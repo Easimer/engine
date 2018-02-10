@@ -8,40 +8,20 @@
 #include <fstream>
 #include <map>
 
+#define SMD_MAX_BONE_NAME_SIZ 64
+#define SMD_MAX_MATERIAL_PATH_SIZ 128
+
+#include <model.h>
+
 namespace mdlc {
-
-	struct smd_vertex {
-		float px, py, pz;
-		float nx, ny, nz;
-		float u, v;
-	};
-
-	struct smd_triangle {
-		size_t material;
-		// these seem to be clockwise
-		smd_vertex vertices[3];
-	};
-
-
-	struct smd_bone {
-		int iId;
-		int iParent;
-		std::string iszName;
-	};
-
-	struct smd_keyframe {
-		int iTime;
-		int iBone;
-		float px, py, pz;
-		float rx, ry, rz;
-	};
-
 	class smd_parser {
 	public:
 		smd_parser(const char* szFilename);
 		smd_parser(std::string& iszFilename);
-		
 
+		model get_model() const {
+			return m_outmodel;
+		}
 	protected:
 		void parse();
 		void parse_line();
@@ -52,7 +32,7 @@ namespace mdlc {
 		int m_iState;
 		std::ifstream m_file;
 
-		// <material, material table index>
-		std::map<std::string, size_t> m_materials;
+		model m_outmodel;
+		model_triangle m_triangle;
 	};
 }

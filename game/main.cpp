@@ -35,6 +35,12 @@ int main(int argc, char** argv)
 	delete gpGlobals->pRenderer;
 	delete gpGlobals->pEntSys;
 
+#if defined(PLAT_DEBUG) // wait for key
+	PRINT("Press a key to exit...");
+	std::string a;
+	std::cin >> a;
+#endif
+
 	//CMDLINE_SHUTDOWN(); // CRASH HERE
 
 	return 0;

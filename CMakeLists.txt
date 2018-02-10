@@ -47,3 +47,4 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/build/" CACHE STRING "Deploy dir" 
 
 add_subdirectory(game)
 add_subdirectory(libenl)
+add_subdirectory(smd_parser)
