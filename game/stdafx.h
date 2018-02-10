@@ -1,3 +1,4 @@
+#include <thread>
 #include <enl/platform.h>
 #include <enl/assert.h>
 #include <glm/fwd.hpp>

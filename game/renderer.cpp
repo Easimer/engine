@@ -8,6 +8,7 @@
 
 void renderer::open_window(const char * szTitle, int nWidth, int nHeight, bool bFullscreen)
 {
+	RESTRICT_THREAD_RENDERING;
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
@@ -19,6 +20,7 @@ void renderer::open_window(const char * szTitle, int nWidth, int nHeight, bool b
 
 void renderer::close_window()
 {
+	RESTRICT_THREAD_RENDERING;
 	if (m_pRenderer)
 		SDL_DestroyRenderer(m_pRenderer);
 	if (m_pWindow)
@@ -27,11 +29,24 @@ void renderer::close_window()
 
 void renderer::render()
 {
+	RESTRICT_THREAD_RENDERING;
 	SDL_GL_SwapWindow(m_pWindow);
+}
+
+bool renderer::init_gl()
+{
+	RESTRICT_THREAD_RENDERING;
+	return false;
+}
+
+void renderer::shutdown_gl()
+{
+	RESTRICT_THREAD_RENDERING;
 }
 
 void renderer::draw_model(size_t iModelID, vec & vecPosition, float flRotation)
 {
+	RESTRICT_THREAD_RENDERING;
 	while (!m_cmdbuf.IsClosed()) {}
 	
 	drawcmd_t* pCommands;

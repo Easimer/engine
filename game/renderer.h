@@ -16,6 +16,8 @@ public:
 	void open_window(const char* szTitle, int nWidth, int nHeight, bool bFullscreen);
 	void close_window();
 	void render();
+	bool init_gl();
+	void shutdown_gl();
 
 	void draw_model(size_t iModelID, vec& vecPosition, float flRotation);
 

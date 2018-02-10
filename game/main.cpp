@@ -3,6 +3,10 @@
 #include "entsys.h"
 #include "renderer.h"
 
+void thread_logic();
+void thread_rendering();
+void thread_sound();
+
 int main(int argc, char** argv)
 {
 	CMDLINE_INIT();
@@ -13,19 +17,47 @@ int main(int argc, char** argv)
 
 	gpGlobals->pEntSys = new entsys();
 	gpGlobals->pRenderer = new renderer();
-	//
+	
+	// Start main threads
 
-	gpGlobals->pRenderer->open_window("engine", 1280, 720, false);
+	std::thread thread_logic_(thread_logic);
+	PRINT_DBG("Logic thread started");
+	std::thread thread_rendering_(thread_rendering);
+	PRINT_DBG("Rendering thread started");
+	std::thread thread_sound_(thread_sound);
+	PRINT_DBG("Sound thread started");
 
-
-
-	gpGlobals->pRenderer->close_window();
+	thread_rendering_.join();
+	thread_logic_.join();
+	thread_sound_.join();
 
 	// deinit globals
-	delete gpGlobals->pEntSys;
+	delete gpGlobals->pRenderer;
 	delete gpGlobals->pEntSys;
 
 	//CMDLINE_SHUTDOWN(); // CRASH HERE
 
 	return 0;
+}
+
+void thread_logic()
+{
+	gpGlobals->iThreadLogic = std::this_thread::get_id();
+}
+
+void thread_rendering()
+{
+	gpGlobals->iThreadRendering = std::this_thread::get_id();
+	gpGlobals->pRenderer->open_window("engine", 1280, 720, false);
+	gpGlobals->pRenderer->init_gl();
+
+
+
+	gpGlobals->pRenderer->shutdown_gl();
+	gpGlobals->pRenderer->close_window();
+}
+
+void thread_sound()
+{
+	gpGlobals->iThreadSound = std::this_thread::get_id();
 }

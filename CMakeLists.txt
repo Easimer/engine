@@ -35,9 +35,6 @@ if(MSVC)
 	  CACHE STRING "Release compiler flags" FORCE
 	)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /permissive-")
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /Machine:x64")
-	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /Machine:x64")
-	set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /Machine:x64")
 endif(MSVC)
 
 # include libenl for all projects
@@ -47,8 +44,6 @@ link_directories(${CMAKE_SOURCE_DIR}/public/lib/)
 include_directories(${CMAKE_SOURCE_DIR}/public/include/)
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/build/" CACHE STRING "Deploy dir" FORCE)
-
-set(CMAKE_GENERATOR_PLATFORM "x64" CACHE INTERNAL "CMAKE_GENERATOR_PLATFORM" FORCE)
 
 add_subdirectory(game)
 add_subdirectory(libenl)

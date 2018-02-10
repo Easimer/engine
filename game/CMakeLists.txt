@@ -21,7 +21,6 @@ set(SRC_CORE
 	stdafx.h
 	
 	main.cpp
-	
 	renderer.cpp
 
 	globals.h
