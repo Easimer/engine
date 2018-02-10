@@ -23,6 +23,14 @@ set(SRC_GAME
 	main.cpp
 )
 
+set(SRC_MDLLDR
+	qc_parser.cpp
+	smd_parser.cpp
+	
+	qc_parser.h
+	smd_parser.h
+)
+
 IF(CMAKE_BUILD_TYPE MATCHES "Debug")
 add_definitions(-DDEBUG)
 ENDIF()
@@ -31,6 +39,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 add_executable(game
 	${SRC_GAME}
+	${SRC_MDLLDR}
 	CMakeLists.txt
 )
 
@@ -40,4 +49,5 @@ install(TARGETS game DESTINATION bin/)
 IF(WIN32)
 # Create filters
 source_group("Source Files" FILES ${SRC_GAME})
+source_group("Source Files\\Model Loader" FILES ${SRC_MDLLDR})
 ENDIF()
