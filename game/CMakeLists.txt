@@ -9,7 +9,7 @@ project(klog)
 
 IF(WIN32)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd /Zi")
 ENDIF()
 
 vs_pch(stdafx)
@@ -21,6 +21,15 @@ set(SRC_GAME
 	stdafx.h
 	
 	main.cpp
+	baseentity.cpp
+	entsys.cpp
+
+	globals.h
+	vector.h
+	basethinker.h
+	baseentity.h
+	entityfactory.h
+	entsys.h
 )
 
 set(SRC_MDLLDR
