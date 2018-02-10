@@ -16,22 +16,27 @@ vs_pch(stdafx)
 
 # Add source files here
 
-set(SRC_GAME
+set(SRC_CORE
 	stdafx.cpp
 	stdafx.h
 	
 	main.cpp
-	baseentity.cpp
-	entsys.cpp
+	
 	renderer.cpp
 
 	globals.h
 	vector.h
+	renderer.h
+)
+
+set(SRC_ENTSYS
+	baseentity.cpp
+	entsys.cpp
+
 	basethinker.h
 	baseentity.h
 	entityfactory.h
 	entsys.h
-	renderer.h
 )
 
 set(SRC_MDLLDR
@@ -55,10 +60,11 @@ set_source_files_properties(${SRC_NOPCH}
 									PROPERTIES COMPILE_FLAGS "/Y-")
 ENDIF()
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 add_executable(game
-	${SRC_GAME}
+	${SRC_CORE}
+	${SRC_ENTSYS}
 	${SRC_MDLLDR}
 	${SRC_NOPCH}
 	CMakeLists.txt
@@ -71,4 +77,5 @@ IF(WIN32)
 # Create filters
 source_group("Source Files" FILES ${SRC_GAME})
 source_group("Source Files\\Model Loader" FILES ${SRC_MDLLDR})
+source_group("Source Files\\Entity System" FILES ${SRC_ENTSYS})
 ENDIF()
