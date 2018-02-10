@@ -40,8 +40,17 @@ set(SRC_MDLLDR
 	smd_parser.h
 )
 
+set(SRC_NOPCH
+	glad.c
+)
+
 IF(CMAKE_BUILD_TYPE MATCHES "Debug")
 add_definitions(-DDEBUG)
+ENDIF()
+
+IF(WIN32)
+set_source_files_properties(${SRC_NOPCH}
+									PROPERTIES COMPILE_FLAGS "/Y-")
 ENDIF()
 
 set(CMAKE_CXX_STANDARD 11)
@@ -49,6 +58,7 @@ set(CMAKE_CXX_STANDARD 11)
 add_executable(game
 	${SRC_GAME}
 	${SRC_MDLLDR}
+	${SRC_NOPCH}
 	CMakeLists.txt
 )
 
