@@ -1,0 +1,4 @@
+[submodule "libenl"]
+	path = libenl
+	url = https://github.com/Easimer/libenl.git
+	branch = engine
