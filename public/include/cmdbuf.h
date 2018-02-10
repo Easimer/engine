@@ -12,17 +12,17 @@ bClearOnEndRead - should the front buffer be cleared on EndRead
 bSortBeforeCopy - should the back buffer be sorted before Copy; commands are sorted by the first 8 bytes of the commands
 */
 template<class T, unsigned nSize, bool bClearOnEndRead = false, bool bSortBeforeCopy = false>
-class CBaseCommandBuffer
+class cmdbuf
 {
 public:
-	CBaseCommandBuffer()
+	cmdbuf()
 	{
 		m_pBackBuffer = new T[nSize];
 		m_pFrontBuffer = new T[nSize];
 		m_bForceCopy = true;
 		m_bClosed = false;
 	}
-	~CBaseCommandBuffer()
+	~cmdbuf()
 	{
 		delete m_pFrontBuffer;
 		delete m_pBackBuffer;
@@ -184,3 +184,5 @@ typedef struct cmdbuf_debug_t {
 #define CMDBUF_END_CMD(name) \
 		CMDBUF_DEBUG; \
 	} name;
+
+#define CMDBUF_DEF(name, T, nSize, bClearOnEndRead, bSortBeforeCopy) class name : public cmdbuf<T, nSize, bClearOnEndRead, bSortBeforeCopy> {};

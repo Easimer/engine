@@ -23,6 +23,7 @@ set(SRC_GAME
 	main.cpp
 	baseentity.cpp
 	entsys.cpp
+	renderer.cpp
 
 	globals.h
 	vector.h
@@ -30,6 +31,7 @@ set(SRC_GAME
 	baseentity.h
 	entityfactory.h
 	entsys.h
+	renderer.h
 )
 
 set(SRC_MDLLDR
@@ -62,7 +64,7 @@ add_executable(game
 	CMakeLists.txt
 )
 
-target_link_libraries(game enl SDL2 SDL2_image SDL2_mixer SDL2_ttf)
+target_link_libraries(game enl SDL2main SDL2 SDL2_image SDL2_mixer SDL2_ttf)
 install(TARGETS game DESTINATION bin/)
 
 IF(WIN32)

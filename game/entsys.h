@@ -1,7 +1,9 @@
 #pragma once
 
+#define ENTSYS_MAX_ENTITIES 1024
+
 #define ESPAGE_SIZ 4096		// page size / max entity size
-#define ESPAGE_COUNT 1024	// max page count / max entity count
+#define ESPAGE_COUNT ENTSYS_MAX_ENTITIES
 
 typedef unsigned char entsys_page[ESPAGE_SIZ];
 
