@@ -74,7 +74,7 @@ private:
 	SDL_Renderer* m_pRenderer;
 	SDL_GLContext m_pGLContext;
 
-	bool m_bLoading = false;
+	bool m_bLoading = true;
 
 	size_t m_iLoadedModelID = 0;
 };

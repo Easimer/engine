@@ -61,9 +61,7 @@ void thread_logic()
 	gpGlobals->iThreadLogic = std::this_thread::get_id();
 
 	gpGlobals->pRenderer->begin_load();
-
-	gpGlobals->pRenderer->load_model("Debug/data/models/cowboy_hat.smd");
-
+	gpGlobals->pRenderer->load_model("../data/models/cowboy_hat.smd");
 	gpGlobals->pRenderer->end_load();
 }
 
