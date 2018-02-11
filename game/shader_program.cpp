@@ -54,33 +54,33 @@ shader_program::shader_program(const char * szFilename) :
 	if (!link())
 		return;
 
-	if (parser.is_cmd("uniform_trans"))
+	if (parser.is_cmd("uniformtrans"))
 	{
-		m_iUniformMatTrans = glGetUniformLocation(m_iID, parser.get_string("uniform_trans").c_str());
+		m_iUniformMatTrans = glGetUniformLocation(m_iID, parser.get_string("uniformtrans").c_str());
 	}
 	else
 	{
-		PRINT_ERR("uniform_trans undefined for shader " << m_szName);
+		PRINT_ERR("uniformtrans undefined for shader " << m_szName);
 		return;
 	}
 
-	if (parser.is_cmd("uniform_view"))
+	if (parser.is_cmd("uniformview"))
 	{
-		m_iUniformMatTrans = glGetUniformLocation(m_iID, parser.get_string("uniform_view").c_str());
+		m_iUniformMatTrans = glGetUniformLocation(m_iID, parser.get_string("uniformview").c_str());
 	}
 	else
 	{
-		PRINT_ERR("uniform_view undefined for shader " << m_szName);
+		PRINT_ERR("uniformview undefined for shader " << m_szName);
 		return;
 	}
 
-	if (parser.is_cmd("uniform_proj"))
+	if (parser.is_cmd("uniformproj"))
 	{
-		m_iUniformMatTrans = glGetUniformLocation(m_iID, parser.get_string("uniform_proj").c_str());
+		m_iUniformMatTrans = glGetUniformLocation(m_iID, parser.get_string("uniformproj").c_str());
 	}
 	else
 	{
-		PRINT_ERR("uniform_proj undefined for shader " << m_szName);
+		PRINT_ERR("uniformproj undefined for shader " << m_szName);
 		return;
 	}
 }
