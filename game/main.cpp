@@ -49,6 +49,12 @@ int main(int argc, char** argv)
 void thread_logic()
 {
 	gpGlobals->iThreadLogic = std::this_thread::get_id();
+
+	gpGlobals->pRenderer->begin_load();
+
+	gpGlobals->pRenderer->load_model("Debug/data/models/cowboy_hat.smd");
+
+	gpGlobals->pRenderer->end_load();
 }
 
 void thread_rendering()
@@ -57,7 +63,8 @@ void thread_rendering()
 	gpGlobals->pRenderer->open_window("engine", 1280, 720, false);
 	gpGlobals->pRenderer->init_gl();
 
-
+	gpGlobals->pRenderer->model_load_loop();
+	PRINT_DBG("Model load has ended");
 
 	gpGlobals->pRenderer->shutdown_gl();
 	gpGlobals->pRenderer->close_window();

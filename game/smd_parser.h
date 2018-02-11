@@ -8,9 +8,6 @@
 #include <fstream>
 #include <map>
 
-#define SMD_MAX_BONE_NAME_SIZ 64
-#define SMD_MAX_MATERIAL_PATH_SIZ 128
-
 #include <model.h>
 
 namespace mdlc {

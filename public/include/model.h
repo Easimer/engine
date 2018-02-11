@@ -2,6 +2,9 @@
 
 #include <vector>
 
+#define SMD_MAX_BONE_NAME_SIZ 64
+#define SMD_MAX_MATERIAL_PATH_SIZ 128
+
 // a model parsed from a SMD file
 
 struct model_bone {

@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 #include "cmdbuf.h"
+#include <model.h>
 
 //
 // model draw cmdbuf
@@ -28,6 +29,13 @@ CMDBUF_END_CMD(ldmdl_cmd_t)
 
 CMDBUF_DEF(renderer_ldmdl_cmdbuf, ldmdl_cmd_t, 512, true, false);
 
+#define MDL_VBO_POSITION	0 // contains vertex position (3 GLfloats)
+#define MDL_VBO_NORMAL		1 // contains vertex normal (3 GLfloats)
+#define MDL_VBO_UV			2 // contains vertex uv (2 GLfloats)
+#define MDL_VBO_BONE		3 // contains bone ID (1 UNSIGNED_INT)
+#define MDL_VBO_MAT			4 // contains texture sampler ID (1 UNSIGNED_INT)
+#define MDL_VBO_MAX			5
+
 class renderer {
 public:
 	void open_window(const char* szTitle, int nWidth, int nHeight, bool bFullscreen);
@@ -53,7 +61,8 @@ public:
 	model_id load_model(const char * szFilename);
 	void draw_model(size_t iModelID, vec& vecPosition, float flRotation);
 
-private:
+	model_id upload_model(const model&);
+
 	void model_load_loop();
 
 private:

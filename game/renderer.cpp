@@ -38,11 +38,11 @@ void renderer::render()
 	// Draw models
 	while (!m_cmdbuf.IsClosed());
 	drawcmd_t* pCommands;
-	size_t nCommands;
-	m_cmdbuf.BeginRead(&pCommands, &nCommands);
-	m_cmdbuf.EndRead();
+size_t nCommands;
+m_cmdbuf.BeginRead(&pCommands, &nCommands);
+m_cmdbuf.EndRead();
 
-	SDL_GL_SwapWindow(m_pWindow);
+SDL_GL_SwapWindow(m_pWindow);
 }
 
 bool renderer::init_gl()
@@ -102,16 +102,27 @@ void renderer::shutdown_gl()
 }
 
 
-model_id renderer::load_model( const char * szFilename)
+model_id renderer::load_model(const char * szFilename)
 {
 	RESTRICT_THREAD_LOGIC;
+
+	if (m_iLoadedModelID)
+	{
+		PRINT_DBG("renderer::load_model: waiting to upload...");
+	}
+	while (m_iLoadedModelID);
+
 	ldmdl_cmd_t c;
 	strncpy(c.szFilename, szFilename, LDMDL_CMD_MAX_FN);
 	m_ldmdl_cmdbuf.BeginWrite();
 	m_ldmdl_cmdbuf.Write(c);
 	m_ldmdl_cmdbuf.EndWrite();
+	PRINT_DBG("renderer::load_model: waiting for upload...");
 	// wait for renderer thread to upload the model
-	while (m_iLoadedModelID == 0);
+	while (m_iLoadedModelID == 0) {
+		Sleep(5);
+	}
+	PRINT_DBG("renderer::load_model: received model id!");
 	// save model id
 	model_id ret = m_iLoadedModelID;
 	// signal renderer thread to load next model
@@ -127,8 +138,84 @@ void renderer::draw_model(size_t iModelID, vec & vecPosition, float flRotation)
 	m_cmdbuf.EndWrite();
 }
 
+model_id renderer::upload_model(const model& mdl)
+{
+	RESTRICT_THREAD_RENDERING;
+	GLuint iVAO;
+	GLuint aiVBO[MDL_VBO_MAX];
+
+	glGenVertexArrays(1, &iVAO); ASSERT_OPENGL();
+	glBindVertexArray(iVAO); ASSERT_OPENGL();
+	glGenBuffers(MDL_VBO_MAX, aiVBO); ASSERT_OPENGL();
+	
+	// Generate arrays
+	size_t nPositionsSiz = mdl.triangles.size() * 9;
+	size_t nNormalsSiz = mdl.triangles.size() * 9;
+	size_t nUVsSiz = mdl.triangles.size() * 6;
+	size_t nBoneIDsSiz = mdl.triangles.size() * 3;
+	size_t nMatIDsSiz = mdl.triangles.size() * 3;
+	float* aflPositions = new float[nPositionsSiz];
+	float* aflNormals = new float[nNormalsSiz];
+	float* aflUVs = new float[nUVsSiz];
+	uint32_t* anBoneIDs = new uint32_t[nBoneIDsSiz];
+	uint32_t* anMatIDs = new uint32_t[nMatIDsSiz];
+
+	for (size_t iTriangle = 0; iTriangle < mdl.triangles.size(); iTriangle++)
+	{
+		for (size_t iVertex = 0; iVertex < 3; iVertex++)
+		{
+			aflPositions[iTriangle * 9 + iVertex * 3 + 0] = mdl.triangles[iTriangle].vertices[iVertex].px;
+			aflPositions[iTriangle * 9 + iVertex * 3 + 1] = mdl.triangles[iTriangle].vertices[iVertex].py;
+			aflPositions[iTriangle * 9 + iVertex * 3 + 2] = mdl.triangles[iTriangle].vertices[iVertex].pz;
+
+			aflNormals[iTriangle * 9 + iVertex * 3 + 0] = mdl.triangles[iTriangle].vertices[iVertex].nx;
+			aflNormals[iTriangle * 9 + iVertex * 3 + 1] = mdl.triangles[iTriangle].vertices[iVertex].ny;
+			aflNormals[iTriangle * 9 + iVertex * 3 + 2] = mdl.triangles[iTriangle].vertices[iVertex].nz;
+
+			aflUVs[iTriangle * 6 + iVertex * 2 + 0] = mdl.triangles[iTriangle].vertices[iVertex].u;
+			aflUVs[iTriangle * 6 + iVertex * 2 + 1] = mdl.triangles[iTriangle].vertices[iVertex].v;
+
+			anBoneIDs[iTriangle * 3 + iVertex] = mdl.triangles[iTriangle].vertices[iVertex].iBoneID;
+
+			anMatIDs[iTriangle * 3 + iVertex] = 0;
+		}
+	}
+	// Upload vertex positions
+	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_POSITION]); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nPositionsSiz, aflPositions, GL_STATIC_DRAW); ASSERT_OPENGL();
+	glVertexAttribPointer(MDL_VBO_POSITION, 3, GL_FLOAT, GL_FALSE, 0, 0); ASSERT_OPENGL();
+	glEnableVertexAttribArray(MDL_VBO_POSITION);
+	// Upload vertex_normals
+	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_NORMAL]); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nNormalsSiz, aflNormals, GL_STATIC_DRAW); ASSERT_OPENGL();
+	glVertexAttribPointer(MDL_VBO_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, 0); ASSERT_OPENGL();
+	glEnableVertexAttribArray(MDL_VBO_NORMAL);
+	// Upload UVs
+	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_UV]); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nUVsSiz, aflUVs, GL_STATIC_DRAW); ASSERT_OPENGL();
+	glVertexAttribPointer(MDL_VBO_UV, 2, GL_FLOAT, GL_FALSE, 0, 0); ASSERT_OPENGL();
+	glEnableVertexAttribArray(MDL_VBO_UV);
+	// Upload bones
+	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_BONE]); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nBoneIDsSiz, anBoneIDs, GL_STATIC_DRAW); ASSERT_OPENGL();
+	glVertexAttribPointer(MDL_VBO_BONE, 1, GL_UNSIGNED_INT, GL_FALSE, 0, 0); ASSERT_OPENGL();
+	glEnableVertexAttribArray(MDL_VBO_BONE);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	delete[] aflPositions;
+	delete[] aflNormals;
+	delete[] aflUVs;
+	delete[] anBoneIDs;
+	delete[] anMatIDs;
+
+	return iVAO;
+}
+
 void renderer::model_load_loop()
 {
+	RESTRICT_THREAD_RENDERING;
 	PRINT_DBG("renderer::model_load_loop entered");
 	while (m_bLoading)
 	{
@@ -140,7 +227,17 @@ void renderer::model_load_loop()
 			m_ldmdl_cmdbuf.BeginRead(&pCommands, &nCommands);
 			while (nCommands--)
 			{
+				PRINT_DBG("renderer: received model load request for " << pCommands->szFilename);
 				mdlc::smd_parser parser(pCommands->szFilename);
+				model mdl = parser.get_model();
+
+				
+				m_iLoadedModelID = upload_model(mdl);
+				PRINT_DBG("renderer: model uploaded!");
+				while (m_iLoadedModelID) {
+					Sleep(5);
+				}
+				PRINT_DBG("renderer: model delivered!");
 				
 				pCommands++;
 			}
