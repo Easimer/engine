@@ -2,6 +2,7 @@
 #include <enl/cmdline.h>
 #include "entsys.h"
 #include "renderer.h"
+#include "event_handler.h"
 #include "memstat.h"
 #include <chrono>
 
@@ -21,6 +22,7 @@ int main(int argc, char** argv)
 
 	gpGlobals->pEntSys = new entsys();
 	gpGlobals->pRenderer = new renderer();
+	gpGlobals->pEventHandler = new event_handler();
 	
 	// Start main threads
 
@@ -36,6 +38,7 @@ int main(int argc, char** argv)
 	thread_sound_.join();
 
 	// deinit globals
+	delete gpGlobals->pEventHandler;
 	delete gpGlobals->pRenderer;
 	delete gpGlobals->pEntSys;
 
@@ -76,11 +79,12 @@ void thread_logic()
 		float flElapsed = std::chrono::duration_cast<std::chrono::duration<float>>(m_end - m_start).count();
 		if (flElapsed < 0.015625f)
 		{
-			int nSleepTime = (int)((0.015625f - flElapsed) * 1000.0f);
-			Sleep(nSleepTime);
+			//std::this_thread::sleep_for(std::chrono::duration<float>(0.015625f - flElapsed));
 		}
 		gpGlobals->flDeltaTime = flElapsed;
 		gpGlobals->curtime += gpGlobals->flDeltaTime;
+
+		gpGlobals->pEventHandler->update();
 	}
 }
 
@@ -96,16 +100,7 @@ void thread_rendering()
 
 	while (gpGlobals->bRunning)
 	{
-		m_start = std::chrono::high_resolution_clock::now();
 		gpGlobals->pRenderer->render();
-		m_end = std::chrono::high_resolution_clock::now();
-
-		float flElapsed = std::chrono::duration_cast<std::chrono::duration<float>>(m_end - m_start).count();
-		if (flElapsed < 0.0166666666f)
-		{
-			std::chrono::duration<float> dur(0.1666666666f - flElapsed);
-			std::this_thread::sleep_for(dur);
-		}
 	}
 
 	gpGlobals->pRenderer->shutdown_gl();

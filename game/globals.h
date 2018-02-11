@@ -5,6 +5,7 @@
 struct entfmap_t;
 class entsys;
 class renderer;
+class event_handler;
 
 struct engine_globals {
 	// Entity Factory
@@ -17,6 +18,7 @@ struct engine_globals {
 
 	// Game
 	bool bRunning = true;
+	event_handler* pEventHandler;
 
 	// Entity System
 	entsys* pEntSys;

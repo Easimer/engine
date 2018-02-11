@@ -26,6 +26,9 @@ set(SRC_CORE
 
 	globals.h
 	vector.h
+
+	event_handler.cpp
+	event_handler.h
 )
 
 set(SRC_ENTSYS

@@ -10,6 +10,7 @@
 #include "qc_parser.h"
 #include "smd_parser.h"
 #include "shader_program.h"
+#include "event_handler.h"
 
 void renderer::open_window(const char * szTitle, int nWidth, int nHeight, bool bFullscreen)
 {
@@ -41,14 +42,21 @@ void renderer::render()
 	// Draw models
 	drawcmd_t* pCommands;
 	size_t nCommands;
-	m_cmdbuf.BeginRead(&pCommands, &nCommands);
-	if (nCommands)
+	if(m_cmdbuf.BeginRead(&pCommands, &nCommands))
 	{
 		// TODO: draw
 		m_cmdbuf.EndRead();
 	}
 
 	SDL_GL_SwapWindow(m_pWindow);
+	std::vector<event_t> vecEvents;
+	event_t event;
+	while (SDL_PollEvent(&event.event))
+	{
+		vecEvents.push_back(event);
+	}
+	if(vecEvents.size() > 0)
+		gpGlobals->pEventHandler->push_event(vecEvents);
 }
 
 bool renderer::init_gl()
@@ -278,11 +286,8 @@ void renderer::load_loop()
 		{
 			gfx_load_cmd_t* pCommands;
 			size_t nCommands = 0;
-			m_gfx_ld_cmdbuf.BeginRead(&pCommands, &nCommands);
-			if (nCommands == 0)
-			{
+			if (!m_gfx_ld_cmdbuf.BeginRead(&pCommands, &nCommands))
 				continue;
-			}
 			PRINT_DBG("renderer: received " << nCommands << " load request(s)");
 			while (nCommands--)
 			{
