@@ -21,13 +21,11 @@ set(SRC_CORE
 	stdafx.h
 	
 	main.cpp
-	renderer.cpp
 	memstat.cpp
 	memstat.h
 
 	globals.h
 	vector.h
-	renderer.h
 )
 
 set(SRC_ENTSYS
@@ -48,8 +46,24 @@ set(SRC_MDLLDR
 	smd_parser.h
 )
 
+set(SRC_GFX
+	renderer.cpp
+	renderer.h
+
+	shader.cpp
+	shader.h
+
+	shader_program.cpp
+	shader_program.h
+)
+
 set(SRC_NOPCH
 	glad.c
+)
+
+set(SRC_RES_SHADERS
+	shaders/model_dynamic.frag
+	shaders/model_dynamic.vert
 )
 
 IF(CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -67,6 +81,7 @@ add_executable(game
 	${SRC_CORE}
 	${SRC_ENTSYS}
 	${SRC_MDLLDR}
+	${SRC_GFX}
 	${SRC_NOPCH}
 	CMakeLists.txt
 )
@@ -79,4 +94,6 @@ IF(WIN32)
 source_group("Source Files" FILES ${SRC_GAME})
 source_group("Source Files\\Model Loader" FILES ${SRC_MDLLDR})
 source_group("Source Files\\Entity System" FILES ${SRC_ENTSYS})
+source_group("Source Files\\Graphics" FILES ${SRC_GFX})
+source_group("Shader Source Files" FILES ${SRC_RES_SHADERS})
 ENDIF()
