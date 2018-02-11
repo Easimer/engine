@@ -39,6 +39,9 @@ set(SRC_ENTSYS
 	baseentity.h
 	entityfactory.h
 	entsys.h
+
+	prop_common.h
+	prop_dynamic.cpp
 )
 
 set(SRC_MDLLDR

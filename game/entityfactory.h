@@ -20,17 +20,13 @@ public:
 	{
 		if (gpGlobals->entityFactoryDictionary == NULL)
 			gpGlobals->entityFactoryDictionary = new entfmap_t[128];
-		LD_strncpy(gpGlobals->entityFactoryDictionary[gpGlobals->iEntityFactoryDictionaryIndex].szMapname, szName, 64);
+		strncpy(gpGlobals->entityFactoryDictionary[gpGlobals->iEntityFactoryDictionaryIndex].szMapname, szName, 64);
 		gpGlobals->entityFactoryDictionary[gpGlobals->iEntityFactoryDictionaryIndex].pFactory = this;
 		gpGlobals->iEntityFactoryDictionaryIndex++;
 	}
 
 	virtual base_entity* Create()
 	{
-		//return new T();
-		// Request page from entsys
-		base_entity* pPage = gpGlobals->pEntSys->request_page();
-		pPage->init();
-		return pPage;
+		return new T();
 	}
 };

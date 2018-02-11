@@ -18,15 +18,8 @@ public:
 	void draw_entities();
 
 	void add_entity(base_entity* pEnt) { m_vecEntities.push_back(pEnt); }
+	void kill_entity(base_entity* pEnt);
 
 private:
-	void* request_page();
-	void free_page(void* pPage);
-	friend class ientity_factory;
-
-private:
-	entsys_page* m_pPages;
-	entsys_page** m_pFreePages;
-
 	std::list<base_entity*> m_vecEntities;
 };

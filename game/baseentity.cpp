@@ -8,7 +8,7 @@ base_entity * CreateEntity(const char * mapname)
 		if (strncmp(gpGlobals->entityFactoryDictionary[i].szMapname, mapname, 64) == 0)
 		{
 			auto pEntity = gpGlobals->entityFactoryDictionary[i].pFactory->Create();
-			//gpGlobals->pEntSys->add_entity(pEntity);
+			gpGlobals->pEntSys->add_entity(pEntity);
 			pEntity->spawn();
 			return pEntity;
 		}
@@ -23,9 +23,9 @@ base_entity * CreateEntityNoSpawn(const char * mapname)
 	{
 		if (strncmp(gpGlobals->entityFactoryDictionary[i].szMapname, mapname, 64) == 0)
 		{
-			//auto pEntity = gpGlobals->entityFactoryDictionary[i].pFactory->Create();
-			//gpGlobals->pEntSys->add_entity(pEntity);
-			return gpGlobals->entityFactoryDictionary[i].pFactory->Create();
+			auto pEntity = gpGlobals->entityFactoryDictionary[i].pFactory->Create();
+			gpGlobals->pEntSys->add_entity(pEntity);
+			return pEntity;
 		}
 	}
 	PRINT_ERR("Attempted to create unknown entity named" << mapname);

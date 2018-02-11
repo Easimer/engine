@@ -65,7 +65,7 @@ void mdlc::qc_parser::parse()
 
 	for (auto& cmd : m_commands)
 	{
-		PRINT_DBG("Command: \"" << cmd.m_iszCmd << "\" Argument: \"" << cmd.m_iszArg << "\"");
+		//PRINT_DBG("Command: \"" << cmd.m_iszCmd << "\" Argument: \"" << cmd.m_iszArg << "\"");
 	}
 
 	m_commands.push_back({ "<invalid>", "<invalid>" });

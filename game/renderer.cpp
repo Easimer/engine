@@ -126,6 +126,14 @@ model_id renderer::load_model(const char * szFilename)
 {
 	RESTRICT_THREAD_LOGIC;
 
+	std::string iszFilename(szFilename);
+	auto it = m_mapModels.find(iszFilename);
+	if (it != m_mapModels.end())
+	{
+		PRINT_DBG("Model " << szFilename << " already found");
+		return (*it).second;
+	}
+
 	/*if (m_iLoadedModelID)
 	{
 		PRINT_DBG("renderer::load_model: waiting to upload...");
@@ -150,6 +158,7 @@ model_id renderer::load_model(const char * szFilename)
 	model_id ret = m_iLoadedModelID;
 	// signal renderer thread to load next model
 	m_iLoadedModelID = 0;
+	m_mapModels.emplace(iszFilename, ret);
 	return ret;
 }
 

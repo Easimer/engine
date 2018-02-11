@@ -4,6 +4,7 @@
 #include "cmdbuf.h"
 #include <model.h>
 #include "shader_program.h"
+#include <map>
 
 //
 // model draw cmdbuf
@@ -89,4 +90,6 @@ private:
 	size_t m_iLoadedModelID = 0;
 
 	std::vector<shader_program*> m_vecPrograms;
+
+	std::map<std::string, model_id> m_mapModels;
 };

@@ -65,7 +65,9 @@ void thread_logic()
 	gpGlobals->iThreadLogic = std::this_thread::get_id();
 
 	gpGlobals->pRenderer->begin_load();
-	gpGlobals->pRenderer->load_model("data/models/cowboy_hat.smd");
+	auto a = gpGlobals->pRenderer->load_model("data/models/cowboy_hat.smd");
+	auto b = gpGlobals->pRenderer->load_model("data/models/cowboy_hat.smd");
+	ASSERT(a == b);
 	gpGlobals->pRenderer->load_shader("data/shaders/model_dynamic.qc");
 	gpGlobals->pRenderer->end_load();
 

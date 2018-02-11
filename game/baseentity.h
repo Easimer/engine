@@ -7,8 +7,8 @@
 
 #define DEC_CLASS(classname, basename) \
 	typedef basename BaseClass; \
-	virtual const char* GetClassname() { return #classname; }
-#define REGISTER_ENTITY(classname, mapname) static CEntityFactory<classname> mapname(#mapname);
+	virtual const char* get_classname() { return #classname; }
+#define REGISTER_ENTITY(classname, mapname) static entity_factory<classname> mapname(#mapname);
 
 class base_entity : public base_thinker
 {
@@ -62,9 +62,7 @@ public:
 		}
 			
 	}
-	virtual base_entity* GetParent() { return m_pParent; }
-
-	virtual void UpdatePhysics() {};
+	virtual base_entity* get_parent() { return m_pParent; }
 
 	//virtual CEntityKeyValues* GetEntKV() { return NULL; }
 
@@ -78,8 +76,6 @@ protected:
 	//CPhysObj* m_pPhysObj = NULL;
 
 private:
-	size_t m_iEId;
-	void set_eid(size_t iEId) { m_iEId = iEId; }
 	friend class entsys;
 };
 
@@ -89,6 +85,6 @@ base_entity* CreateEntity(const char* mapname);
 base_entity* CreateEntityNoSpawn(const char* mapname);
 #define CREATE_ENTITY(mapname) CreateEntity(mapname)
 #define CREATE_ENTITY_NOSPAWN(mapname) CreateEntityNoSpawn(mapname)
-#define KILL_ENTITY(ent) gpGlobals->pEntSys->KillEntity(ent)
+#define KILL_ENTITY(ent) gpGlobals->pEntSys->kill_entity(ent)
 
 //#include "keyvalues2.h"
