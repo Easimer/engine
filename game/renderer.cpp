@@ -106,29 +106,58 @@ model_id renderer::load_model(const char * szFilename)
 {
 	RESTRICT_THREAD_LOGIC;
 
-	if (m_iLoadedModelID)
+	/*if (m_iLoadedModelID)
 	{
 		PRINT_DBG("renderer::load_model: waiting to upload...");
+	}*/
+	while (m_iLoadedModelID) {
+		Sleep(1);
 	}
-	while (m_iLoadedModelID);
 
 	ldmdl_cmd_t c;
 	strncpy(c.szFilename, szFilename, LDMDL_CMD_MAX_FN);
 	m_ldmdl_cmdbuf.BeginWrite();
 	m_ldmdl_cmdbuf.Write(c);
 	m_ldmdl_cmdbuf.EndWrite();
-	PRINT_DBG("renderer::load_model: waiting for upload...");
+	//PRINT_DBG("renderer::load_model: waiting for upload...");
 	// wait for renderer thread to upload the model
 	while (m_iLoadedModelID == 0) {
-		Sleep(5);
+		Sleep(1);
 	}
-	PRINT_DBG("renderer::load_model: received model id!");
+	//PRINT_DBG("renderer::load_model: received model id!");
 	// save model id
 	model_id ret = m_iLoadedModelID;
 	// signal renderer thread to load next model
 	m_iLoadedModelID = 0;
 	return ret;
 }
+
+void renderer::load_models(std::vector<std::string> filenames, std::vector<model_id>& model_ids)
+{
+	RESTRICT_THREAD_LOGIC;
+	while (m_iLoadedModelID) {
+		Sleep(1);
+	}
+
+	ldmdl_cmd_t c;
+	model_ids.clear();
+	m_ldmdl_cmdbuf.BeginWrite();
+	for (auto& fn : filenames)
+	{
+		strncpy(c.szFilename, fn.c_str(), LDMDL_CMD_MAX_FN);
+		m_ldmdl_cmdbuf.Write(c);
+	}
+	m_ldmdl_cmdbuf.EndWrite();
+	for (size_t i = 0; i < filenames.size(); i++)
+	{
+		while (m_iLoadedModelID == 0) {
+			Sleep(1);
+		}
+		model_ids.push_back(m_iLoadedModelID);
+		m_iLoadedModelID = 0;
+	}
+}
+
 void renderer::draw_model(size_t iModelID, vec & vecPosition, float flRotation)
 {
 	RESTRICT_THREAD_LOGIC;
@@ -223,8 +252,13 @@ void renderer::model_load_loop()
 		if (!m_ldmdl_cmdbuf.IsEmpty())
 		{
 			ldmdl_cmd_t* pCommands;
-			size_t nCommands;
+			size_t nCommands = 0;
 			m_ldmdl_cmdbuf.BeginRead(&pCommands, &nCommands);
+			if (nCommands == 0)
+			{
+				continue;
+			}
+			PRINT_DBG("renderer: received " << nCommands << " model load request(s)");
 			while (nCommands--)
 			{
 				PRINT_DBG("renderer: received model load request for " << pCommands->szFilename);
@@ -233,11 +267,11 @@ void renderer::model_load_loop()
 
 				
 				m_iLoadedModelID = upload_model(mdl);
-				PRINT_DBG("renderer: model uploaded!");
+				//PRINT_DBG("renderer: model uploaded!");
 				while (m_iLoadedModelID) {
-					Sleep(5);
+					Sleep(1);
 				}
-				PRINT_DBG("renderer: model delivered!");
+				//PRINT_DBG("renderer: model delivered!");
 				
 				pCommands++;
 			}

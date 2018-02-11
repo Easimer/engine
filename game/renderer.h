@@ -59,6 +59,7 @@ public:
 	}
 
 	model_id load_model(const char * szFilename);
+	void load_models(std::vector<std::string> filenames, std::vector<model_id>& model_ids);
 	void draw_model(size_t iModelID, vec& vecPosition, float flRotation);
 
 	model_id upload_model(const model&);

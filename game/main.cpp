@@ -2,6 +2,7 @@
 #include <enl/cmdline.h>
 #include "entsys.h"
 #include "renderer.h"
+#include "memstat.h"
 
 void thread_logic();
 void thread_rendering();
@@ -9,6 +10,8 @@ void thread_sound();
 
 int main(int argc, char** argv)
 {
+	memstat_init();
+	memstat_enabled = true;
 	CMDLINE_INIT();
 
 	//PRINT_DBG(gpCmdline->GetExecName());
@@ -34,6 +37,13 @@ int main(int argc, char** argv)
 	// deinit globals
 	delete gpGlobals->pRenderer;
 	delete gpGlobals->pEntSys;
+
+	memstat_enabled = false;
+	memstat_print();
+
+#if defined(PLAT_DEBUG)
+
+#endif
 
 #if defined(PLAT_DEBUG) // wait for key
 	PRINT("Press a key to exit...");
@@ -64,7 +74,6 @@ void thread_rendering()
 	gpGlobals->pRenderer->init_gl();
 
 	gpGlobals->pRenderer->model_load_loop();
-	PRINT_DBG("Model load has ended");
 
 	gpGlobals->pRenderer->shutdown_gl();
 	gpGlobals->pRenderer->close_window();

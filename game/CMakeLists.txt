@@ -22,6 +22,8 @@ set(SRC_CORE
 	
 	main.cpp
 	renderer.cpp
+	memstat.cpp
+	memstat.h
 
 	globals.h
 	vector.h
