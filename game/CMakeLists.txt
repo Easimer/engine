@@ -88,6 +88,7 @@ add_executable(game
 
 target_link_libraries(game enl SDL2main SDL2 SDL2_image SDL2_mixer SDL2_ttf)
 install(TARGETS game DESTINATION bin/)
+install(FILES ${SRC_RES_SHADERS} DESTINATION data/shaders/)
 
 IF(WIN32)
 # Create filters
