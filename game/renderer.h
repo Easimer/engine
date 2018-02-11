@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include "cmdbuf.h"
 #include <model.h>
+#include "shader_program.h"
 
 //
 // model draw cmdbuf
@@ -20,14 +21,21 @@ CMDBUF_DEF(renderer_drawmdl_cmdbuf, drawcmd_t, ENTSYS_MAX_ENTITIES, true, false)
 // model load cmdbuf
 //
 
-#define LDMDL_CMD_MAX_FN 64
+#define GFX_LD_CMD_MAX_FN 64
 typedef size_t model_id;
 
-CMDBUF_BEGIN_CMD(ldmdl_cmd_t)
-	char szFilename[LDMDL_CMD_MAX_FN];
-CMDBUF_END_CMD(ldmdl_cmd_t)
+enum gfx_ld_cmd_type {
+	GFX_LD_T_MDL = 0,
+	GFX_LD_T_SHADER = 1,
+	GFX_LD_T_MAX = 2
+};
 
-CMDBUF_DEF(renderer_ldmdl_cmdbuf, ldmdl_cmd_t, 512, true, false);
+CMDBUF_BEGIN_CMD(gfx_load_cmd_t)
+	gfx_ld_cmd_type type;
+	char szFilename[GFX_LD_CMD_MAX_FN];
+CMDBUF_END_CMD(gfx_load_cmd_t)
+
+CMDBUF_DEF(renderer_load_cmdbuf, gfx_load_cmd_t, 512, true, false);
 
 #define MDL_VBO_POSITION	0 // contains vertex position (3 GLfloats)
 #define MDL_VBO_NORMAL		1 // contains vertex normal (3 GLfloats)
@@ -62,13 +70,15 @@ public:
 	void load_models(std::vector<std::string> filenames, std::vector<model_id>& model_ids);
 	void draw_model(size_t iModelID, vec& vecPosition, float flRotation);
 
+	void load_shader(const char* szFilename);
+
 	model_id upload_model(const model&);
 
-	void model_load_loop();
+	void load_loop();
 
 private:
 	renderer_drawmdl_cmdbuf m_cmdbuf;
-	renderer_ldmdl_cmdbuf m_ldmdl_cmdbuf;
+	renderer_load_cmdbuf m_gfx_ld_cmdbuf;
 
 	SDL_Window* m_pWindow;
 	SDL_Renderer* m_pRenderer;
@@ -77,4 +87,6 @@ private:
 	bool m_bLoading = true;
 
 	size_t m_iLoadedModelID = 0;
+
+	std::vector<shader_program*> m_vecPrograms;
 };

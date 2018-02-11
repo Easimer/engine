@@ -13,6 +13,7 @@
 namespace mdlc {
 	class smd_parser {
 	public:
+		smd_parser() {};
 		smd_parser(const char* szFilename);
 		smd_parser(std::string& iszFilename);
 

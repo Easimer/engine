@@ -11,6 +11,13 @@ struct engine_globals {
 	entfmap_t* entityFactoryDictionary;
 	size_t iEntityFactoryDictionaryIndex;
 	
+	// Time
+	float curtime = 0;
+	float flDeltaTime = 0;
+
+	// Game
+	bool bRunning = true;
+
 	// Entity System
 	entsys* pEntSys;
 	// Renderer

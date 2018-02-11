@@ -7,12 +7,22 @@
 mdlc::qc_parser::qc_parser(const char * szFilename)
 {
 	m_file = std::ifstream(szFilename);
+	if (m_file.fail())
+	{
+		PRINT_DBG("Can't open file " << szFilename << ", reason: " << strerror(errno));
+		return;
+	}
 	parse();
 }
 
 mdlc::qc_parser::qc_parser(std::string & iszFilename)
 {
 	m_file = std::ifstream(iszFilename);
+	if (m_file.fail())
+	{
+		PRINT_DBG("Can't open file " << iszFilename << ", reason: " << strerror(errno));
+		return;
+	}
 	parse();
 }
 
@@ -109,8 +119,9 @@ void mdlc::qc_parser::parse_line()
 		}
 	}
 
-	while (c == ' ' || c == '\t')
-		i++;
+	while (c == ' ' || c == '\t') {
+		c = line[++i];
+	}
 
 	if (line[i] == '\n')
 		goto over;
@@ -141,6 +152,11 @@ void mdlc::qc_parser::parse_line()
 		{
 			PRINT_ERR("ERR5: space(s) in a string without surrounding quotation marks on line " << m_iLine);
 			break;
+		}
+		if (c == '\t')
+		{
+			i++;
+			continue;
 		}
 	}
 

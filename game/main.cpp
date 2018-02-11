@@ -3,6 +3,7 @@
 #include "entsys.h"
 #include "renderer.h"
 #include "memstat.h"
+#include <chrono>
 
 void thread_logic();
 void thread_rendering();
@@ -61,8 +62,26 @@ void thread_logic()
 	gpGlobals->iThreadLogic = std::this_thread::get_id();
 
 	gpGlobals->pRenderer->begin_load();
-	gpGlobals->pRenderer->load_model("../data/models/cowboy_hat.smd");
+	gpGlobals->pRenderer->load_model("data/models/cowboy_hat.smd");
+	gpGlobals->pRenderer->load_shader("data/shaders/model_dynamic.qc");
 	gpGlobals->pRenderer->end_load();
+
+	std::chrono::high_resolution_clock::time_point m_start, m_end;
+
+	while (gpGlobals->bRunning)
+	{
+		m_start = std::chrono::high_resolution_clock::now();
+		gpGlobals->pEntSys->update_entities();
+		m_end = std::chrono::high_resolution_clock::now();
+		float flElapsed = std::chrono::duration_cast<std::chrono::duration<float>>(m_end - m_start).count();
+		if (flElapsed < 0.015625f)
+		{
+			int nSleepTime = (int)((0.015625f - flElapsed) * 1000.0f);
+			Sleep(nSleepTime);
+		}
+		gpGlobals->flDeltaTime = flElapsed;
+		gpGlobals->curtime += gpGlobals->flDeltaTime;
+	}
 }
 
 void thread_rendering()
@@ -71,7 +90,23 @@ void thread_rendering()
 	gpGlobals->pRenderer->open_window("engine", 1280, 720, false);
 	gpGlobals->pRenderer->init_gl();
 
-	gpGlobals->pRenderer->model_load_loop();
+	gpGlobals->pRenderer->load_loop();
+
+	std::chrono::high_resolution_clock::time_point m_start, m_end;
+
+	while (gpGlobals->bRunning)
+	{
+		m_start = std::chrono::high_resolution_clock::now();
+		gpGlobals->pRenderer->render();
+		m_end = std::chrono::high_resolution_clock::now();
+
+		float flElapsed = std::chrono::duration_cast<std::chrono::duration<float>>(m_end - m_start).count();
+		if (flElapsed < 0.0166666666f)
+		{
+			std::chrono::duration<float> dur(0.1666666666f - flElapsed);
+			std::this_thread::sleep_for(dur);
+		}
+	}
 
 	gpGlobals->pRenderer->shutdown_gl();
 	gpGlobals->pRenderer->close_window();

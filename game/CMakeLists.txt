@@ -55,6 +55,9 @@ set(SRC_GFX
 
 	shader_program.cpp
 	shader_program.h
+
+	camera.cpp
+	camera.h
 )
 
 set(SRC_NOPCH
@@ -82,6 +85,7 @@ add_executable(game
 	${SRC_ENTSYS}
 	${SRC_MDLLDR}
 	${SRC_GFX}
+	${SRC_RES_SHADERS}
 	${SRC_NOPCH}
 	CMakeLists.txt
 )

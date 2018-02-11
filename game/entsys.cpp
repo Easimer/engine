@@ -22,6 +22,22 @@ entsys::~entsys()
 		delete[] m_pPages;
 }
 
+void entsys::update_entities()
+{
+	for (auto& pEnt : m_vecEntities)
+	{
+		float flNextThink = pEnt->GetNextThink();
+		if (flNextThink == DONT_THINK)
+			continue;
+		if (flNextThink <= gpGlobals->curtime)
+		{
+			auto pThinkFunc = pEnt->GetThinkFunc();
+			if (pThinkFunc)
+				(pEnt->*pThinkFunc)();
+		}
+	}
+}
+
 void* entsys::request_page()
 {
 	for (size_t i = 0; i < ESPAGE_COUNT; i++)
@@ -54,6 +70,14 @@ void entsys::free_page(void * pPage)
 			m_pFreePages[i] = (entsys_page*)pPage;
 		}
 	}*/
+
+	// remove from active entity list
+	for (auto pEnt : m_vecEntities)
+	{
+		if (pEnt == pPage)
+			m_vecEntities.remove(pEnt);
+	}
+
 	base_entity* pEnt = (base_entity*)pPage;
 	m_pFreePages[pEnt->m_iEId] = (entsys_page*)pPage;
 }

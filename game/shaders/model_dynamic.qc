@@ -1,0 +1,7 @@
+$name			"model_dynamic"
+$description	"Shader for dynamic models"
+$vertexshader	"data/shaders/model_dynamic.vert"
+$fragmentshader	"data/shaders/model_dynamic.frag"
+$uniformview	"mat_view"
+$uniformtrans	"mat_trans"
+$uniformproj	"mat_proj"

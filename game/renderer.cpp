@@ -9,6 +9,7 @@
 
 #include "qc_parser.h"
 #include "smd_parser.h"
+#include "shader_program.h"
 
 void renderer::open_window(const char * szTitle, int nWidth, int nHeight, bool bFullscreen)
 {
@@ -35,14 +36,19 @@ void renderer::render()
 {
 	RESTRICT_THREAD_RENDERING;
 
-	// Draw models
-	while (!m_cmdbuf.IsClosed());
-	drawcmd_t* pCommands;
-size_t nCommands;
-m_cmdbuf.BeginRead(&pCommands, &nCommands);
-m_cmdbuf.EndRead();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-SDL_GL_SwapWindow(m_pWindow);
+	// Draw models
+	drawcmd_t* pCommands;
+	size_t nCommands;
+	m_cmdbuf.BeginRead(&pCommands, &nCommands);
+	if (nCommands)
+	{
+		// TODO: draw
+		m_cmdbuf.EndRead();
+	}
+
+	SDL_GL_SwapWindow(m_pWindow);
 }
 
 bool renderer::init_gl()
@@ -97,6 +103,12 @@ bool renderer::init_gl()
 void renderer::shutdown_gl()
 {
 	RESTRICT_THREAD_RENDERING;
+
+	for (auto pProgram : m_vecPrograms)
+	{
+		delete pProgram;
+	}
+
 	if (m_pGLContext)
 		SDL_GL_DeleteContext(m_pGLContext);
 }
@@ -114,11 +126,12 @@ model_id renderer::load_model(const char * szFilename)
 		Sleep(1);
 	}
 
-	ldmdl_cmd_t c;
-	strncpy(c.szFilename, szFilename, LDMDL_CMD_MAX_FN);
-	m_ldmdl_cmdbuf.BeginWrite();
-	m_ldmdl_cmdbuf.Write(c);
-	m_ldmdl_cmdbuf.EndWrite();
+	gfx_load_cmd_t c;
+	c.type = GFX_LD_T_MDL;
+	strncpy(c.szFilename, szFilename, GFX_LD_CMD_MAX_FN);
+	m_gfx_ld_cmdbuf.BeginWrite();
+	m_gfx_ld_cmdbuf.Write(c);
+	m_gfx_ld_cmdbuf.EndWrite();
 	//PRINT_DBG("renderer::load_model: waiting for upload...");
 	// wait for renderer thread to upload the model
 	while (m_iLoadedModelID == 0) {
@@ -139,15 +152,16 @@ void renderer::load_models(std::vector<std::string> filenames, std::vector<model
 		Sleep(1);
 	}
 
-	ldmdl_cmd_t c;
+	gfx_load_cmd_t c;
+	c.type = GFX_LD_T_MDL;
 	model_ids.clear();
-	m_ldmdl_cmdbuf.BeginWrite();
+	m_gfx_ld_cmdbuf.BeginWrite();
 	for (auto& fn : filenames)
 	{
-		strncpy(c.szFilename, fn.c_str(), LDMDL_CMD_MAX_FN);
-		m_ldmdl_cmdbuf.Write(c);
+		strncpy(c.szFilename, fn.c_str(), GFX_LD_CMD_MAX_FN);
+		m_gfx_ld_cmdbuf.Write(c);
 	}
-	m_ldmdl_cmdbuf.EndWrite();
+	m_gfx_ld_cmdbuf.EndWrite();
 	for (size_t i = 0; i < filenames.size(); i++)
 	{
 		while (m_iLoadedModelID == 0) {
@@ -165,6 +179,17 @@ void renderer::draw_model(size_t iModelID, vec & vecPosition, float flRotation)
 	m_cmdbuf.BeginWrite();
 	m_cmdbuf.Write(c);
 	m_cmdbuf.EndWrite();
+}
+
+void renderer::load_shader(const char * szFilename)
+{
+	RESTRICT_THREAD_LOGIC;
+	gfx_load_cmd_t c;
+	c.type = GFX_LD_T_SHADER;
+	strncpy(c.szFilename, szFilename, GFX_LD_CMD_MAX_FN);
+	m_gfx_ld_cmdbuf.BeginWrite();
+	m_gfx_ld_cmdbuf.Write(c);
+	m_gfx_ld_cmdbuf.EndWrite();
 }
 
 model_id renderer::upload_model(const model& mdl)
@@ -242,40 +267,53 @@ model_id renderer::upload_model(const model& mdl)
 	return iVAO;
 }
 
-void renderer::model_load_loop()
+void renderer::load_loop()
 {
 	RESTRICT_THREAD_RENDERING;
 	PRINT_DBG("renderer::model_load_loop entered");
 	while (m_bLoading)
 	{
-		while (m_bLoading && (m_ldmdl_cmdbuf.IsEmpty()));
-		if (!m_ldmdl_cmdbuf.IsEmpty())
+		while (m_bLoading && (m_gfx_ld_cmdbuf.IsEmpty()));
+		if (!m_gfx_ld_cmdbuf.IsEmpty())
 		{
-			ldmdl_cmd_t* pCommands;
+			gfx_load_cmd_t* pCommands;
 			size_t nCommands = 0;
-			m_ldmdl_cmdbuf.BeginRead(&pCommands, &nCommands);
+			m_gfx_ld_cmdbuf.BeginRead(&pCommands, &nCommands);
 			if (nCommands == 0)
 			{
 				continue;
 			}
-			PRINT_DBG("renderer: received " << nCommands << " model load request(s)");
+			PRINT_DBG("renderer: received " << nCommands << " load request(s)");
 			while (nCommands--)
 			{
-				PRINT_DBG("renderer: received model load request for " << pCommands->szFilename);
-				mdlc::smd_parser parser(pCommands->szFilename);
-				model mdl = parser.get_model();
+				model mdl;
+				mdlc::smd_parser parser;
+				switch (pCommands->type)
+				{
+				case GFX_LD_T_MDL:
+					PRINT_DBG("renderer: received model load request for " << pCommands->szFilename);
+					parser = mdlc::smd_parser(pCommands->szFilename);
+					mdl = parser.get_model();
 
-				
-				m_iLoadedModelID = upload_model(mdl);
-				//PRINT_DBG("renderer: model uploaded!");
-				while (m_iLoadedModelID) {
-					Sleep(1);
+
+					m_iLoadedModelID = upload_model(mdl);
+					//PRINT_DBG("renderer: model uploaded!");
+					while (m_iLoadedModelID) {
+						Sleep(1);
+					}
+					//PRINT_DBG("renderer: model delivered!");
+					break;
+				case GFX_LD_T_SHADER:
+					shader_program* pProgram = new shader_program(pCommands->szFilename);
+					PRINT_DBG("renderer: received shader load request for " << pProgram->get_name());
+					m_vecPrograms.push_back(pProgram);
+					break;
 				}
-				//PRINT_DBG("renderer: model delivered!");
+				
 				
 				pCommands++;
 			}
-			m_ldmdl_cmdbuf.EndRead();
+			m_gfx_ld_cmdbuf.EndRead();
 		}
 	}
 	PRINT_DBG("renderer::model_load_loop ended");

@@ -183,6 +183,7 @@ typedef struct cmdbuf_debug_t {
 #define CMDBUF_BEGIN_CMD(name) typedef struct name {
 #define CMDBUF_END_CMD(name) \
 		CMDBUF_DEBUG; \
-	} name;
+	} name; \
+	static_assert(sizeof(name) >= 8, "cmdbuf cmd must be at least 8 bytes!");
 
 #define CMDBUF_DEF(name, T, nSize, bClearOnEndRead, bSortBeforeCopy) class name : public cmdbuf<T, nSize, bClearOnEndRead, bSortBeforeCopy> {};
