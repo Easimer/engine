@@ -3,4 +3,4 @@
 #include "globals.h"
 #include "renderer.h"
 
-#define SET_MODEL(mdlname) gpGlobals->pRenderer->load_model(mdlname)
+#define SET_MODEL(mdlname) m_iModelID = gpGlobals->pRenderer->load_model(mdlname)

@@ -29,6 +29,9 @@ set(SRC_CORE
 
 	event_handler.cpp
 	event_handler.h
+
+	input.cpp
+	input.h
 )
 
 set(SRC_ENTSYS
@@ -71,6 +74,7 @@ set(SRC_NOPCH
 )
 
 set(SRC_RES_SHADERS
+	shaders/model_dynamic.qc
 	shaders/model_dynamic.frag
 	shaders/model_dynamic.vert
 )

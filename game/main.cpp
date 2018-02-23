@@ -5,6 +5,8 @@
 #include "event_handler.h"
 #include "memstat.h"
 #include <chrono>
+#include "camera.h"
+#include "input.h"
 
 void thread_logic();
 void thread_rendering();
@@ -23,6 +25,8 @@ int main(int argc, char** argv)
 	gpGlobals->pEntSys = new entsys();
 	gpGlobals->pRenderer = new renderer();
 	gpGlobals->pEventHandler = new event_handler();
+	gpGlobals->pCamera = new camera();
+	gpGlobals->pInput = new input();
 	
 	// Start main threads
 
@@ -38,6 +42,8 @@ int main(int argc, char** argv)
 	thread_sound_.join();
 
 	// deinit globals
+	delete gpGlobals->pInput;
+	delete gpGlobals->pCamera;
 	delete gpGlobals->pEventHandler;
 	delete gpGlobals->pRenderer;
 	delete gpGlobals->pEntSys;
@@ -64,11 +70,19 @@ void thread_logic()
 {
 	gpGlobals->iThreadLogic = std::this_thread::get_id();
 
+	std::this_thread::sleep_for(std::chrono::duration<float>(0.5));
+
 	gpGlobals->pRenderer->begin_load();
-	auto a = gpGlobals->pRenderer->load_model("data/models/cowboy_hat.smd");
-	auto b = gpGlobals->pRenderer->load_model("data/models/cowboy_hat.smd");
-	ASSERT(a == b);
 	gpGlobals->pRenderer->load_shader("data/shaders/model_dynamic.qc");
+
+	gpGlobals->pEntSys->precache_entities();
+	CreateEntity("prop_dynamic");
+	CreateEntity("prop_dynamic");
+	CreateEntity("prop_dynamic");
+	
+	PRINT_DBG("===========");
+	PRINT_DBG("End of loading");
+	PRINT_DBG("===========");
 	gpGlobals->pRenderer->end_load();
 
 	std::chrono::high_resolution_clock::time_point m_start, m_end;
@@ -83,6 +97,7 @@ void thread_logic()
 		{
 			//std::this_thread::sleep_for(std::chrono::duration<float>(0.015625f - flElapsed));
 		}
+		gpGlobals->pEntSys->draw_entities();
 		gpGlobals->flDeltaTime = flElapsed;
 		gpGlobals->curtime += gpGlobals->flDeltaTime;
 
@@ -103,6 +118,7 @@ void thread_rendering()
 	while (gpGlobals->bRunning)
 	{
 		gpGlobals->pRenderer->render();
+		gpGlobals->pCamera->update();
 	}
 
 	gpGlobals->pRenderer->shutdown_gl();

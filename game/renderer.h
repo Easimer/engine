@@ -5,13 +5,14 @@
 #include <model.h>
 #include "shader_program.h"
 #include <map>
+#include <glm/mat4x4.hpp>
 
 //
 // model draw cmdbuf
 //
 
 CMDBUF_BEGIN_CMD(drawcmd_t)
-	size_t iModelID;
+	model_id iModelID;
 	vec vecPosition;
 	float flRotation;
 CMDBUF_END_CMD(drawcmd_t)
@@ -23,7 +24,6 @@ CMDBUF_DEF(renderer_drawmdl_cmdbuf, drawcmd_t, ENTSYS_MAX_ENTITIES, true, false)
 //
 
 #define GFX_LD_CMD_MAX_FN 64
-typedef size_t model_id;
 
 enum gfx_ld_cmd_type {
 	GFX_LD_T_MDL = 0,
@@ -68,14 +68,20 @@ public:
 	}
 
 	model_id load_model(const char * szFilename);
-	void load_models(std::vector<std::string> filenames, std::vector<model_id>& model_ids);
+	void load_models(std::vector<std::string> filenames);
+	
 	void draw_model(size_t iModelID, vec& vecPosition, float flRotation);
+	void draw_models(std::vector<drawcmd_t>& cmds);
 
 	void load_shader(const char* szFilename);
 
 	model_id upload_model(const model&);
 
 	void load_loop();
+
+	void update_camera(vector& pos, vector& rot);
+
+	void _load_test_model();
 
 private:
 	renderer_drawmdl_cmdbuf m_cmdbuf;
@@ -92,4 +98,9 @@ private:
 	std::vector<shader_program*> m_vecPrograms;
 
 	std::map<std::string, model_id> m_mapModels;
+
+	glm::mat4 m_matProj;
+	glm::mat4 m_matView;
+
+	std::map<model_id, size_t> m_model_vertexcount;
 };

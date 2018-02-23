@@ -19,6 +19,8 @@ public:
 	vector& get_pos() { return m_vecPos; }
 	vector& get_rot() { return m_vecRot; }
 
+	void update();
+
 private:
 	vector m_vecPos;
 	vector m_vecRot;

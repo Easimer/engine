@@ -6,6 +6,8 @@ struct entfmap_t;
 class entsys;
 class renderer;
 class event_handler;
+class camera;
+class input;
 
 struct engine_globals {
 	// Entity Factory
@@ -19,6 +21,8 @@ struct engine_globals {
 	// Game
 	bool bRunning = true;
 	event_handler* pEventHandler;
+	camera* pCamera;
+	input* pInput;
 
 	// Entity System
 	entsys* pEntSys;
@@ -37,3 +41,5 @@ extern engine_globals* gpGlobals;
 #define RESTRICT_THREAD_LOGIC RESTRICT_THREAD(gpGlobals->iThreadLogic)
 #define RESTRICT_THREAD_RENDERING RESTRICT_THREAD(gpGlobals->iThreadRendering)
 #define RESTRICT_THREAD_SOUND RESTRICT_THREAD(gpGlobals->iThreadSound)
+
+typedef size_t model_id;

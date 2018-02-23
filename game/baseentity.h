@@ -13,7 +13,6 @@
 class base_entity : public base_thinker
 {
 public:
-	virtual void init() = 0;
 	~base_entity() {}
 	virtual void precache() = 0;
 	virtual void spawn() { m_vecPos = vec3_origin; SetNextThink(DONT_THINK); SetParent(NULL); };
@@ -74,6 +73,8 @@ protected:
 
 	base_entity* m_pParent = NULL;
 	//CPhysObj* m_pPhysObj = NULL;
+
+	size_t m_iModelID;
 
 private:
 	friend class entsys;

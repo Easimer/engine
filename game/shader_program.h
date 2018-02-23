@@ -19,6 +19,8 @@ public:
 	void set_mat_view(void* pMat);
 	void set_mat_proj(void* pMat);
 
+	uint32_t get_id() const { return m_iID; }
+
 private:
 	uint32_t m_iID;
 

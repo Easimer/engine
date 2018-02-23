@@ -7,8 +7,21 @@
 		GLenum iErr = glGetError(); \
 		if (iErr != GL_NO_ERROR) \
 		{ \
-			PRINT_ERR("OpenGL error: " << iErr); \
-			ASSERT(0); \
+			switch(iErr) { \
+				case GL_INVALID_OPERATION: \
+					PRINT_ERR("OpenGL Invalid Operation!"); \
+					break; \
+				case GL_INVALID_ENUM: \
+					PRINT_ERR("OpenGL Invalid Enum!");\
+					break; \
+				case GL_INVALID_VALUE: \
+					PRINT_ERR("OpenGL Invalid Value!");\
+					break; \
+				default: \
+					PRINT_ERR("OpenGL error: " << iErr); \
+					break; \
+			} \
+			ASSERT(iErr == GL_NO_ERROR); \
 		} \
 	}
 #else

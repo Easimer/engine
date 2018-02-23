@@ -1,8 +1,8 @@
 #version 330 core
 
-uniform mat4 mat_view;
-uniform mat4 mat_proj;
-uniform mat4 mat_trans;
+layout(location = 10) uniform mat4 mat_view;
+layout(location = 11) uniform mat4 mat_proj;
+layout(location = 12) uniform mat4 mat_trans;
 
 layout(location = 0) in vec3 in_pos;
 layout(location = 1) in vec3 in_normal;

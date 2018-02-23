@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "event_handler.h"
+#include "input.h"
 
 void event_handler::push_event(std::vector<event_t>& events)
 {
@@ -34,8 +35,10 @@ void event_handler::update()
 		switch (event.type)
 		{
 			case SDL_KEYDOWN:
+				gpGlobals->pInput->press_key(event.key.keysym.sym);
 				break;
 			case SDL_KEYUP:
+				gpGlobals->pInput->release_key(event.key.keysym.sym);
 				break;
 			case SDL_WINDOWEVENT:
 				switch (event.window.event)
@@ -56,4 +59,6 @@ void event_handler::update()
 	}
 
 	m_event_buf.EndRead();
+
+	gpGlobals->pInput->update();
 }

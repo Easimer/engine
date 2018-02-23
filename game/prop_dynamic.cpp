@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "prop_common.h"
 
 class c_prop_dynamic : public base_entity {
 public:
@@ -11,17 +12,14 @@ public:
 
 REGISTER_ENTITY(c_prop_dynamic, prop_dynamic);
 
-void c_prop_dynamic::init()
-{
-	set_pos(vec3_origin);
-}
-
 void c_prop_dynamic::precache()
 {
-	
+	PRECACHE_MODEL("data/models/triangle.smd");
 }
 
 void c_prop_dynamic::spawn()
 {
-
+	set_pos(vec3_origin);
+	SET_MODEL("data/models/triangle.smd");
+	SetNextThink(DONT_THINK);
 }
