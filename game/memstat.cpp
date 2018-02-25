@@ -3,9 +3,9 @@
 bool memstat_enabled = false;
 
 #if defined(PLAT_DEBUG)
-
 #include "memstat.h"
 #include <algorithm>
+#include <sstream>
 
 static memstat memoverride_alloc[MEMSTAT_MAX_BLOCKS] = { { NULL, 0 } };
 
@@ -103,5 +103,12 @@ void memstat_print()
 	PRINT("Highest total allocation count: " << memstat_counter_max);
 	PRINT("Highest total allocated bytes: " << memstat_size_counter_max << " bytes");
 	PRINT("============");
+
+	if (nSum > 1024)
+	{
+		PRINT("Press a key to exit...");
+		std::string inp;
+		std::cin >> inp;
+	}
 #endif
 }

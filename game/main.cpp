@@ -3,20 +3,26 @@
 #include "entsys.h"
 #include "renderer.h"
 #include "event_handler.h"
-#include "memstat.h"
 #include <chrono>
 #include "camera.h"
 #include "input.h"
+#include "statistics.h"
+#include "memstat.h"
 
 void thread_logic();
 void thread_rendering();
 void thread_sound();
+
+#undef main // SDL_main seems to crash the program at the very end, so we're doing init ourselves
 
 int main(int argc, char** argv)
 {
 	memstat_init();
 	memstat_enabled = true;
 	CMDLINE_INIT();
+
+	SDL_SetMainReady();
+	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_TIMER | SDL_INIT_VIDEO);
 
 	//PRINT_DBG(gpCmdline->GetExecName());
 	// init globals
@@ -27,6 +33,7 @@ int main(int argc, char** argv)
 	gpGlobals->pEventHandler = new event_handler();
 	gpGlobals->pCamera = new camera();
 	gpGlobals->pInput = new input();
+	gpGlobals->pStatistics = new estat_container();
 	
 	// Start main threads
 
@@ -41,7 +48,10 @@ int main(int argc, char** argv)
 	thread_logic_.join();
 	thread_sound_.join();
 
+	PRINT_DBG("Main: threads joined!");
+
 	// deinit globals
+	delete gpGlobals->pStatistics;
 	delete gpGlobals->pInput;
 	delete gpGlobals->pCamera;
 	delete gpGlobals->pEventHandler;
@@ -51,20 +61,14 @@ int main(int argc, char** argv)
 	memstat_enabled = false;
 	memstat_print();
 
-#if defined(PLAT_DEBUG)
-
-#endif
-
-#if defined(PLAT_DEBUG) // wait for key
-	PRINT("Press a key to exit...");
-	std::string a;
-	std::cin >> a;
-#endif
-
 	//CMDLINE_SHUTDOWN(); // CRASH HERE
+
+	SDL_Quit();
 
 	return 0;
 }
+
+#include "prop_common.h"
 
 void thread_logic()
 {
@@ -76,33 +80,26 @@ void thread_logic()
 	gpGlobals->pRenderer->load_shader("data/shaders/model_dynamic.qc");
 
 	gpGlobals->pEntSys->precache_entities();
-	CreateEntity("prop_dynamic");
-	CreateEntity("prop_dynamic");
-	CreateEntity("prop_dynamic");
+
+	c_base_prop* pWolf = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+	pWolf->set_model("data/models/wolf.smd");
+	pWolf->spawn();
+	pWolf->set_relpos(vec3(0, -0.5, 0));
 	
 	PRINT_DBG("===========");
 	PRINT_DBG("End of loading");
 	PRINT_DBG("===========");
 	gpGlobals->pRenderer->end_load();
 
-	std::chrono::high_resolution_clock::time_point m_start, m_end;
-
 	while (gpGlobals->bRunning)
 	{
-		m_start = std::chrono::high_resolution_clock::now();
-		gpGlobals->pEntSys->update_entities();
-		m_end = std::chrono::high_resolution_clock::now();
-		float flElapsed = std::chrono::duration_cast<std::chrono::duration<float>>(m_end - m_start).count();
-		if (flElapsed < 0.015625f)
-		{
-			//std::this_thread::sleep_for(std::chrono::duration<float>(0.015625f - flElapsed));
-		}
-		gpGlobals->pEntSys->draw_entities();
-		gpGlobals->flDeltaTime = flElapsed;
-		gpGlobals->curtime += gpGlobals->flDeltaTime;
-
 		gpGlobals->pEventHandler->update();
+		gpGlobals->pEntSys->update_entities();
+		if(gpGlobals->pRenderer->waiting_for_draw())
+			gpGlobals->pEntSys->draw_entities();
+		gpGlobals->pInput->update();
 	}
+	PRINT_DBG("Logic: joining...");
 }
 
 void thread_rendering()
@@ -110,19 +107,31 @@ void thread_rendering()
 	gpGlobals->iThreadRendering = std::this_thread::get_id();
 	gpGlobals->pRenderer->open_window("engine", 1280, 720, false);
 	gpGlobals->pRenderer->init_gl();
+	gpGlobals->pRenderer->init_gui();
 
 	gpGlobals->pRenderer->load_loop();
 
-	std::chrono::high_resolution_clock::time_point m_start, m_end;
+	unsigned long long nNow = SDL_GetPerformanceCounter();
+	unsigned long long nLast = 0;
 
 	while (gpGlobals->bRunning)
 	{
+		nLast = nNow;
+		nNow = SDL_GetPerformanceCounter();
+		gpGlobals->flDeltaTime = ((nNow - nLast) / (double)SDL_GetPerformanceFrequency());
+		gpGlobals->curtime += gpGlobals->flDeltaTime;
+		gpGlobals->flRot_ += gpGlobals->flDeltaTime * 2.f;
+
 		gpGlobals->pRenderer->render();
 		gpGlobals->pCamera->update();
 	}
 
+	gpGlobals->pRenderer->shutdown_gui();
+	PRINT_DBG("Renderer: shutting down GL");
 	gpGlobals->pRenderer->shutdown_gl();
+	PRINT_DBG("Renderer: shutting down SDL2");
 	gpGlobals->pRenderer->close_window();
+	PRINT_DBG("Renderer: joining...");
 }
 
 void thread_sound()

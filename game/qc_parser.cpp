@@ -1,8 +1,8 @@
 #include "stdafx.h"
-#include <parseutils.h>
 #include "qc_parser.h"
 #include <sstream>
 #include <algorithm>
+#include <parseutils.h>
 
 mdlc::qc_parser::qc_parser(const char * szFilename)
 {

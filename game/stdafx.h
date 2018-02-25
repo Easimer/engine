@@ -1,8 +1,8 @@
 #include <thread>
 #include <enl/platform.h>
 #include <enl/assert.h>
-#include <glm/fwd.hpp>
 #include <print.h>
+#include <glm/fwd.hpp>
 #include "globals.h"
 #include "baseentity.h"
 #include "entityfactory.h"

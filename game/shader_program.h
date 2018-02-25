@@ -30,6 +30,11 @@ private:
 	int m_iUniformMatTrans;
 	int m_iUniformMatView;
 	int m_iUniformMatProj;
+	int m_iUniformTex1;
+	int m_iUniformTex2;
+	int m_iUniformTex3;
+	int m_iUniformTex4;
+	int m_iUniformTex5;
 
 	char m_szName[64] = { 0 };
 	char m_szDescription[128] = { 0 };

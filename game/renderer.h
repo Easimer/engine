@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SDL2/SDL.h>
-#include "cmdbuf.h"
+#include <enl/cmdbuf.h>
 #include <model.h>
 #include "shader_program.h"
 #include <map>
@@ -14,10 +14,11 @@
 CMDBUF_BEGIN_CMD(drawcmd_t)
 	model_id iModelID;
 	vec vecPosition;
-	float flRotation;
+	glm::mat4 matRotation;
+	float flScale = 1;
 CMDBUF_END_CMD(drawcmd_t)
 
-CMDBUF_DEF(renderer_drawmdl_cmdbuf, drawcmd_t, ENTSYS_MAX_ENTITIES, true, false);
+CMDBUF_DEF(renderer_drawmdl_cmdbuf, drawcmd_t, ENTSYS_MAX_ENTITIES, false, false);
 
 //
 // model load cmdbuf
@@ -38,12 +39,14 @@ CMDBUF_END_CMD(gfx_load_cmd_t)
 
 CMDBUF_DEF(renderer_load_cmdbuf, gfx_load_cmd_t, 512, true, false);
 
-#define MDL_VBO_POSITION	0 // contains vertex position (3 GLfloats)
-#define MDL_VBO_NORMAL		1 // contains vertex normal (3 GLfloats)
-#define MDL_VBO_UV			2 // contains vertex uv (2 GLfloats)
-#define MDL_VBO_BONE		3 // contains bone ID (1 UNSIGNED_INT)
-#define MDL_VBO_MAT			4 // contains texture sampler ID (1 UNSIGNED_INT)
-#define MDL_VBO_MAX			5
+enum mdl_vertexattrib {
+	MDL_VBO_POSITION	= 0, // contains vertex position (3 GLfloats)
+	MDL_VBO_NORMAL		= 1, // contains vertex normal (3 GLfloats)
+	MDL_VBO_UV			= 2, // contains vertex uv (2 GLfloats)
+	MDL_VBO_BONE		= 3, // contains bone ID (1 UNSIGNED_INT)
+	MDL_VBO_MAT			= 4, // contains material IDs
+	MDL_VBO_MAX			= 5
+};
 
 class renderer {
 public:
@@ -70,6 +73,7 @@ public:
 	model_id load_model(const char * szFilename);
 	void load_models(std::vector<std::string> filenames);
 	
+	// DEPRECATED
 	void draw_model(size_t iModelID, vec& vecPosition, float flRotation);
 	void draw_models(std::vector<drawcmd_t>& cmds);
 
@@ -77,11 +81,20 @@ public:
 
 	model_id upload_model(const model&);
 
+	uint32_t load_texture(const std::string& filename);
+
 	void load_loop();
 
 	void update_camera(vector& pos, vector& rot);
 
-	void _load_test_model();
+	void init_gui();
+	void shutdown_gui();
+
+	bool waiting_for_draw() const {
+		return m_cmdbuf.is_empty();
+	}
+
+	void draw_debug_tools();
 
 private:
 	renderer_drawmdl_cmdbuf m_cmdbuf;
@@ -95,6 +108,8 @@ private:
 
 	size_t m_iLoadedModelID = 0;
 
+	// list of shaders
+	// TODO: make this a map<string [name], shader_program*>
 	std::vector<shader_program*> m_vecPrograms;
 
 	std::map<std::string, model_id> m_mapModels;
@@ -103,4 +118,26 @@ private:
 	glm::mat4 m_matView;
 
 	std::map<model_id, size_t> m_model_vertexcount;
+	// maps texture filename to GL texture ID
+	std::map<std::string, uint32_t> m_map_texture_name;
+	/*	maps texture ids to texture units of a model
+		TODO: doc this better
+		i.e. mapping of three textures to three tex units of a model:
+
+					<- GL_TEXTURE0 <- 5
+		MODEL(0)	<- GL_TEXTURE1 <- 13
+					<- GL_TEXTURE2 <- 1
+	*/
+	std::map<model_id, std::vector<uint32_t>> m_mapTextures;
+
+	// FPS counting
+	size_t m_nFrames = 0;
+	float m_flNow = 0, m_flLast = 0;
+	float m_flFPS = 0;
+
+	// Debug GUI state
+	bool m_bShowRendererDebug = false;
+	bool m_bShowStatistics = false;
+	bool m_bShowInspector = false;
+	size_t m_iCurEnt = 0;
 };

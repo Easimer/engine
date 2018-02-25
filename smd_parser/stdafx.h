@@ -1,5 +1,6 @@
 #pragma once
 #include <parseutils.h>
+#include <print.h>
 #include "smd_parser.h"
 #include <sstream>
 #include <algorithm>
@@ -7,4 +8,3 @@
 #include <vector>
 #include <fstream>
 #include <map>
-#include <print.h>

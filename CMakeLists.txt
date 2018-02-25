@@ -25,16 +25,29 @@ macro(src_frgn path)
 	endif(MSVC)
 endmacro(src_frgn)
 
+macro(vs_link_static target)
+	if(MSVC)
+		set_target_properties(${target} PROPERTIES CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+		set_target_properties(${target} PROPERTIES CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT")
+	endif(MSVC)
+endmacro()
+
+macro(vs_link_no target)
+	if(MSVC)
+		set_target_properties(${target} PROPERTIES CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /NODEFAULTLIB :msvcrt")
+		set_target_properties(${target} PROPERTIES CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /NODEFAULTLIB :msvcrt")
+	endif(MSVC)
+endmacro()
+
 if(MSVC)
 	set(CMAKE_CXX_FLAGS_DEBUG
-	  "/DWIN32 /D_WINDOWS /DDEBUG /EHsc /wd4355 /wd4251 /wd4250 /wd4996 /MT"
+	  "/DWIN32 /D_WINDOWS /DDEBUG /EHsc /wd4355 /wd4251 /wd4250 /wd4996 /MP /permissive-"
 	  CACHE STRING "Debug compiler flags" FORCE
 	)
 	set(CMAKE_CXX_FLAGS
-	  "/DWIN32 /D_WINDOWS /EHsc /wd4355 /wd4251 /wd4250 /wd4996 /MT"
+	  "/DWIN32 /D_WINDOWS /EHsc /wd4355 /wd4251 /wd4250 /wd4996 /MP /permissive-"
 	  CACHE STRING "Release compiler flags" FORCE
 	)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /permissive-")
 endif(MSVC)
 
 # include libenl for all projects
@@ -44,7 +57,12 @@ link_directories(${CMAKE_SOURCE_DIR}/public/lib/)
 include_directories(${CMAKE_SOURCE_DIR}/public/include/)
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/build/" CACHE STRING "Deploy dir" FORCE)
+set (CMAKE_CXX_STANDARD 17)
+IF(CMAKE_BUILD_TYPE MATCHES "Debug")
+add_definitions(-DDEBUG)
+ENDIF()
 
 add_subdirectory(game)
+#add_subdirectory(smd_parser)
+add_subdirectory(imgui)
 add_subdirectory(libenl)
-add_subdirectory(smd_parser)

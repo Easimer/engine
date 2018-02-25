@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 layout(location = 10) uniform mat4 mat_view;
 layout(location = 11) uniform mat4 mat_proj;
@@ -14,7 +14,7 @@ out vec3 pos;
 out vec3 normal;
 out vec2 uv;
 out uint bone;
-out uint mat;
+out flat uint mat;
 
 void main()
 {

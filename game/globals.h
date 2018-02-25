@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entityfactory.h"
+#include "statistics.h"
 
 struct entfmap_t;
 class entsys;
@@ -15,8 +16,8 @@ struct engine_globals {
 	size_t iEntityFactoryDictionaryIndex;
 	
 	// Time
-	float curtime = 0;
-	float flDeltaTime = 0;
+	double curtime = 0;
+	double flDeltaTime = 0;
 
 	// Game
 	bool bRunning = true;
@@ -32,6 +33,12 @@ struct engine_globals {
 	std::thread::id iThreadLogic;
 	std::thread::id iThreadRendering;
 	std::thread::id iThreadSound;
+
+	// Engine Statistics
+	estat_container* pStatistics;
+
+	// TEMP
+	float flRot_ = 0;
 };
 
 extern engine_globals* gpGlobals;

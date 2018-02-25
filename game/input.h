@@ -20,7 +20,11 @@ public:
 	void release_key(long int keysym);
 	void bind_key(long int keysym, input_action ia);
 	void update();
+
+protected:
+	void check_conflicting_actions(const input_action&);
+
 private:
 	std::map<long int, input_action> m_keybinds;
-	std::map<long int, bool> m_keystate;
+	std::map<input_action, bool> m_action_state;
 };

@@ -4,6 +4,7 @@
 #include "glad/glad.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
+#include <SDL2/SDL_image.h>
 #include <GL/glu.h>
 #include <assert_opengl.h>
 
@@ -11,10 +12,15 @@
 #include "smd_parser.h"
 #include "shader_program.h"
 #include "event_handler.h"
+#include "camera.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "gui/imgui_impl_sdl_gl3.h"
+
+static void opengl_msg_callback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*, const void*);
 
 void renderer::open_window(const char * szTitle, int nWidth, int nHeight, bool bFullscreen)
 {
@@ -37,47 +43,88 @@ void renderer::close_window()
 		SDL_DestroyRenderer(m_pRenderer);
 	if (m_pWindow)
 		SDL_DestroyWindow(m_pWindow);
+	SDL_Quit();
 }
 
 void renderer::render()
 {
 	RESTRICT_THREAD_RENDERING;
 
-	PRINT_DBG("renderer::render");
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (m_vecPrograms.size() == 0)
 		return;
+	
+	ImGui_ImplSdlGL3_NewFrame(m_pWindow);
 
 	// Draw models
 	drawcmd_t* pCommands;
 	size_t nCommands = 0;
-	if(m_cmdbuf.BeginRead(&pCommands, &nCommands))
+	size_t nAllVertices = 0;
+	while (m_cmdbuf.is_empty());
+	if(m_cmdbuf.begin_read(&pCommands, &nCommands))
 	{
+		//PRINT_DBG("renderer::render: drawing " << nCommands << " models");
 		shader_program* pShader = m_vecPrograms[0];
 		glUseProgram(pShader->get_id());
+		gpGlobals->pStatistics->get_stat_u(ESTAT_C_RENDERER, "current draw commands") = nCommands;
 		while (nCommands--)
 		{
+			//PRINT_DBG("renderer::render: drawing model #" << pCommands->iModelID);
 			glBindVertexArray(pCommands->iModelID); ASSERT_OPENGL();
-			glm::mat4 mat_trans = glm::translate(glm::mat4(1.0), glm::vec3(pCommands->vecPosition[0], pCommands->vecPosition[1], pCommands->vecPosition[2]));
+			
+			glm::mat4 mat_trans(1.0);
+			mat_trans = glm::scale(mat_trans, glm::vec3(pCommands->flScale, pCommands->flScale, pCommands->flScale));
+			mat_trans = pCommands->matRotation * mat_trans;
+			mat_trans = glm::translate(mat_trans, glm::vec3(pCommands->vecPosition[0], pCommands->vecPosition[1], pCommands->vecPosition[2]));
+			
 			pShader->set_mat_trans(glm::value_ptr(mat_trans));
 
-			size_t nVertexCount = m_model_vertexcount[pCommands->iModelID];
+			// activate textures
+			for (size_t i = 0; i < m_mapTextures[pCommands->iModelID].size(); i++)
+			{
+				glActiveTexture(GL_TEXTURE0 + i); ASSERT_OPENGL();
+				glBindTexture(GL_TEXTURE_2D, m_mapTextures[pCommands->iModelID][i]); ASSERT_OPENGL();
+			}
 
-			glDrawArrays(GL_TRIANGLES, 0, nVertexCount);
+			size_t nVertexCount = m_model_vertexcount[pCommands->iModelID];
+			nAllVertices += nVertexCount;
+
+			glDrawArrays(GL_TRIANGLES, 0, nVertexCount); ASSERT_OPENGL();
 
 			pCommands++;
 		}
 
-		m_cmdbuf.EndRead();
+		m_cmdbuf.end_read();
 	}
 
+	gpGlobals->pStatistics->get_stat_u(ESTAT_C_RENDERER, "Vertex count") = nAllVertices;
+
+	m_flNow = gpGlobals->curtime;
+	if (m_flNow - m_flLast > 1)
+	{
+		m_flFPS = (float)m_nFrames / (m_flNow - m_flLast);
+		m_flLast = m_flNow;
+		m_nFrames = 0;
+		char szNewWindowTitle[64];
+		snprintf(szNewWindowTitle, 64, "engine - %d FPS", (int)ceilf(m_flFPS));
+		SDL_SetWindowTitle(m_pWindow, szNewWindowTitle);
+	}
+
+	draw_debug_tools();
+	ImGui::Render();
+	ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());
+
+	m_nFrames++;
 	SDL_GL_SwapWindow(m_pWindow);
+
+	// Pass SDL events to the event handler on the logic thread
 	std::vector<event_t> vecEvents;
 	event_t event;
 	while (SDL_PollEvent(&event.event))
 	{
+		event.nTime = (uint64_t)(gpGlobals->curtime * 1000);
+		ImGui_ImplSdlGL3_ProcessEvent(&event.event);
 		vecEvents.push_back(event);
 	}
 	if(vecEvents.size() > 0)
@@ -88,8 +135,8 @@ bool renderer::init_gl()
 {
 	RESTRICT_THREAD_RENDERING;
 
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -109,7 +156,7 @@ bool renderer::init_gl()
 	PRINT_DBG("GL Renderer: " << glGetString(GL_RENDERER));
 	PRINT_DBG("GL Version: " << glGetString(GL_VERSION));
 
-	SDL_GL_SetSwapInterval(1);
+	SDL_GL_SetSwapInterval(-1);
 
 	int nWidth, nHeight;
 	SDL_GetWindowSize(m_pWindow, &nWidth, &nHeight);
@@ -122,13 +169,19 @@ bool renderer::init_gl()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
-	glFrontFace(GL_CW);
+	glFrontFace(GL_CCW);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 
 	glEnable(GL_MULTISAMPLE);
+
+#ifdef PLAT_DEBUG
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback((GLDEBUGPROC)opengl_msg_callback, 0);
+#endif
 
 	return true;
 }
@@ -175,9 +228,9 @@ model_id renderer::load_model(const char * szFilename)
 	gfx_load_cmd_t c;
 	c.type = GFX_LD_T_MDL;
 	strncpy(c.szFilename, szFilename, GFX_LD_CMD_MAX_FN);
-	m_gfx_ld_cmdbuf.BeginWrite();
-	m_gfx_ld_cmdbuf.Write(c);
-	m_gfx_ld_cmdbuf.EndWrite();
+	m_gfx_ld_cmdbuf.begin_write();
+	m_gfx_ld_cmdbuf.write(c);
+	m_gfx_ld_cmdbuf.end_write();
 	//PRINT_DBG("renderer::load_model: waiting for upload...");
 	// wait for renderer thread to upload the model
 	while (m_iLoadedModelID == 0) {
@@ -202,7 +255,7 @@ void renderer::load_models(std::vector<std::string> filenames)
 	gfx_load_cmd_t c;
 	c.type = GFX_LD_T_MDL;
 	//model_ids.clear();
-	m_gfx_ld_cmdbuf.BeginWrite();
+	m_gfx_ld_cmdbuf.begin_write();
 	for (auto& fn : filenames)
 	{
 		// check if already loaded
@@ -215,27 +268,27 @@ void renderer::load_models(std::vector<std::string> filenames)
 		}
 
 		strncpy(c.szFilename, fn.c_str(), GFX_LD_CMD_MAX_FN);
-		m_gfx_ld_cmdbuf.Write(c);
+		m_gfx_ld_cmdbuf.write(c);
 	}
-	m_gfx_ld_cmdbuf.EndWrite();
+	m_gfx_ld_cmdbuf.end_write();
 }
 
 void renderer::draw_model(size_t iModelID, vec & vecPosition, float flRotation)
 {
 	RESTRICT_THREAD_LOGIC;
-	drawcmd_t c = { iModelID, vecPosition, flRotation };
-	m_cmdbuf.BeginWrite();
-	m_cmdbuf.Write(c);
-	m_cmdbuf.EndWrite();
+	//drawcmd_t c = { iModelID, vecPosition, flRotation };
+	//m_cmdbuf.begin_write();
+	//m_cmdbuf.write(c);
+	//m_cmdbuf.end_write();
 }
 
 void renderer::draw_models(std::vector<drawcmd_t>& cmds)
 {
 	RESTRICT_THREAD_LOGIC;
-	m_cmdbuf.BeginWrite();
+	m_cmdbuf.begin_write();
 	for (auto& cmd : cmds)
-		m_cmdbuf.Write(cmd);
-	m_cmdbuf.EndWrite();
+		m_cmdbuf.write(cmd);
+	m_cmdbuf.end_write();
 }
 
 void renderer::load_shader(const char * szFilename)
@@ -245,9 +298,9 @@ void renderer::load_shader(const char * szFilename)
 	c.type = GFX_LD_T_SHADER;
 	PRINT_DBG("renderer::load_shader: requesting load of shader: " << szFilename);
 	strncpy(c.szFilename, szFilename, GFX_LD_CMD_MAX_FN);
-	m_gfx_ld_cmdbuf.BeginWrite();
-	m_gfx_ld_cmdbuf.Write(c);
-	m_gfx_ld_cmdbuf.EndWrite();
+	m_gfx_ld_cmdbuf.begin_write();
+	m_gfx_ld_cmdbuf.write(c);
+	m_gfx_ld_cmdbuf.end_write();
 }
 
 model_id renderer::upload_model(const model& mdl)
@@ -259,7 +312,16 @@ model_id renderer::upload_model(const model& mdl)
 	glGenVertexArrays(1, &iVAO); ASSERT_OPENGL();
 	glBindVertexArray(iVAO); ASSERT_OPENGL();
 	glGenBuffers(MDL_VBO_MAX, aiVBO); ASSERT_OPENGL();
-	
+
+	// Load textures
+	std::vector<uint32_t> aTextures(mdl.materials.size(), 0);
+	for (size_t i = 0; i < mdl.materials.size(); i++)
+	{
+		uint32_t iTex = load_texture(mdl.materials[i].szName);
+		aTextures[i] = iTex;
+	}
+	m_mapTextures.emplace(iVAO, aTextures);
+
 	// Generate arrays
 	size_t nPositionsSiz = mdl.triangles.size() * 9;
 	size_t nNormalsSiz = mdl.triangles.size() * 9;
@@ -270,7 +332,7 @@ model_id renderer::upload_model(const model& mdl)
 	float* aflNormals = new float[nNormalsSiz];
 	float* aflUVs = new float[nUVsSiz];
 	uint32_t* anBoneIDs = new uint32_t[nBoneIDsSiz];
-	uint32_t* anMatIDs = new uint32_t[nMatIDsSiz];
+	uint8_t* anMatIDs = new uint8_t[nMatIDsSiz * 3];
 
 	for (size_t iTriangle = 0; iTriangle < mdl.triangles.size(); iTriangle++)
 	{
@@ -288,8 +350,7 @@ model_id renderer::upload_model(const model& mdl)
 			aflUVs[iTriangle * 6 + iVertex * 2 + 1] = mdl.triangles[iTriangle].vertices[iVertex].v;
 
 			anBoneIDs[iTriangle * 3 + iVertex] = mdl.triangles[iTriangle].vertices[iVertex].iBoneID;
-
-			anMatIDs[iTriangle * 3 + iVertex] = 0;
+			anMatIDs[iTriangle * 3 + iVertex] = mdl.triangles[iTriangle].iModelMaterial;
 		}
 	}
 	// Upload vertex positions
@@ -312,6 +373,10 @@ model_id renderer::upload_model(const model& mdl)
 	glBufferData(GL_ARRAY_BUFFER, nBoneIDsSiz * sizeof(uint32_t), anBoneIDs, GL_STATIC_DRAW); ASSERT_OPENGL();
 	glVertexAttribPointer(MDL_VBO_BONE, 1, GL_UNSIGNED_INT, GL_FALSE, 0, 0); ASSERT_OPENGL();
 	glEnableVertexAttribArray(MDL_VBO_BONE);
+	// Upload material IDs
+	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_MAT]); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nMatIDsSiz * sizeof(uint8_t), anMatIDs, GL_STATIC_DRAW); ASSERT_OPENGL();
+	glVertexAttribPointer(MDL_VBO_MAT, 3, GL_UNSIGNED_BYTE, GL_FALSE, 0, 0); ASSERT_OPENGL();
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -324,9 +389,54 @@ model_id renderer::upload_model(const model& mdl)
 
 	m_model_vertexcount.emplace((model_id)iVAO, mdl.triangles.size() * 3);
 
-	_load_test_model();
+	gpGlobals->pStatistics->get_stat_u(ESTAT_C_RENDERER, "models_loaded") += 1;
 
 	return iVAO;
+}
+
+uint32_t renderer::load_texture(const std::string & filename)
+{
+	SDL_Surface* pSurf;
+	uint32_t iTex;
+	int iTexFmt = GL_RGB;
+
+	// is the texture already loaded?
+	if (m_map_texture_name.count(filename))
+	{
+		return m_map_texture_name[filename];
+	}
+
+	pSurf = IMG_Load(filename.c_str());
+
+	PRINT_DBG("renderer::load_texture: loading " << filename);
+
+	if (!pSurf) {
+		PRINT_ERR("Failed to load texture: " << filename << " (assertion incoming)");
+		ASSERT_IMAGE(pSurf);
+		return 0;
+	}
+
+	ASSERT(pSurf->format);
+
+	if (pSurf->format->BytesPerPixel == 4)
+		iTexFmt = GL_RGBA;
+
+	glGenTextures(1, &iTex); ASSERT_OPENGL();
+	glBindTexture(GL_TEXTURE_2D, iTex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	ASSERT(pSurf->pixels);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, iTexFmt, pSurf->w, pSurf->h, 0, iTexFmt, GL_UNSIGNED_BYTE, pSurf->pixels);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	m_map_texture_name.emplace(filename, iTex);
+
+	SDL_FreeSurface(pSurf);
+
+	return iTex;
 }
 
 void renderer::load_loop()
@@ -338,7 +448,7 @@ void renderer::load_loop()
 
 		gfx_load_cmd_t* pCommands;
 		size_t nCommands = 0;
-		if (!m_gfx_ld_cmdbuf.BeginRead(&pCommands, &nCommands))
+		if (!m_gfx_ld_cmdbuf.begin_read(&pCommands, &nCommands))
 			continue;
 		//PRINT_DBG("renderer: received " << nCommands << " load request(s)");
 		while (nCommands--)
@@ -372,7 +482,7 @@ void renderer::load_loop()
 				
 			pCommands++;
 		}
-		m_gfx_ld_cmdbuf.EndRead();
+		m_gfx_ld_cmdbuf.end_read();
 	}
 	PRINT_DBG("renderer::model_load_loop ended");
 }
@@ -382,38 +492,34 @@ void renderer::update_camera(vector& pos, vector& rot)
 	RESTRICT_THREAD_RENDERING;
 	if (m_vecPrograms.size() < 1)
 		return;
-	float flRot = rot[2];
-	float x = pos[0];
-	float y = pos[1];
-	float z = pos[2];
-	m_matView = glm::rotate(glm::mat4(1.0), flRot, glm::vec3(0, 1, 0));
-	m_matView = glm::translate(m_matView, glm::vec3(x, y, z));
+	m_matView = glm::mat4(1.0);
+	//m_matView = glm::rotate(m_matview, 0, glm::vec3(0, 1, 0));
+	m_matView = glm::translate(m_matView, glm::vec3(pos));
 
 	shader_program* pShader = m_vecPrograms[0];
 	pShader->set_mat_view(glm::value_ptr(m_matView));
 }
 
-void renderer::_load_test_model()
+void renderer::init_gui()
 {
-	RESTRICT_THREAD_RENDERING;
-	GLuint iVAO;
-	GLuint aiVBO[MDL_VBO_MAX];
+	PRINT_DBG("renderer::init_gui: initializing imgui");
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui_ImplSdlGL3_Init(m_pWindow);
+	ImGui::StyleColorsClassic();
 
-	glGenVertexArrays(1, &iVAO); ASSERT_OPENGL();
-	glBindVertexArray(iVAO); ASSERT_OPENGL();
-	glGenBuffers(MDL_VBO_MAX, aiVBO); ASSERT_OPENGL();
+	io.Fonts->AddFontDefault();
+}
 
-	float aflPositions[9] = {
-		-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.0f,  0.5f, 0.0f
-	};
+void renderer::shutdown_gui()
+{
+	PRINT_DBG("renderer::shutdown_gui: shutting down");
+	ImGui_ImplSdlGL3_Shutdown();
+	ImGui::DestroyContext();
+}
 
-	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_POSITION]); ASSERT_OPENGL();
-	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), aflPositions, GL_STATIC_DRAW); ASSERT_OPENGL();
-	glVertexAttribPointer(MDL_VBO_POSITION, 3, GL_FLOAT, GL_FALSE, 0, 0); ASSERT_OPENGL();
-	glEnableVertexAttribArray(MDL_VBO_POSITION);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+static void opengl_msg_callback(GLenum iSource, GLenum iType, GLuint iID, GLenum iSeverity, GLsizei nLength, const GLchar* szMsg, const void* pUParam)
+{
+	fprintf(stderr, "[ OpenGL Message ] type = 0x%x, severity = 0x%x, message = %s\n",
+		iType, iSeverity, szMsg);
 }

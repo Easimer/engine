@@ -7,11 +7,6 @@ cmake_minimum_required(VERSION 3.2.3)
 
 project(klog)
 
-IF(WIN32)
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd /Zi")
-ENDIF()
-
 vs_pch(stdafx)
 
 # Add source files here
@@ -21,17 +16,18 @@ set(SRC_CORE
 	stdafx.h
 	
 	main.cpp
-	memstat.cpp
-	memstat.h
 
 	globals.h
-	vector.h
+	statistics.h
 
 	event_handler.cpp
 	event_handler.h
 
 	input.cpp
 	input.h
+
+	memstat.cpp
+	memstat.h
 )
 
 set(SRC_ENTSYS
@@ -47,14 +43,6 @@ set(SRC_ENTSYS
 	prop_dynamic.cpp
 )
 
-set(SRC_MDLLDR
-	qc_parser.cpp
-	smd_parser.cpp
-	
-	qc_parser.h
-	smd_parser.h
-)
-
 set(SRC_GFX
 	renderer.cpp
 	renderer.h
@@ -67,10 +55,21 @@ set(SRC_GFX
 
 	camera.cpp
 	camera.h
+
+	qc_parser.cpp
+	qc_parser.h
+
+	smd_parser.cpp
+	smd_parser.h
+
+	vector.cpp
+	vector.h
 )
 
 set(SRC_NOPCH
 	glad.c
+	gui/imgui_impl_sdl_gl3.cpp
+	gui/imgui_impl_sdl_gl3.h
 )
 
 set(SRC_RES_SHADERS
@@ -79,28 +78,31 @@ set(SRC_RES_SHADERS
 	shaders/model_dynamic.vert
 )
 
-IF(CMAKE_BUILD_TYPE MATCHES "Debug")
-add_definitions(-DDEBUG)
-ENDIF()
+set(SRC_GUI
+	gui/imgui_impl_sdl_gl3.cpp
+	gui/imgui_impl_sdl_gl3.h
+
+	devgui.cpp
+)
 
 IF(WIN32)
 set_source_files_properties(${SRC_NOPCH}
 									PROPERTIES COMPILE_FLAGS "/Y-")
 ENDIF()
 
-set(CMAKE_CXX_STANDARD 17)
-
 add_executable(game
 	${SRC_CORE}
 	${SRC_ENTSYS}
-	${SRC_MDLLDR}
 	${SRC_GFX}
 	${SRC_RES_SHADERS}
 	${SRC_NOPCH}
+	${SRC_GUI}
 	CMakeLists.txt
 )
 
-target_link_libraries(game enl SDL2main SDL2 SDL2_image SDL2_mixer SDL2_ttf)
+vs_link_static(game)
+
+target_link_libraries(game enl SDL2main SDL2 SDL2_image SDL2_mixer SDL2_ttf imgui)
 install(TARGETS game DESTINATION bin/)
 install(FILES ${SRC_RES_SHADERS} DESTINATION data/shaders/)
 
@@ -110,5 +112,6 @@ source_group("Source Files" FILES ${SRC_GAME})
 source_group("Source Files\\Model Loader" FILES ${SRC_MDLLDR})
 source_group("Source Files\\Entity System" FILES ${SRC_ENTSYS})
 source_group("Source Files\\Graphics" FILES ${SRC_GFX})
+source_group("Source Files\\GUI" FILES ${SRC_GUI})
 source_group("Shader Source Files" FILES ${SRC_RES_SHADERS})
 ENDIF()

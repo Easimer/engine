@@ -1,7 +1,5 @@
 #pragma once
 
-#include "vector.h"
-
 class camera {
 public:
 	void forward();
@@ -24,6 +22,6 @@ public:
 private:
 	vector m_vecPos;
 	vector m_vecRot;
-	float m_flSpeed, m_flTurnSpeed;
+	float m_flSpeed = 0.2, m_flTurnSpeed;
 	float m_flFov;
 };

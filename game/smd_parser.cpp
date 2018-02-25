@@ -1,9 +1,9 @@
 #include "stdafx.h"
-#include <parseutils.h>
 #include "smd_parser.h"
 #include <sstream>
 #include <algorithm>
 #include <enl/strstrip.h>
+#include <parseutils.h>
 
 #define SMDP_STATE_START			0x00
 #define SMDP_STATE_GLOBAL			0x10

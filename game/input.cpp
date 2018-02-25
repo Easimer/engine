@@ -3,28 +3,40 @@
 #include "input.h"
 #include "camera.h"
 
+#include <algorithm>
+
 #include <SDL2/SDL.h>
 
 input::input()
 {
+	// action states
+	for (size_t i = 0; i < IA_MAX; i++)
+		m_action_state[(input_action)i] = false;
 	// default binds
-	bind_key(SDLK_UP, IA_FORWARD);
-	bind_key(SDLK_DOWN, IA_BACKWARD);
-	bind_key(SDLK_LEFT, IA_STRAFE_L);
-	bind_key(SDLK_RIGHT, IA_STRAFE_R);
+	bind_key(SDLK_w, IA_FORWARD);
+	bind_key(SDLK_s, IA_BACKWARD);
+	bind_key(SDLK_a, IA_STRAFE_L);
+	bind_key(SDLK_d, IA_STRAFE_R);
 	bind_key(SDLK_PERIOD, IA_TURN_L);
 	bind_key(SDLK_COMMA, IA_TURN_R);
 	bind_key(SDLK_SPACE, IA_JUMP);
+	PRINT_DBG("input::input: default keybindings loaded");
 }
 
 void input::press_key(long int keysym)
 {
-	m_keystate[keysym] = true;
+	//if (m_keybinds.count(keysym) == 0)
+	//	return;
+	//const auto& ia = m_keybinds[keysym];
+	//m_action_state[ia] = true;
+	//check_conflicting_actions(ia);
 }
 
 void input::release_key(long int keysym)
 {
-	m_keystate[keysym] = false;
+	//if (m_keybinds.count(keysym) == 0)
+	//	return;
+	//m_action_state[m_keybinds[keysym]] = false;
 }
 
 void input::bind_key(long int keysym, input_action ia)
@@ -34,11 +46,16 @@ void input::bind_key(long int keysym, input_action ia)
 
 void input::update()
 {
-	for (auto& ks : m_keystate)
+	auto pKeyState = SDL_GetKeyboardState(NULL);
+	for (auto& keybind : m_keybinds)
 	{
-		if (ks.second)
+		m_action_state[keybind.second] = pKeyState[SDL_GetScancodeFromKey(keybind.first)];
+	}
+	for (auto& ks : m_action_state)
+	{
+		if (ks.second) // is action active
 		{
-			switch (m_keybinds[ks.first])
+			switch (ks.first)
 			{
 				case IA_FORWARD:
 					gpGlobals->pCamera->forward();
@@ -63,5 +80,30 @@ void input::update()
 					break;
 			}
 		}
+	}
+}
+
+void input::check_conflicting_actions(const input_action& act)
+{
+	switch (act)
+	{
+		case IA_FORWARD:
+			m_action_state[IA_BACKWARD] = false;
+			break;
+		case IA_BACKWARD:
+			m_action_state[IA_FORWARD] = false;
+			break;
+		case IA_TURN_L:
+			m_action_state[IA_TURN_R] = false;
+			break;
+		case IA_TURN_R:
+			m_action_state[IA_TURN_L] = false;
+			break;
+		case IA_STRAFE_L:
+			m_action_state[IA_STRAFE_R] = false;
+			break;
+		case IA_STRAFE_R:
+			m_action_state[IA_STRAFE_L] = false;
+			break;
 	}
 }

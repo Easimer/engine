@@ -2,13 +2,30 @@
 
 #include <vector>
 #include <list>
+#include <map>
+#include <enl/cmdbuf.h>
 
 #define ENTSYS_MAX_ENTITIES 1024
 
-#define ESPAGE_SIZ 4096		// page size / max entity size
-#define ESPAGE_COUNT ENTSYS_MAX_ENTITIES
+#define INVALID_ENTITY 0
 
-typedef unsigned char entsys_page[ESPAGE_SIZ];
+enum entsys_update_type {
+	ENTSYS_T_SETPOS		= 0,
+	ENTSYS_T_SETROT		= 1,
+	ENTSYS_T_SETMODEL	= 2,
+	ENTSYS_T_MAX = 3
+};
+
+CMDBUF_BEGIN_CMD(entsys_update_t)
+	size_t nEntityID;
+	entsys_update_type iType;
+
+	vec3 vector;
+	char szString[256];
+	std::string iszString;
+CMDBUF_END_CMD(entsys_update_t)
+
+CMDBUF_DEF(entsys_update_cmdbuf, entsys_update_t, 16, true, false);
 
 class entsys {
 public:
@@ -20,7 +37,7 @@ public:
 
 	void precache_entities();
 
-	void add_entity(base_entity* pEnt) { m_vecEntities.push_back(pEnt); }
+	void add_entity(base_entity* pEnt);
 	void kill_entity(base_entity* pEnt);
 
 	void precache_model(const char* szFilename) { 
@@ -28,10 +45,26 @@ public:
 		m_vecPrecacheModels.push_back(std::string(szFilename));
 	}
 
+	base_entity* get_entity(size_t iID)
+	{
+		if (iID >= m_vecEntities.size())
+			return nullptr;
+
+		return m_vecEntityIDs[iID];
+	}
+
+	void get_entities(std::vector<std::pair<size_t, char[64]>>&) const;
+
+	void send_updates(const std::vector<entsys_update_t>&);
+
 private:
 	std::list<base_entity*> m_vecEntities;
+	std::map<size_t, base_entity*> m_vecEntityIDs;
+	size_t m_iNextEntityID = 1;
 	// models to be precached
 	std::vector<std::string> m_vecPrecacheModels;
+
+	entsys_update_cmdbuf m_update_buf;
 };
 
 #define PRECACHE_MODEL(fn) gpGlobals->pEntSys->precache_model(fn)

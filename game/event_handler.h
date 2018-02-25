@@ -1,14 +1,15 @@
 #pragma once
 
-#include <cmdbuf.h>
+#include <enl/cmdbuf.h>
 #include <SDL2/SDL.h>
 #include <vector>
 
 CMDBUF_BEGIN_CMD(event_t)
+	uint64_t nTime;
 	SDL_Event event;
 CMDBUF_END_CMD(event_t)
 
-CMDBUF_DEF(event_buf, event_t, 32, true, false);
+CMDBUF_DEF(event_buf, event_t, 32, true, true);
 
 class event_handler {
 public:

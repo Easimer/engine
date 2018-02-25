@@ -51,12 +51,17 @@ shader_program::shader_program(const char * szFilename) :
 	glAttachShader(m_iID, m_pShaderVert->get_id());
 	glAttachShader(m_iID, m_pShaderFrag->get_id());
 
-	if (!link())
+	if (!link()) {
+		PRINT_ERR("Link of shader " << m_szName << " has failed!");
+		ASSERT(0);
 		return;
+	}
+
+	glUseProgram(m_iID); ASSERT_OPENGL();
 
 	if (parser.is_cmd("uniformtrans"))
 	{
-		m_iUniformMatTrans = glGetUniformLocation(m_iID, parser.get_string("uniformtrans").c_str());
+		m_iUniformMatTrans = glGetUniformLocation(m_iID, parser.get_string("uniformtrans").c_str()); ASSERT_OPENGL();
 		ASSERT(m_iUniformMatTrans != -1);
 	}
 	else
@@ -67,9 +72,7 @@ shader_program::shader_program(const char * szFilename) :
 
 	if (parser.is_cmd("uniformview"))
 	{
-		auto lofasz = parser.get_string("uniformview");
-		PRINT_DBG("uniform viewvar: " << lofasz);
-		m_iUniformMatView = glGetUniformLocation(m_iID, lofasz.c_str());
+		m_iUniformMatView = glGetUniformLocation(m_iID, parser.get_string("uniformview").c_str()); ASSERT_OPENGL();
 		ASSERT(m_iUniformMatView != -1);
 	}
 	else
@@ -80,9 +83,7 @@ shader_program::shader_program(const char * szFilename) :
 
 	if (parser.is_cmd("uniformproj"))
 	{
-		auto lofasz = parser.get_string("uniformproj");
-		PRINT_DBG("uniform proj var: " << lofasz);
-		m_iUniformMatProj = glGetUniformLocation(m_iID, lofasz.c_str());
+		m_iUniformMatProj = glGetUniformLocation(m_iID, parser.get_string("uniformproj").c_str()); ASSERT_OPENGL();
 		ASSERT(m_iUniformMatProj != -1);
 	}
 	else
@@ -90,6 +91,20 @@ shader_program::shader_program(const char * szFilename) :
 		PRINT_ERR("uniformproj undefined for shader " << m_szName);
 		return;
 	}
+
+	m_iUniformTex1 = glGetUniformLocation(m_iID, "tex_tex1"); ASSERT_OPENGL();
+	m_iUniformTex2 = glGetUniformLocation(m_iID, "tex_tex2"); ASSERT_OPENGL();
+	m_iUniformTex3 = glGetUniformLocation(m_iID, "tex_tex3"); ASSERT_OPENGL();
+	m_iUniformTex4 = glGetUniformLocation(m_iID, "tex_tex4"); ASSERT_OPENGL();
+	m_iUniformTex5 = glGetUniformLocation(m_iID, "tex_tex5"); ASSERT_OPENGL();
+
+	glUniform1i(m_iUniformTex1, 0); ASSERT_OPENGL();
+	glUniform1i(m_iUniformTex2, 1); ASSERT_OPENGL();
+	glUniform1i(m_iUniformTex3, 2); ASSERT_OPENGL();
+	glUniform1i(m_iUniformTex4, 3); ASSERT_OPENGL();
+	glUniform1i(m_iUniformTex5, 4); ASSERT_OPENGL();
+
+	glUseProgram(0);
 }
 
 shader_program::~shader_program()
@@ -161,23 +176,19 @@ void shader_program::set_mat_trans(void * pMat)
 {
 	RESTRICT_THREAD_RENDERING;
 	glUseProgram(m_iID); ASSERT_OPENGL();
-	glUniformMatrix4fv(m_iUniformMatTrans, 1, GL_FALSE, (const GLfloat*)pMat);
-	ASSERT_OPENGL();
+	glUniformMatrix4fv(m_iUniformMatTrans, 1, GL_FALSE, (const GLfloat*)pMat); ASSERT_OPENGL();
 }
 
 void shader_program::set_mat_view(void * pMat)
 {
 	RESTRICT_THREAD_RENDERING;
 	glUseProgram(m_iID); ASSERT_OPENGL();
-	glUniformMatrix4fv(m_iUniformMatView, 1, GL_FALSE, (const GLfloat*)pMat);
-	ASSERT_OPENGL();
+	glUniformMatrix4fv(m_iUniformMatView, 1, GL_FALSE, (const GLfloat*)pMat); ASSERT_OPENGL();
 }
 
 void shader_program::set_mat_proj(void * pMat)
 {
 	RESTRICT_THREAD_RENDERING;
 	glUseProgram(m_iID); ASSERT_OPENGL();
-	glUniformMatrix4fv(m_iUniformMatProj, 1, GL_FALSE, (const GLfloat*)pMat);
-	PRINT_DBG("set_mat_proj: " << m_iUniformMatProj);
-	ASSERT_OPENGL();
+	glUniformMatrix4fv(m_iUniformMatProj, 1, GL_FALSE, (const GLfloat*)pMat); ASSERT_OPENGL();
 }

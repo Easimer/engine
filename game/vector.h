@@ -24,7 +24,20 @@ public:
 		m_aflValues[2] = z;
 	}
 
+	vector(const glm::vec3& v);
+	vector(const glm::vec4& v);
+
+	void operator=(const glm::vec3& v);
+	void operator=(const glm::vec4& v);
+
+	explicit operator glm::vec3() const;
+	explicit operator glm::vec4() const;
+
 	float& operator[](size_t iIndex) {
+		return m_aflValues[iIndex];
+	}
+
+	float operator[](size_t iIndex) const {
 		return m_aflValues[iIndex];
 	}
 
