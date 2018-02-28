@@ -16,6 +16,8 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "gui/imgui_impl_sdl_gl3.h"
@@ -179,7 +181,7 @@ bool renderer::init_gl()
 	glEnable(GL_MULTISAMPLE);
 
 #ifdef PLAT_DEBUG
-	glEnable(GL_DEBUG_OUTPUT);
+	//glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback((GLDEBUGPROC)opengl_msg_callback, 0);
 #endif
 
@@ -487,13 +489,13 @@ void renderer::load_loop()
 	PRINT_DBG("renderer::model_load_loop ended");
 }
 
-void renderer::update_camera(vector& pos, vector& rot)
+void renderer::update_camera(glm::vec3& pos, glm::mat4& rot)
 {
 	RESTRICT_THREAD_RENDERING;
 	if (m_vecPrograms.size() < 1)
 		return;
-	m_matView = glm::mat4(1.0);
-	//m_matView = glm::rotate(m_matview, 0, glm::vec3(0, 1, 0));
+	//m_matView = rot.operator glm::mat<4, 4, float, glm::packed_highp>();
+	m_matView = rot;
 	m_matView = glm::translate(m_matView, glm::vec3(pos));
 
 	shader_program* pShader = m_vecPrograms[0];

@@ -7,7 +7,7 @@ struct entfmap_t;
 class entsys;
 class renderer;
 class event_handler;
-class camera;
+class icamera;
 class input;
 
 struct engine_globals {
@@ -18,11 +18,12 @@ struct engine_globals {
 	// Time
 	double curtime = 0;
 	double flDeltaTime = 0;
+	const double flTickTime = (1.0 / 64.0);
 
 	// Game
 	bool bRunning = true;
 	event_handler* pEventHandler;
-	camera* pCamera;
+	icamera* pCamera;
 	input* pInput;
 
 	// Entity System

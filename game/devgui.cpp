@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "renderer.h"
 #include "gui/imgui_impl_sdl_gl3.h"
-#include "camera.h"
+#include "icamera.h"
 #include "statistics.h"
 #include "entsys.h"
 

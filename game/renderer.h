@@ -5,6 +5,7 @@
 #include <model.h>
 #include "shader_program.h"
 #include <map>
+#include <glm/fwd.hpp>
 #include <glm/mat4x4.hpp>
 
 //
@@ -85,7 +86,7 @@ public:
 
 	void load_loop();
 
-	void update_camera(vector& pos, vector& rot);
+	void update_camera(glm::vec3& pos, glm::mat4& rot);
 
 	void init_gui();
 	void shutdown_gui();

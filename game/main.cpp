@@ -91,13 +91,29 @@ void thread_logic()
 	PRINT_DBG("===========");
 	gpGlobals->pRenderer->end_load();
 
+	double flLastUpdate = 0;
+
 	while (gpGlobals->bRunning)
 	{
-		gpGlobals->pEventHandler->update();
-		gpGlobals->pEntSys->update_entities();
+		bool bEarly = false;
+		double flSinceLastUpdate = gpGlobals->curtime - flLastUpdate;
+		double flNextUpdate = gpGlobals->curtime + gpGlobals->flTickTime;
+		// Only update 64 times a sec
+		if (flSinceLastUpdate >= gpGlobals->flTickTime)
+		{
+			gpGlobals->pEventHandler->update();
+			gpGlobals->pInput->update();
+
+			gpGlobals->pEntSys->update_entities();
+
+			// catch up
+			flLastUpdate += gpGlobals->flTickTime;
+			
+			// sleep
+			std::this_thread::sleep_for(std::chrono::duration<double>(flLastUpdate + gpGlobals->flTickTime - gpGlobals->curtime));
+		}
 		if(gpGlobals->pRenderer->waiting_for_draw())
 			gpGlobals->pEntSys->draw_entities();
-		gpGlobals->pInput->update();
 	}
 	PRINT_DBG("Logic: joining...");
 }

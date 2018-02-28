@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "event_handler.h"
 #include "input.h"
-#include "camera.h"
+#include "icamera.h"
 
 #include <algorithm>
 

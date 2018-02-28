@@ -53,6 +53,7 @@ set(SRC_GFX
 	shader_program.cpp
 	shader_program.h
 
+	icamera.h
 	camera.cpp
 	camera.h
 

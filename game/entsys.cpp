@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "entsys.h"
 #include "renderer.h"
-#include "camera.h"
+#include "icamera.h"
 #include <algorithm>
 
 entsys::entsys()
@@ -12,10 +12,10 @@ entsys::entsys()
 
 entsys::~entsys()
 {
-	for (auto& ent : m_vecEntities)
-	{
-		delete ent;
-	}
+	//for (auto& ent : m_vecEntities)
+	//{
+	//	delete ent;
+	//}
 }
 
 void entsys::update_entities()

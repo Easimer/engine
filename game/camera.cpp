@@ -1,63 +1,61 @@
 #include "stdafx.h"
-#include "camera.h"
 #include "renderer.h"
+#include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/euler_angles.hpp>
+#include "camera.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 void camera::forward()
 {
 	RESTRICT_THREAD_LOGIC;
 
-	auto matRot = glm::eulerAngleXYZ(m_vecRot[0], m_vecRot[1], m_vecRot[2]);
-	auto vecForward = glm::vec4(0, 0, 1, 0);
-	vecForward = matRot * vecForward;
-	m_vecPos = m_vecPos + vec3(vecForward) * gpGlobals->flDeltaTime * m_flSpeed;
-	gpGlobals->pStatistics->get_stat_fl(ESTAT_C_GAME, "player speed") = gpGlobals->flDeltaTime * m_flSpeed;
+	glm::vec3 vecFwd3 = glm::vec3(m_matRot[0][2], m_matRot[1][2], m_matRot[2][2]);
+	m_vecPos = m_vecPos + vecFwd3 * (float)(m_flSpeed * gpGlobals->flTickTime);
 }
 
 void camera::backward()
 {
 	RESTRICT_THREAD_LOGIC;
 
-	auto matRot = glm::eulerAngleXYZ(m_vecRot[0], m_vecRot[1], m_vecRot[2]);
-	auto vecBackward = glm::vec4(0, 0, 1, 0);
-	vecBackward = matRot * vecBackward;
-	m_vecPos = m_vecPos - vec3(vecBackward) * gpGlobals->flDeltaTime * m_flSpeed;
-	gpGlobals->pStatistics->get_stat_fl(ESTAT_C_GAME, "player speed") = gpGlobals->flDeltaTime * m_flSpeed;
+	glm::vec3 vecFwd3 = glm::vec3(m_matRot[0][2], m_matRot[1][2], m_matRot[2][2]);
+	m_vecPos = m_vecPos - vecFwd3 * (float)(m_flSpeed * gpGlobals->flTickTime);
 }
 
 void camera::strafe_left()
 {
 	RESTRICT_THREAD_LOGIC;
 
-	auto matRot = glm::eulerAngleXYZ(m_vecRot[0], m_vecRot[1], m_vecRot[2]);
-	auto vecLeft = glm::vec4(1, 0, 0, 0);
-	vecLeft = matRot * vecLeft;
-	m_vecPos = m_vecPos + vec3(vecLeft) * gpGlobals->flDeltaTime * m_flSpeed;
-	gpGlobals->pStatistics->get_stat_fl(ESTAT_C_GAME, "player speed") = gpGlobals->flDeltaTime * m_flSpeed;
 }
 
 void camera::strafe_right()
 {
 	RESTRICT_THREAD_LOGIC;
 
-	auto matRot = glm::eulerAngleXYZ(m_vecRot[0], m_vecRot[1], m_vecRot[2]);
-	auto vecRight = glm::vec4(-1, 0, 0, 0);
-	vecRight = matRot * vecRight;
-	m_vecPos = m_vecPos + vec3(vecRight) * gpGlobals->flDeltaTime * m_flSpeed;
-	gpGlobals->pStatistics->get_stat_fl(ESTAT_C_GAME, "player speed") = gpGlobals->flDeltaTime * m_flSpeed;
 }
 
 void camera::turn_left()
 {
 	RESTRICT_THREAD_LOGIC;
-	m_vecRot[1] += m_flTurnSpeed * gpGlobals->flDeltaTime;
+	
+	//m_quatRot = glm::rotate(m_quatRot, glm::radians(m_flTurnSpeed * (float)gpGlobals->flTickTime), glm::vec3(0, 1, 0));
+	m_matRot = glm::rotate(m_matRot, m_flTurnSpeed * (float)gpGlobals->flTickTime, glm::vec3(0, 1, 0));
 }
 
 void camera::turn_right()
 {
 	RESTRICT_THREAD_LOGIC;
+
+	m_matRot = glm::rotate(m_matRot, -m_flTurnSpeed * (float)gpGlobals->flTickTime, glm::vec3(0, 1, 0));
+}
+
+void camera::turn(float x, float y)
+{
+}
+
+vector camera::get_rot() const
+{
+	//return vector(glm::eulerAngles(m_matRot));
+	return vector(0, 0, 0);
 }
 
 void camera::set_speed(float flSpeed)
@@ -80,5 +78,5 @@ void camera::set_fov(float flFov)
 
 void camera::update()
 {
-	gpGlobals->pRenderer->update_camera(m_vecPos, m_vecRot);
+	gpGlobals->pRenderer->update_camera(m_vecPos, m_matRot);
 }

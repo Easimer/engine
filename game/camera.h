@@ -1,27 +1,35 @@
 #pragma once
 
-class camera {
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/vec3.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include "icamera.h"
+
+class camera : public icamera {
 public:
-	void forward();
-	void backward();
-	void strafe_left();
-	void strafe_right();
+	void forward() override;
+	void backward() override;
+	void strafe_left() override;
+	void strafe_right() override;
 	
-	void turn_left();
-	void turn_right();
+	void turn_left() override;
+	void turn_right() override;
+
+	void turn(float x, float y) override;
+
+	vector get_pos() const override { return vector(m_vecPos); }
+	vector get_rot() const override;
 
 	void set_speed(float flSpeed);
 	void set_turn_speed(float flTurnSpeed);
 	void set_fov(float flFov);
 
-	vector& get_pos() { return m_vecPos; }
-	vector& get_rot() { return m_vecRot; }
-
-	void update();
+	void update() override;
 
 private:
-	vector m_vecPos;
-	vector m_vecRot;
-	float m_flSpeed = 0.2, m_flTurnSpeed;
+	glm::vec3 m_vecPos;
+	glm::mat4 m_matRot = glm::mat4(1.0);
+	float m_flSpeed = 0.2, m_flTurnSpeed = 3.3;
 	float m_flFov;
 };
