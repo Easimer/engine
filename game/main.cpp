@@ -136,7 +136,6 @@ void thread_rendering()
 		nNow = SDL_GetPerformanceCounter();
 		gpGlobals->flDeltaTime = ((nNow - nLast) / (double)SDL_GetPerformanceFrequency());
 		gpGlobals->curtime += gpGlobals->flDeltaTime;
-		gpGlobals->flRot_ += gpGlobals->flDeltaTime * 2.f;
 
 		gpGlobals->pRenderer->render();
 		gpGlobals->pCamera->update();

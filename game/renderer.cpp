@@ -36,6 +36,11 @@ void renderer::open_window(const char * szTitle, int nWidth, int nHeight, bool b
 	ASSERT_SDL2(m_pRenderer);
 
 	m_matProj = glm::perspective(glm::radians(90.f), (float)nWidth / (float)nHeight, 0.1f, 1000.f);
+
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+
+	m_nScreenWidth = nWidth;
+	m_nScreenHeight = nHeight;
 }
 
 void renderer::close_window()
@@ -128,9 +133,18 @@ void renderer::render()
 		event.nTime = (uint64_t)(gpGlobals->curtime * 1000);
 		ImGui_ImplSdlGL3_ProcessEvent(&event.event);
 		vecEvents.push_back(event);
+
+		// Toggle DevGUI
+		if (event.event.type == SDL_KEYDOWN && event.event.key.keysym.sym == SDLK_F10) {
+				gpGlobals->pRenderer->toggle_devgui();
+		}
 	}
-	if(vecEvents.size() > 0)
+	if(vecEvents.size() > 0 && !gpGlobals->bDevGUI)
 		gpGlobals->pEventHandler->push_event(vecEvents);
+
+	// FIXME: cache half width and half height
+	//if(gpGlobals->bPaused || gpGlobals->bDevGUI)
+	//	SDL_WarpMouseInWindow(m_pWindow, m_nScreenWidth / 2, m_nScreenHeight / 2);
 }
 
 bool renderer::init_gl()
@@ -518,6 +532,32 @@ void renderer::shutdown_gui()
 	PRINT_DBG("renderer::shutdown_gui: shutting down");
 	ImGui_ImplSdlGL3_Shutdown();
 	ImGui::DestroyContext();
+}
+
+void renderer::get_screen_size(int* w, int* h) const
+{
+	SDL_GetWindowSize(m_pWindow, w, h);
+}
+
+void renderer::toggle_devgui()
+{
+	if (gpGlobals->bDevGUI)
+	{
+		SDL_SetRelativeMouseMode(SDL_TRUE);
+		gpGlobals->bDevGUI = false;
+		//SDL_ShowCursor(SDL_DISABLE);
+		//SDL_SetWindowGrab(m_pWindow, SDL_TRUE);
+		//SDL_CaptureMouse(SDL_TRUE);
+	}
+	else
+	{
+		SDL_SetRelativeMouseMode(SDL_FALSE);
+		gpGlobals->bDevGUI = true;
+		//SDL_ShowCursor(SDL_ENABLE);
+		//SDL_SetWindowGrab(m_pWindow, SDL_FALSE);
+		//SDL_CaptureMouse(SDL_FALSE);
+	}
+	PRINT_DBG("DevGUI: " << gpGlobals->bDevGUI);
 }
 
 static void opengl_msg_callback(GLenum iSource, GLenum iType, GLuint iID, GLenum iSeverity, GLsizei nLength, const GLchar* szMsg, const void* pUParam)

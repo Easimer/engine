@@ -97,6 +97,10 @@ public:
 
 	void draw_debug_tools();
 
+	void get_screen_size(int* w, int* h) const;
+
+	void toggle_devgui();
+
 private:
 	renderer_drawmdl_cmdbuf m_cmdbuf;
 	renderer_load_cmdbuf m_gfx_ld_cmdbuf;
@@ -130,6 +134,8 @@ private:
 					<- GL_TEXTURE2 <- 1
 	*/
 	std::map<model_id, std::vector<uint32_t>> m_mapTextures;
+
+	int m_nScreenWidth, m_nScreenHeight;
 
 	// FPS counting
 	size_t m_nFrames = 0;

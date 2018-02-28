@@ -2,6 +2,7 @@
 #include "event_handler.h"
 #include "input.h"
 #include "icamera.h"
+#include "renderer.h"
 
 #include <algorithm>
 
@@ -37,6 +38,14 @@ void input::release_key(long int keysym)
 	//if (m_keybinds.count(keysym) == 0)
 	//	return;
 	//m_action_state[m_keybinds[keysym]] = false;
+
+	if (keysym == SDLK_ESCAPE) {
+		if (SDL_CaptureMouse(m_bMouseCaptured ? SDL_FALSE : SDL_TRUE) == -1)
+		{
+			ASSERT_SDL2(0);
+		}
+		m_bMouseCaptured = !m_bMouseCaptured;
+	}
 }
 
 void input::bind_key(long int keysym, input_action ia)
@@ -81,6 +90,14 @@ void input::update()
 			}
 		}
 	}
+}
+
+void input::mouse_motion(const int x, const int y)
+{
+	/// First-Person
+
+	gpGlobals->pCamera->turn(x, y);
+
 }
 
 void input::check_conflicting_actions(const input_action& act)

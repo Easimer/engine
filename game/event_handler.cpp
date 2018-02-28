@@ -32,7 +32,7 @@ void event_handler::update()
 
 	while (nEvents--)
 	{
-		SDL_Event event = pEvents->event;
+		SDL_Event& event = pEvents->event;
 		switch (event.type)
 		{
 			case SDL_KEYDOWN:
@@ -60,6 +60,9 @@ void event_handler::update()
 						//PRINT_DBG("Unhandled window event: " << (int)event.window.event);
 						break;
 				}
+				break;
+			case SDL_MOUSEMOTION:
+				gpGlobals->pInput->mouse_motion(event.motion.xrel, event.motion.yrel);
 				break;
 			default:
 				//PRINT_DBG("Unhandled event: " << (int)event.type);

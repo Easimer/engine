@@ -8,6 +8,8 @@
 void renderer::draw_debug_tools()
 {
 #ifdef PLAT_DEBUG
+	if (!gpGlobals->bDevGUI)
+		return;
 	if (ImGui::BeginMainMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))

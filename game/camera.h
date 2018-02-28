@@ -32,4 +32,7 @@ private:
 	glm::mat4 m_matRot = glm::mat4(1.0);
 	float m_flSpeed = 0.2, m_flTurnSpeed = 3.3;
 	float m_flFov;
+	
+	float m_flYaw = 0.0;
+	float m_flPitch = 0.0;
 };

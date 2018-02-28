@@ -20,6 +20,7 @@ public:
 	void release_key(long int keysym);
 	void bind_key(long int keysym, input_action ia);
 	void update();
+	void mouse_motion(const int x, const int y);
 
 protected:
 	void check_conflicting_actions(const input_action&);
@@ -27,4 +28,9 @@ protected:
 private:
 	std::map<long int, input_action> m_keybinds;
 	std::map<input_action, bool> m_action_state;
+
+	bool m_bMouseCaptured = false;
+
+	int m_nScreenWidth = -1, m_nScreenHeight = -1;
+	int m_nMouseLastX = -1, m_nMouseLastY = -1;
 };

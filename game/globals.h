@@ -11,35 +11,42 @@ class icamera;
 class input;
 
 struct engine_globals {
-	// Entity Factory
-	entfmap_t* entityFactoryDictionary;
-	size_t iEntityFactoryDictionaryIndex;
-	
-	// Time
-	double curtime = 0;
-	double flDeltaTime = 0;
-	const double flTickTime = (1.0 / 64.0);
-
-	// Game
-	bool bRunning = true;
-	event_handler* pEventHandler;
-	icamera* pCamera;
-	input* pInput;
-
-	// Entity System
-	entsys* pEntSys;
+	/// Engine Core
 	// Renderer
 	renderer* pRenderer;
+	// Window event handler
+	event_handler* pEventHandler;
+	// Camera
+	icamera* pCamera;
+	// input handler
+	input* pInput;
+	// Engine Statistics
+	estat_container* pStatistics;
+	// Set this to false and the engine will shut down.
+	bool bRunning = true;
+	// Whether main menu is open. Open by default.
+	bool bPaused = true;
+	// Is the DevGUI open? If so, events will only be passed to imgui.
+	bool bDevGUI = false;
 	// Thread IDs
 	std::thread::id iThreadLogic;
 	std::thread::id iThreadRendering;
 	std::thread::id iThreadSound;
 
-	// Engine Statistics
-	estat_container* pStatistics;
+	/// Time
+	// Current time in seconds / time elapsed since engine init
+	double curtime = 0;
+	// Time elapsed since last frame
+	double flDeltaTime = 0;
+	// Approx. time elapsed since last logic update
+	// Used for timimg of the logic thread loop
+	const double flTickTime = (1.0 / 64.0);
 
-	// TEMP
-	float flRot_ = 0;
+	/// Entity System
+	entsys* pEntSys;
+	// Entity Factory
+	entfmap_t* entityFactoryDictionary;
+	size_t iEntityFactoryDictionaryIndex;
 };
 
 extern engine_globals* gpGlobals;
