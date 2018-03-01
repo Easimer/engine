@@ -5,6 +5,7 @@
 #include "statistics.h"
 #include "entsys.h"
 #include "devgui.h"
+#include "prop_common.h"
 #include <glm/glm.hpp>
 
 void renderer::draw_debug_tools()
@@ -134,6 +135,7 @@ void renderer::draw_debug_tools()
 			std::vector<entsys_update_t> entsys_updates;
 
 			auto pEnt = gpGlobals->pEntSys->get_entity(gpGlobals->pDevGUI->m_iCurEnt);
+			auto pEntProp = dynamic_cast<c_base_prop*>(pEnt);
 			if (pEnt)
 			{
 				entsys_update_t upd;
@@ -169,6 +171,15 @@ void renderer::draw_debug_tools()
 					upd.iType = ENTSYS_T_SETSCALE;
 					upd.flFloat = flScale;
 					entsys_updates.push_back(upd);
+				}
+
+				if (pEntProp) {
+					ImGui::InputText("Model", gpGlobals->pDevGUI->m_szModelPath, 128);
+					if (ImGui::Button("Update model")) {
+						upd.iType = ENTSYS_T_SETMODEL;
+						upd.iszString = std::string(gpGlobals->pDevGUI->m_szModelPath);
+						entsys_updates.push_back(upd);
+					}
 				}
 
 				if (ImGui::Button("Kill Entity")) {

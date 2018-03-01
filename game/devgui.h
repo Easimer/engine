@@ -13,4 +13,5 @@ struct devgui_state {
 
 	// Entity Inspector
 	size_t m_iCurEnt = 0;
+	char m_szModelPath[128] = { 0 };
 };

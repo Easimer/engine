@@ -3,6 +3,8 @@
 #include "globals.h"
 #include "renderer.h"
 
+#define SET_MODEL(mdlname) m_iModelID = gpGlobals->pRenderer->load_model(mdlname)
+
 class c_base_prop : public base_entity {
 public:
 	virtual void precache()
@@ -17,6 +19,8 @@ public:
 		if (m_bSpawned)
 			return;
 		strncpy(m_szModel, szFilename, 128);
+		PRECACHE_MODEL(m_szModel);
+		SET_MODEL(m_szModel);
 	}
 
 	bool is_drawable() { return true; }
@@ -33,5 +37,3 @@ protected:
 	char m_szModel[128] = { 0 };
 	float m_flScale = 1.0f;
 };
-
-#define SET_MODEL(mdlname) m_iModelID = gpGlobals->pRenderer->load_model(mdlname)

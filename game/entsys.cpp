@@ -49,13 +49,19 @@ void entsys::update_entities()
 							pEnt->set_rotation(pUpdate->vector);
 							break;
 						case ENTSYS_T_SETMODEL:
+							if (pEntProp) {
+								pEntProp->set_model(pUpdate->iszString.c_str());
+							}
+							else {
+								PRINT_DBG("entsys::update: update type SETMODEL is invalid for entity " << pUpdate->nEntityID);
+							}
 							break;
 						case ENTSYS_T_SETSCALE:
 							if (pEntProp) {
 								pEntProp->set_scale(pUpdate->flFloat);
 							}
 							else {
-								PRINT_DBG("entsys::update: update type SETSCALE invalid for entity " << pUpdate->nEntityID);
+								PRINT_DBG("entsys::update: update type SETSCALE is invalid for entity " << pUpdate->nEntityID);
 							}
 							break;
 						case ENTSYS_T_SET_TNAME:

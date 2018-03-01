@@ -91,6 +91,11 @@ void thread_logic()
 	c_base_prop* pWolf2 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pWolf2->set_model("data/models/wolf.smd");
 	pWolf2->spawn();
+
+	c_base_prop* pHat = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+	pHat->set_model("data/models/cowboy_hat.smd");
+	pHat->spawn();
+	gpGlobals->pEntSys->kill_entity(pHat);
 	
 	PRINT_DBG("===========");
 	PRINT_DBG("End of loading");
