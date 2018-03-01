@@ -56,16 +56,28 @@ void camera::turn(float x, float y)
 	// X is yaw
 	// Y is pitch
 
-	float dx = x * m_flTurnSpeed * gpGlobals->flTickTime;
-	float dy = y * m_flTurnSpeed * gpGlobals->flTickTime;
+	glm::vec3 vecFwd = glm::vec3(m_matRot[0][2], m_matRot[1][2], m_matRot[2][2]);
+	glm::vec3 vecUp = glm::vec3(m_matRot[0][0], m_matRot[1][0], m_matRot[2][0]);
 
-	m_flYaw += dx;
+	float dx = x * m_flTurnSpeed * 0.2 * gpGlobals->flTickTime;
+	float dy = y * m_flTurnSpeed * 0.2 * gpGlobals->flTickTime;
+
 	m_flPitch += dy;
 
 	m_flPitch = glm::clamp(m_flPitch, glm::radians(-90.0f), glm::radians(90.0f));
 
-	m_matRot = glm::rotate(glm::mat4(1.0), m_flYaw, glm::vec3(0, 1, 0));
-	m_matRot = glm::rotate(m_matRot, m_flPitch, glm::vec3(1, 0, 0));
+	if ((m_flPitch > glm::radians(90.0f) && m_flPitch < glm::radians(270.0f)) || (m_flPitch < glm::radians(-90.0f) && m_flPitch > glm::radians(-270.0f)))
+	{
+		m_flYaw -= dx;
+	}
+	else
+	{
+		m_flYaw += dx;
+	}
+
+	m_matRot = glm::rotate(glm::mat4(1.0), m_flPitch, glm::vec3(1, 0, 0));
+	m_matRot = glm::rotate(m_matRot, m_flYaw, glm::vec3(0, 1, 0));
+	
 	
 }
 
