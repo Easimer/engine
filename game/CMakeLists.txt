@@ -65,6 +65,9 @@ set(SRC_GFX
 
 	vector.cpp
 	vector.h
+
+	material.cpp
+	material.h
 )
 
 set(SRC_NOPCH

@@ -105,6 +105,24 @@ shader_program::shader_program(const char * szFilename) :
 	glUniform1i(m_iUniformTex5, 4); ASSERT_OPENGL();
 
 	glUseProgram(0);
+
+	if (parser.is_cmd("diffusekey"))
+		m_mapTexKey.emplace(SHADERTEX_DIFFUSE, parser.get_string("diffusekey"));
+	if (parser.is_cmd("normalkey"))
+		m_mapTexKey.emplace(SHADERTEX_NORMAL, parser.get_string("normalkey"));
+	if (parser.is_cmd("specularkey"))
+		m_mapTexKey.emplace(SHADERTEX_SPECULAR, parser.get_string("specularkey"));
+	if (parser.is_cmd("opacitykey"))
+		m_mapTexKey.emplace(SHADERTEX_OPACITY, parser.get_string("opacitykey"));
+
+	if (parser.is_cmd("diffusedefault"))
+		m_mapTexDefault.emplace(SHADERTEX_DIFFUSE, parser.get_string("diffusedefault"));
+	if (parser.is_cmd("normaldefault"))
+		m_mapTexDefault.emplace(SHADERTEX_NORMAL, parser.get_string("normaldefault"));
+	if (parser.is_cmd("speculardefault"))
+		m_mapTexDefault.emplace(SHADERTEX_SPECULAR, parser.get_string("speculardefault"));
+	if (parser.is_cmd("opacitydefault"))
+		m_mapTexDefault.emplace(SHADERTEX_OPACITY, parser.get_string("opacitydefault"));
 }
 
 shader_program::~shader_program()
@@ -191,4 +209,11 @@ void shader_program::set_mat_proj(void * pMat)
 	RESTRICT_THREAD_RENDERING;
 	glUseProgram(m_iID); ASSERT_OPENGL();
 	glUniformMatrix4fv(m_iUniformMatProj, 1, GL_FALSE, (const GLfloat*)pMat); ASSERT_OPENGL();
+}
+
+material shader_program::load_material(const mdlc::qc_parser & qc)
+{
+	material mat(qc);
+	// TODO
+	return mat;
 }
