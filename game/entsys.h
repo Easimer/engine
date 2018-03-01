@@ -15,7 +15,10 @@ enum entsys_update_type {
 	ENTSYS_T_SETMODEL	= 2,
 	ENTSYS_T_SETSCALE	= 3,
 	ENTSYS_T_IO			= 4,
-	ENTSYS_T_MAX		= 5
+	ENTSYS_T_SET_TNAME	= 5,
+	ENTSYS_T_CREATE		= 6,
+	ENTSYS_T_KILL		= 7,
+	ENTSYS_T_MAX		= 8
 };
 
 CMDBUF_BEGIN_CMD(entsys_update_t)
