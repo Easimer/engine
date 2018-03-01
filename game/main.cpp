@@ -87,7 +87,10 @@ void thread_logic()
 	c_base_prop* pWolf = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pWolf->set_model("data/models/wolf.smd");
 	pWolf->spawn();
-	pWolf->set_relpos(vec3(0, -0.5, 0));
+
+	c_base_prop* pWolf2 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+	pWolf2->set_model("data/models/wolf.smd");
+	pWolf2->spawn();
 	
 	PRINT_DBG("===========");
 	PRINT_DBG("End of loading");

@@ -5,6 +5,7 @@
 #include "icamera.h"
 #include "prop_common.h"
 #include <algorithm>
+#include <limits>
 
 entsys::entsys()
 {
@@ -72,6 +73,9 @@ void entsys::update_entities()
 							else
 								PRINT_ERR("entsys: attempted to create unknown entity type " << pUpdate->iszString);
 							break;
+						case ENTSYS_T_KILL:
+							kill_entity(pEnt);
+							break;
 						default:
 							PRINT_DBG("entsys::update: invalid update type " << pUpdate->iType);
 							break;
@@ -130,7 +134,7 @@ void entsys::draw_entities()
 		}
 	}
 
-	if (vecDrawCmdsDists.size() > 0)
+	//if (vecDrawCmdsDists.size() > 0)
 	{
 		std::vector<drawcmd_t> vecDrawCmds;
 		std::sort(vecDrawCmdsDists.begin(), vecDrawCmdsDists.end(), drawcmdsort());
@@ -159,6 +163,9 @@ void entsys::add_entity(base_entity * pEnt)
 	gpGlobals->pStatistics->get_stat_u(ESTAT_C_ENTSYS, "entity count") = m_vecEntities.size();
 	
 	m_vecEntityIDs.emplace(m_iNextEntityID, pEnt);
+
+	ASSERT(m_iNextEntityID != std::numeric_limits<size_t>::max());
+
 	m_iNextEntityID++;
 }
 
@@ -167,8 +174,16 @@ void entsys::kill_entity(base_entity * pEnt)
 	RESTRICT_THREAD_LOGIC;
 	m_vecEntities.remove(pEnt);
 	gpGlobals->pStatistics->get_stat_u(ESTAT_C_ENTSYS, "entity count") = m_vecEntities.size();
+
+	// Find handle
+	for (auto& kv : m_vecEntityIDs) {
+		if (kv.second == pEnt) {
+			kv.second = nullptr;
+			// break; // entity might have multiple handles
+		}
+	}
+
 	delete pEnt;
-	m_vecEntityIDs[m_iNextEntityID] = nullptr;
 }
 
 void entsys::get_entities(std::vector<std::pair<size_t, char[64]>>& v) const
@@ -176,6 +191,9 @@ void entsys::get_entities(std::vector<std::pair<size_t, char[64]>>& v) const
 	for (auto& kv : m_vecEntityIDs)
 	{
 		std::pair<size_t, char[64]> p;
+
+		if (!kv.second)
+			continue;
 
 		p.first = kv.first;
 		strncpy(p.second, kv.second->get_classname(), 64);

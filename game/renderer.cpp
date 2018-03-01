@@ -68,7 +68,7 @@ void renderer::render()
 	drawcmd_t* pCommands;
 	size_t nCommands = 0;
 	size_t nAllVertices = 0;
-	while (m_cmdbuf.is_empty());
+	//while (m_cmdbuf.is_empty());
 	if(m_cmdbuf.begin_read(&pCommands, &nCommands))
 	{
 		//PRINT_DBG("renderer::render: drawing " << nCommands << " models");

@@ -174,6 +174,7 @@ void renderer::draw_debug_tools()
 				if (ImGui::Button("Kill Entity")) {
 					upd.iType = ENTSYS_T_KILL;
 					entsys_updates.push_back(upd);
+					gpGlobals->pDevGUI->m_iCurEnt = 0;
 				}
 			}
 			else
