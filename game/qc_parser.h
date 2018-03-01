@@ -20,11 +20,11 @@ namespace mdlc {
 		qc_parser(const char* szFilename);
 		qc_parser(std::string& iszFilename);
 
-		bool is_cmd(const char* cmd);
+		bool is_cmd(const char* cmd) const;
 
-		int get_int(const char* cmd);
-		double get_float(const char* cmd);
-		std::string get_string(const char* cmd);
+		int get_int(const char* cmd) const;
+		double get_float(const char* cmd) const;
+		std::string get_string(const char* cmd) const;
 
 	protected:
 		void parse();

@@ -26,28 +26,28 @@ mdlc::qc_parser::qc_parser(std::string & iszFilename)
 	parse();
 }
 
-bool mdlc::qc_parser::is_cmd(const char* szCmd)
+bool mdlc::qc_parser::is_cmd(const char* szCmd) const
 {
 	return std::any_of(m_commands.begin(), m_commands.end(), [&szCmd](const qc_command& cmd){
 		return cmd.m_iszCmd == szCmd;
 	});
 }
 
-int mdlc::qc_parser::get_int(const char* szCmd)
+int mdlc::qc_parser::get_int(const char* szCmd) const
 {
 	return std::stoi(std::find_if(m_commands.begin(), m_commands.end(), [&szCmd](const qc_command& cmd) {
 		return cmd.m_iszCmd == szCmd;
 	})->m_iszArg);
 }
 
-double mdlc::qc_parser::get_float(const char* szCmd)
+double mdlc::qc_parser::get_float(const char* szCmd) const
 {
 	return std::stod(std::find_if(m_commands.begin(), m_commands.end(), [&szCmd](const qc_command& cmd) {
 		return cmd.m_iszCmd == szCmd;
 	})->m_iszArg);
 }
 
-std::string mdlc::qc_parser::get_string(const char* szCmd)
+std::string mdlc::qc_parser::get_string(const char* szCmd) const
 {
 	return std::find_if(m_commands.begin(), m_commands.end(), [&szCmd](const qc_command& cmd) {
 		return cmd.m_iszCmd == szCmd;
