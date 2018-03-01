@@ -66,6 +66,14 @@ public:
 
 	virtual void set_scale(float flScale) {}
 
+	virtual const char* get_targetname() const {
+		return m_szTargetname;
+	}
+
+	virtual void set_targetname(const char* szNewname) {
+		strncpy(m_szTargetname, szNewname, 128);
+	}
+
 protected:
 	// This is the absolute pos if this ent has no parent
 	// Otherwise this is relative
@@ -81,6 +89,9 @@ protected:
 	size_t m_iModelID;
 
 	bool m_bSpawned = false;
+
+	// human-readable name in the IO system
+	char m_szTargetname[128] = {0};
 
 private:
 	friend class entsys;
