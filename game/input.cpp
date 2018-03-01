@@ -55,6 +55,8 @@ void input::bind_key(long int keysym, input_action ia)
 
 void input::update()
 {
+	if (gpGlobals->bDevGUI)
+		return;
 	auto pKeyState = SDL_GetKeyboardState(NULL);
 	for (auto& keybind : m_keybinds)
 	{

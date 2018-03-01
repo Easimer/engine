@@ -7,8 +7,6 @@ public:
 	DEC_CLASS(prop_dynamic, c_base_prop);
 	void precache();
 	void spawn();
-
-	void think();
 };
 
 REGISTER_ENTITY(c_prop_dynamic, prop_dynamic);

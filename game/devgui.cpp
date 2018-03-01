@@ -4,6 +4,7 @@
 #include "icamera.h"
 #include "statistics.h"
 #include "entsys.h"
+#include <glm/glm.hpp>
 
 void renderer::draw_debug_tools()
 {
@@ -102,7 +103,7 @@ void renderer::draw_debug_tools()
 		std::vector<std::pair<size_t, char[64]>> entities;
 		gpGlobals->pEntSys->get_entities(entities);
 		
-		ImGui::ListBoxHeader("Entities");
+		ImGui::ListBoxHeader("");
 		for (size_t i = 0; i < entities.size(); i++)
 		{
 			if (ImGui::Selectable(entities[i].second, i == entities[i].first))
@@ -122,30 +123,39 @@ void renderer::draw_debug_tools()
 			auto pEnt = gpGlobals->pEntSys->get_entity(m_iCurEnt);
 			if (pEnt)
 			{
+				entsys_update_t upd;
+				upd.nEntityID = m_iCurEnt;
+
+				ImGui::Text(pEnt->get_classname());
+
 				auto vecPos = pEnt->get_abspos();
 				aflPos[0] = vecPos[0];
 				aflPos[1] = vecPos[1];
 				aflPos[2] = vecPos[2];
 				if (ImGui::InputFloat3("Position", aflPos))
 				{
-					entsys_update_t posupd;
-					posupd.nEntityID = m_iCurEnt;
-					posupd.iType = ENTSYS_T_SETPOS;
-					posupd.vector = vec3(aflPos[0], aflPos[1], aflPos[2]);
-					entsys_updates.push_back(posupd);
+					upd.iType = ENTSYS_T_SETPOS;
+					upd.vector = vec3(aflPos[0], aflPos[1], aflPos[2]);
+					entsys_updates.push_back(upd);
 				}
 
 				auto vecRot = pEnt->get_relrot();
-				aflPos[0] = vecRot[0];
-				aflPos[1] = vecRot[1];
-				aflPos[2] = vecRot[2];
+				aflPos[0] = glm::degrees(vecRot[0]);
+				aflPos[1] = glm::degrees(vecRot[1]);
+				aflPos[2] = glm::degrees(vecRot[2]);
 				if (ImGui::InputFloat3("Rotation", aflPos))
 				{
-					entsys_update_t posupd;
-					posupd.nEntityID = m_iCurEnt;
-					posupd.iType = ENTSYS_T_SETROT;
-					posupd.vector = vec3(aflPos[0], aflPos[1], aflPos[2]);
-					entsys_updates.push_back(posupd);
+					upd.iType = ENTSYS_T_SETROT;
+					upd.vector = vec3(glm::radians(aflPos[0]), glm::radians(aflPos[1]), glm::radians(aflPos[2]));
+					entsys_updates.push_back(upd);
+				}
+
+				float flScale = pEnt->get_scale();
+				if (ImGui::InputFloat("Scale", &flScale))
+				{
+					upd.iType = ENTSYS_T_SETSCALE;
+					upd.flFloat = flScale;
+					entsys_updates.push_back(upd);
 				}
 			}
 			else

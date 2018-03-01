@@ -112,7 +112,7 @@ void thread_logic()
 			// sleep
 			std::this_thread::sleep_for(std::chrono::duration<double>(flLastUpdate + gpGlobals->flTickTime - gpGlobals->curtime));
 		}
-		if(gpGlobals->pRenderer->waiting_for_draw())
+		//if(gpGlobals->pRenderer->waiting_for_draw())
 			gpGlobals->pEntSys->draw_entities();
 	}
 	PRINT_DBG("Logic: joining...");

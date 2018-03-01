@@ -13,7 +13,9 @@ enum entsys_update_type {
 	ENTSYS_T_SETPOS		= 0,
 	ENTSYS_T_SETROT		= 1,
 	ENTSYS_T_SETMODEL	= 2,
-	ENTSYS_T_MAX = 3
+	ENTSYS_T_SETSCALE	= 3,
+	ENTSYS_T_IO			= 4,
+	ENTSYS_T_MAX		= 5
 };
 
 CMDBUF_BEGIN_CMD(entsys_update_t)
@@ -23,6 +25,7 @@ CMDBUF_BEGIN_CMD(entsys_update_t)
 	vec3 vector;
 	char szString[256];
 	std::string iszString;
+	float flFloat;
 CMDBUF_END_CMD(entsys_update_t)
 
 CMDBUF_DEF(entsys_update_cmdbuf, entsys_update_t, 16, true, false);

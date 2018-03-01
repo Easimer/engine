@@ -21,8 +21,17 @@ public:
 
 	bool is_drawable() { return true; }
 
+	virtual float get_scale() const override {
+		return m_flScale;
+	}
+
+	virtual void set_scale(float flScale) override {
+		m_flScale = flScale;
+	}
+
 protected:
 	char m_szModel[128] = { 0 };
+	float m_flScale = 1.0f;
 };
 
 #define SET_MODEL(mdlname) m_iModelID = gpGlobals->pRenderer->load_model(mdlname)

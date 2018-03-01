@@ -64,6 +64,8 @@ public:
 		return 1;
 	}
 
+	virtual void set_scale(float flScale) {}
+
 protected:
 	// This is the absolute pos if this ent has no parent
 	// Otherwise this is relative

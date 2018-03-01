@@ -3,6 +3,7 @@
 #include "entsys.h"
 #include "renderer.h"
 #include "icamera.h"
+#include "prop_common.h"
 #include <algorithm>
 
 entsys::entsys()
@@ -35,16 +36,26 @@ void entsys::update_entities()
 				while (nUpdates--)
 				{
 					auto pEnt = get_entity(pUpdate->nEntityID);
+					c_base_prop* pEntProp = dynamic_cast<c_base_prop*>(pEnt);
 					if (pEnt)
 					{
 						switch (pUpdate->iType)
 						{
 						case ENTSYS_T_SETPOS:
-							pEnt->set_abspos(pUpdate->vector);
+							pEnt->set_relpos(pUpdate->vector);
 							break;
 						case ENTSYS_T_SETROT:
+							pEnt->set_rotation(pUpdate->vector);
 							break;
 						case ENTSYS_T_SETMODEL:
+							break;
+						case ENTSYS_T_SETSCALE:
+							if (pEntProp) {
+								pEntProp->set_scale(pUpdate->flFloat);
+							}
+							else {
+								PRINT_DBG("entsys::update: update type SETSCALE invalid for entity " << pUpdate->nEntityID);
+							}
 							break;
 						default:
 							PRINT_DBG("entsys::update: invalid update type " << pUpdate->iType);
