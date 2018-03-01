@@ -141,10 +141,4 @@ private:
 	size_t m_nFrames = 0;
 	float m_flNow = 0, m_flLast = 0;
 	float m_flFPS = 0;
-
-	// Debug GUI state
-	bool m_bShowRendererDebug = false;
-	bool m_bShowStatistics = false;
-	bool m_bShowInspector = false;
-	size_t m_iCurEnt = 0;
 };

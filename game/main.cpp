@@ -7,6 +7,7 @@
 #include "camera.h"
 #include "input.h"
 #include "statistics.h"
+#include "devgui.h"
 #include "memstat.h"
 
 void thread_logic();
@@ -34,6 +35,7 @@ int main(int argc, char** argv)
 	gpGlobals->pCamera = new camera();
 	gpGlobals->pInput = new input();
 	gpGlobals->pStatistics = new estat_container();
+	gpGlobals->pDevGUI = new devgui_state();
 	
 	// Start main threads
 
@@ -51,6 +53,7 @@ int main(int argc, char** argv)
 	PRINT_DBG("Main: threads joined!");
 
 	// deinit globals
+	delete gpGlobals->pDevGUI;
 	delete gpGlobals->pStatistics;
 	delete gpGlobals->pInput;
 	delete gpGlobals->pCamera;

@@ -84,6 +84,7 @@ set(SRC_GUI
 	gui/imgui_impl_sdl_gl3.h
 
 	devgui.cpp
+	devgui.h
 )
 
 IF(WIN32)

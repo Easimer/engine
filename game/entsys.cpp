@@ -37,7 +37,7 @@ void entsys::update_entities()
 				{
 					auto pEnt = get_entity(pUpdate->nEntityID);
 					c_base_prop* pEntProp = dynamic_cast<c_base_prop*>(pEnt);
-					if (pEnt)
+					if (pEnt && pUpdate->iType != ENTSYS_T_CREATE)
 					{
 						switch (pUpdate->iType)
 						{
@@ -56,6 +56,21 @@ void entsys::update_entities()
 							else {
 								PRINT_DBG("entsys::update: update type SETSCALE invalid for entity " << pUpdate->nEntityID);
 							}
+							break;
+						case ENTSYS_T_SET_TNAME:
+							if (pUpdate->iszString.size() > 0) // prefer contents of std::string
+								pEnt->set_targetname(pUpdate->iszString.c_str());
+							else
+								pEnt->set_targetname(pUpdate->szString);
+							break;
+						case ENTSYS_T_CREATE:
+							// isz contains classname
+							// sz contains targetname
+							pEnt = CreateEntity(pUpdate->iszString.c_str());
+							if (pEnt)
+								pEnt->set_targetname(pUpdate->szString);
+							else
+								PRINT_ERR("entsys: attempted to create unknown entity type " << pUpdate->iszString);
 							break;
 						default:
 							PRINT_DBG("entsys::update: invalid update type " << pUpdate->iType);

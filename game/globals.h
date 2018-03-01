@@ -9,6 +9,7 @@ class renderer;
 class event_handler;
 class icamera;
 class input;
+struct devgui_state;
 
 struct engine_globals {
 	/// Engine Core
@@ -32,6 +33,8 @@ struct engine_globals {
 	std::thread::id iThreadLogic;
 	std::thread::id iThreadRendering;
 	std::thread::id iThreadSound;
+	// DevGUI State
+	devgui_state* pDevGUI;
 
 	/// Time
 	// Current time in seconds / time elapsed since engine init

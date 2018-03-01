@@ -4,6 +4,7 @@
 #include "icamera.h"
 #include "statistics.h"
 #include "entsys.h"
+#include "devgui.h"
 #include <glm/glm.hpp>
 
 void renderer::draw_debug_tools()
@@ -23,6 +24,18 @@ void renderer::draw_debug_tools()
 
 			gpGlobals->bRunning = !bQuit;
 		}
+		if (ImGui::BeginMenu("Entities"))
+		{
+			bool bOpenCreate = false;
+			ImGui::MenuItem("Create", NULL, &bOpenCreate);
+			ImGui::EndMenu();
+
+			if (bOpenCreate) {
+				gpGlobals->pDevGUI->m_szClassname[0] = '\0';
+				gpGlobals->pDevGUI->m_szTargetname[0] = '\0';
+				gpGlobals->pDevGUI->m_bShowEntityCreate = true;
+			}
+		}
 		if (ImGui::BeginMenu("Window"))
 		{
 			bool bToggleRendererDebug = false;
@@ -32,16 +45,16 @@ void renderer::draw_debug_tools()
 			ImGui::EndMenu();
 
 			if (bToggleRendererDebug)
-				m_bShowRendererDebug = !m_bShowRendererDebug;
+				gpGlobals->pDevGUI->m_bShowRendererDebug = !gpGlobals->pDevGUI->m_bShowRendererDebug;
 			if (bToggleStatistics)
-				m_bShowStatistics = !m_bShowStatistics;
+				gpGlobals->pDevGUI->m_bShowStatistics = !gpGlobals->pDevGUI->m_bShowStatistics;
 		}
 		ImGui::EndMainMenuBar();
 	}
 
 	// Renderer Statistics Window
 
-	if (ImGui::Begin("Renderer Debug", &m_bShowRendererDebug))
+	if (ImGui::Begin("Renderer Debug", &gpGlobals->pDevGUI->m_bShowRendererDebug))
 	{
 		ImGui::BeginGroup();
 		ImGui::Separator();
@@ -65,7 +78,7 @@ void renderer::draw_debug_tools()
 	//
 	// Engine Statistics Window
 	//
-	if (ImGui::Begin("Engine Statistics", &m_bShowStatistics, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::Begin("Engine Statistics", &gpGlobals->pDevGUI->m_bShowStatistics, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		for (size_t i = 0; i < ESTAT_C_MAX; i++)
 		{
@@ -96,7 +109,7 @@ void renderer::draw_debug_tools()
 	// Entity Inspector
 	//
 
-	if (ImGui::Begin("Entity Inspector", &m_bShowInspector))
+	if (ImGui::Begin("Entity Inspector", &gpGlobals->pDevGUI->m_bShowInspector))
 	{
 		// Entity list
 		ImGui::Text("Entities");
@@ -108,23 +121,23 @@ void renderer::draw_debug_tools()
 		{
 			if (ImGui::Selectable(entities[i].second, i == entities[i].first))
 			{
-				m_iCurEnt = entities[i].first;
+				gpGlobals->pDevGUI->m_iCurEnt = entities[i].first;
 			}
 		}
 		ImGui::ListBoxFooter();
 
 		ImGui::Separator();
 
-		if (m_iCurEnt)
+		if (gpGlobals->pDevGUI->m_iCurEnt)
 		{
 			float aflPos[3];
 			std::vector<entsys_update_t> entsys_updates;
 
-			auto pEnt = gpGlobals->pEntSys->get_entity(m_iCurEnt);
+			auto pEnt = gpGlobals->pEntSys->get_entity(gpGlobals->pDevGUI->m_iCurEnt);
 			if (pEnt)
 			{
 				entsys_update_t upd;
-				upd.nEntityID = m_iCurEnt;
+				upd.nEntityID = gpGlobals->pDevGUI->m_iCurEnt;
 
 				ImGui::Text(pEnt->get_classname());
 
@@ -157,10 +170,15 @@ void renderer::draw_debug_tools()
 					upd.flFloat = flScale;
 					entsys_updates.push_back(upd);
 				}
+
+				if (ImGui::Button("Kill Entity")) {
+					upd.iType = ENTSYS_T_KILL;
+					entsys_updates.push_back(upd);
+				}
 			}
 			else
 			{
-				PRINT_DBG("devgui: entity handle #" << m_iCurEnt << " is invalid!");
+				PRINT_DBG("devgui: entity handle #" << gpGlobals->pDevGUI->m_iCurEnt << " is invalid!");
 			}
 
 			if (entsys_updates.size() > 0)
@@ -169,6 +187,20 @@ void renderer::draw_debug_tools()
 			}
 		}
 
+		ImGui::End();
+	}
+
+	if (ImGui::Begin("Create entity", &gpGlobals->pDevGUI->m_bShowEntityCreate))
+	{
+		ImGui::InputText("Classname: ", gpGlobals->pDevGUI->m_szClassname, 128);
+		ImGui::InputText("Targetname: ", gpGlobals->pDevGUI->m_szTargetname, 128);
+		if (ImGui::Button("Create")) {
+			entsys_update_t upd;
+			upd.nEntityID = ENTSYS_T_CREATE;
+			upd.iszString = std::string(gpGlobals->pDevGUI->m_szClassname);
+			strncpy(upd.szString, gpGlobals->pDevGUI->m_szTargetname, 128);
+			gpGlobals->pDevGUI->m_bShowEntityCreate = false;
+		}
 		ImGui::End();
 	}
 
