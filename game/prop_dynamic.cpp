@@ -24,14 +24,5 @@ void c_prop_dynamic::spawn()
 	precache();
 	set_abspos(vec3_origin);
 	SET_MODEL(m_szModel);
-	SetThink(&c_prop_dynamic::think);
-	SetNextThink(0);
-}
-
-void c_prop_dynamic::think()
-{
-	auto rot = get_relrot();
-	rot[1] += 1;
-	set_rotation(rot);
-	SetNextThink(gpGlobals->curtime + 0.1);
+	SetNextThink(DONT_THINK);
 }

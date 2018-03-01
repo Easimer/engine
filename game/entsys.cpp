@@ -21,6 +21,47 @@ entsys::~entsys()
 void entsys::update_entities()
 {
 	RESTRICT_THREAD_LOGIC;
+
+	// process entsys updates
+	if (!m_update_buf.is_empty())
+	{
+		size_t nUpdates = 0;
+		entsys_update_t* pUpdate = nullptr;
+		if (m_update_buf.begin_read(&pUpdate, &nUpdates))
+		{
+			if (nUpdates != 0)
+			{
+				PRINT_DBG("entsys: received " << nUpdates << " updates");
+				while (nUpdates--)
+				{
+					auto pEnt = get_entity(pUpdate->nEntityID);
+					if (pEnt)
+					{
+						switch (pUpdate->iType)
+						{
+						case ENTSYS_T_SETPOS:
+							pEnt->set_abspos(pUpdate->vector);
+							break;
+						case ENTSYS_T_SETROT:
+							break;
+						case ENTSYS_T_SETMODEL:
+							break;
+						default:
+							PRINT_DBG("entsys::update: invalid update type " << pUpdate->iType);
+							break;
+						}
+					}
+					else
+					{
+						PRINT_DBG("entsys::update: attempted to update entity with invalid handle " << pUpdate->nEntityID);
+					}
+					pUpdate++;
+				}
+			}
+			m_update_buf.end_read();
+		}
+	}
+
 	for (auto& pEnt : m_vecEntities)
 	{
 		float flNextThink = pEnt->GetNextThink();
@@ -89,7 +130,7 @@ void entsys::precache_entities()
 void entsys::add_entity(base_entity * pEnt)
 {
 	m_vecEntities.push_back(pEnt);
-	gpGlobals->pStatistics->get_stat_u(ESTAT_C_ENTSYS, "Entity count") = m_vecEntities.size();
+	gpGlobals->pStatistics->get_stat_u(ESTAT_C_ENTSYS, "entity count") = m_vecEntities.size();
 	
 	m_vecEntityIDs.emplace(m_iNextEntityID, pEnt);
 	m_iNextEntityID++;
@@ -117,6 +158,22 @@ void entsys::get_entities(std::vector<std::pair<size_t, char[64]>>& v) const
 	}
 }
 
-void entsys::send_updates(const std::vector<entsys_update_t>&)
+void entsys::send_updates(std::vector<entsys_update_t>& updates)
 {
+	m_update_buf.begin_write();
+	for (auto& update : updates)
+	{
+		m_update_buf.write(update);
+	}
+	m_update_buf.end_write();
+}
+
+base_entity* entsys::get_entity(size_t iID)
+{
+	for (auto& kv : m_vecEntityIDs)
+	{
+		if (kv.first == iID)
+			return kv.second;
+	}
+	return nullptr;
 }

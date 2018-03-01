@@ -44,18 +44,12 @@ public:
 		PRINT_DBG("precaching " << szFilename);
 		m_vecPrecacheModels.push_back(std::string(szFilename));
 	}
-
-	base_entity* get_entity(size_t iID)
-	{
-		if (iID >= m_vecEntities.size())
-			return nullptr;
-
-		return m_vecEntityIDs[iID];
-	}
+	
+	base_entity* get_entity(size_t iID);
 
 	void get_entities(std::vector<std::pair<size_t, char[64]>>&) const;
 
-	void send_updates(const std::vector<entsys_update_t>&);
+	void send_updates(std::vector<entsys_update_t>&);
 
 private:
 	std::list<base_entity*> m_vecEntities;

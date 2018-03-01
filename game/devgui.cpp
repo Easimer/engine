@@ -113,6 +113,52 @@ void renderer::draw_debug_tools()
 		ImGui::ListBoxFooter();
 
 		ImGui::Separator();
+
+		if (m_iCurEnt)
+		{
+			float aflPos[3];
+			std::vector<entsys_update_t> entsys_updates;
+
+			auto pEnt = gpGlobals->pEntSys->get_entity(m_iCurEnt);
+			if (pEnt)
+			{
+				auto vecPos = pEnt->get_abspos();
+				aflPos[0] = vecPos[0];
+				aflPos[1] = vecPos[1];
+				aflPos[2] = vecPos[2];
+				if (ImGui::InputFloat3("Position", aflPos))
+				{
+					entsys_update_t posupd;
+					posupd.nEntityID = m_iCurEnt;
+					posupd.iType = ENTSYS_T_SETPOS;
+					posupd.vector = vec3(aflPos[0], aflPos[1], aflPos[2]);
+					entsys_updates.push_back(posupd);
+				}
+
+				auto vecRot = pEnt->get_relrot();
+				aflPos[0] = vecRot[0];
+				aflPos[1] = vecRot[1];
+				aflPos[2] = vecRot[2];
+				if (ImGui::InputFloat3("Rotation", aflPos))
+				{
+					entsys_update_t posupd;
+					posupd.nEntityID = m_iCurEnt;
+					posupd.iType = ENTSYS_T_SETROT;
+					posupd.vector = vec3(aflPos[0], aflPos[1], aflPos[2]);
+					entsys_updates.push_back(posupd);
+				}
+			}
+			else
+			{
+				PRINT_DBG("devgui: entity handle #" << m_iCurEnt << " is invalid!");
+			}
+
+			if (entsys_updates.size() > 0)
+			{
+				gpGlobals->pEntSys->send_updates(entsys_updates);
+			}
+		}
+
 		ImGui::End();
 	}
 
