@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include <string>
+
 struct devgui_state {
 	/// Debug GUI state
 	bool m_bShowRendererDebug = false;

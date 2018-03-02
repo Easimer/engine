@@ -2,6 +2,7 @@
 #include "shader_program.h"
 #include "shader.h"
 #include "qc_parser.h"
+#include "renderer.h"
 
 #include "glad/glad.h"
 #include <assert_opengl.h>
@@ -211,9 +212,37 @@ void shader_program::set_mat_proj(void * pMat)
 	glUniformMatrix4fv(m_iUniformMatProj, 1, GL_FALSE, (const GLfloat*)pMat); ASSERT_OPENGL();
 }
 
-material shader_program::load_material(const mdlc::qc_parser & qc)
+bool shader_program::load_material(material & mat)
 {
-	material mat(qc);
-	// TODO
-	return mat;
+	RESTRICT_THREAD_RENDERING;
+	const mdlc::qc_parser& qcp = mat.get_parser();
+
+	for (size_t iTex = 0; iTex < SHADERTEX_MAX; iTex++) {
+		auto iszKey = m_mapTexKey[(shader_tex_type)iTex];
+		uint32_t iTexObj = 0;
+		if (qcp.is_cmd(iszKey.c_str())) {
+			iTexObj = gpGlobals->pRenderer->load_texture(qcp.get_string(iszKey.c_str()));
+			ASSERT(iTexObj);
+			if (!iTexObj)
+				return false;
+		}
+		else {
+			auto iszDefaultTex = m_mapTexDefault[(shader_tex_type)iTex];
+			iTexObj = gpGlobals->pRenderer->load_texture(iszDefaultTex);
+			ASSERT(iTexObj);
+			if (!iTexObj)
+				return false;
+		}
+		mat.set_texture((mat_tex_index)iTex, iTexObj);
+	}
+
+	return true;
+}
+
+void shader_program::use_material(const material & mat)
+{
+	for (size_t i = 0; i < SHADERTEX_MAX; i++) {
+		glActiveTexture(GL_TEXTURE0 + i); ASSERT_OPENGL();
+		glBindTexture(GL_TEXTURE_2D, mat.get_texture((mat_tex_index)i)); ASSERT_OPENGL();
+	}
 }

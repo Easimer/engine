@@ -31,7 +31,10 @@ public:
 
 	uint32_t get_id() const { return m_iID; }
 
-	material load_material(const mdlc::qc_parser& qc);
+	// 
+	bool load_material(material& mat);
+	// Set as current material
+	void use_material(const material& mat);
 
 private:
 	uint32_t m_iID;

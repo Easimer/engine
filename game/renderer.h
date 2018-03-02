@@ -101,6 +101,8 @@ public:
 
 	void toggle_devgui();
 
+	size_t load_material(const char* szFilename);
+
 private:
 	renderer_drawmdl_cmdbuf m_cmdbuf;
 	renderer_load_cmdbuf m_gfx_ld_cmdbuf;
@@ -116,8 +118,13 @@ private:
 	// list of shaders
 	// TODO: make this a map<string [name], shader_program*>
 	std::vector<shader_program*> m_vecPrograms;
+	
+	// list of materials
+	std::vector<material> m_vecMaterials;
 
 	std::map<std::string, model_id> m_mapModels;
+	// maps material filename to index
+	std::map<std::string, size_t> m_map_material_name;
 
 	glm::mat4 m_matProj;
 	glm::mat4 m_matView;
@@ -125,15 +132,8 @@ private:
 	std::map<model_id, size_t> m_model_vertexcount;
 	// maps texture filename to GL texture ID
 	std::map<std::string, uint32_t> m_map_texture_name;
-	/*	maps texture ids to texture units of a model
-		TODO: doc this better
-		i.e. mapping of three textures to three tex units of a model:
-
-					<- GL_TEXTURE0 <- 5
-		MODEL(0)	<- GL_TEXTURE1 <- 13
-					<- GL_TEXTURE2 <- 1
-	*/
-	std::map<model_id, std::vector<uint32_t>> m_mapTextures;
+	// maps material id to model_id
+	std::map<model_id, size_t> m_mapMaterial;
 
 	int m_nScreenWidth, m_nScreenHeight;
 

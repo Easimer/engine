@@ -25,9 +25,6 @@ set(SRC_CORE
 
 	input.cpp
 	input.h
-
-	memstat.cpp
-	memstat.h
 )
 
 set(SRC_ENTSYS
@@ -88,6 +85,9 @@ set(SRC_GUI
 
 	devgui.cpp
 	devgui.h
+
+	console.cpp
+	console.h
 )
 
 IF(WIN32)

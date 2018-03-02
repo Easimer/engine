@@ -41,7 +41,7 @@ endmacro()
 
 if(MSVC)
 	set(CMAKE_CXX_FLAGS_DEBUG
-	  "/DWIN32 /D_WINDOWS /DDEBUG /EHsc /wd4355 /wd4251 /wd4250 /wd4996 /MP /permissive-"
+	  "/DWIN32 /D_WINDOWS /DDEBUG /EHsc /wd4355 /wd4251 /wd4250 /wd4996 /MP /permissive- /Zi"
 	  CACHE STRING "Debug compiler flags" FORCE
 	)
 	set(CMAKE_CXX_FLAGS

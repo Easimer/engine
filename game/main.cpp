@@ -8,7 +8,6 @@
 #include "input.h"
 #include "statistics.h"
 #include "devgui.h"
-#include "memstat.h"
 
 void thread_logic();
 void thread_rendering();
@@ -18,8 +17,6 @@ void thread_sound();
 
 int main(int argc, char** argv)
 {
-	memstat_init();
-	memstat_enabled = true;
 	CMDLINE_INIT();
 
 	SDL_SetMainReady();
@@ -53,6 +50,10 @@ int main(int argc, char** argv)
 	PRINT_DBG("Main: threads joined!");
 
 	// deinit globals
+	if (gpGlobals->pCommandDefs)
+		delete[] gpGlobals->pCommandDefs;
+	if (gpGlobals->entityFactoryDictionary)
+		delete[] gpGlobals->entityFactoryDictionary;
 	delete gpGlobals->pDevGUI;
 	delete gpGlobals->pStatistics;
 	delete gpGlobals->pInput;
@@ -61,10 +62,7 @@ int main(int argc, char** argv)
 	delete gpGlobals->pRenderer;
 	delete gpGlobals->pEntSys;
 
-	memstat_enabled = false;
-	memstat_print();
-
-	//CMDLINE_SHUTDOWN(); // CRASH HERE
+	CMDLINE_SHUTDOWN();
 
 	SDL_Quit();
 
@@ -95,7 +93,7 @@ void thread_logic()
 	c_base_prop* pHat = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pHat->set_model("data/models/cowboy_hat.smd");
 	pHat->spawn();
-	gpGlobals->pEntSys->kill_entity(pHat);
+	//gpGlobals->pEntSys->kill_entity(pHat);
 	
 	PRINT_DBG("===========");
 	PRINT_DBG("End of loading");

@@ -7,9 +7,11 @@
 #include "devgui.h"
 #include "prop_common.h"
 #include <glm/glm.hpp>
+#include "console.h"
 
 void renderer::draw_debug_tools()
 {
+	console_draw_frame();
 #ifdef PLAT_DEBUG
 	if (!gpGlobals->bDevGUI)
 		return;
@@ -18,12 +20,17 @@ void renderer::draw_debug_tools()
 		if (ImGui::BeginMenu("File"))
 		{
 			bool bQuit = false;
+			bool bConsole = false;
 
+			ImGui::MenuItem("Console", NULL, &bConsole);
 			ImGui::Separator();
 			ImGui::MenuItem("Quit", NULL, &bQuit);
 			ImGui::EndMenu();
 
 			gpGlobals->bRunning = !bQuit;
+
+			if (bConsole)
+				gpGlobals->bConsoleOpen = !gpGlobals->bConsoleOpen;
 		}
 		if (ImGui::BeginMenu("Entities"))
 		{
@@ -120,7 +127,9 @@ void renderer::draw_debug_tools()
 		ImGui::ListBoxHeader("");
 		for (size_t i = 0; i < entities.size(); i++)
 		{
-			if (ImGui::Selectable(entities[i].second, i == entities[i].first))
+			char szLabelBuf[256];
+			snprintf(szLabelBuf, 256, "%s##%llu\n", entities[i].second, entities[i].first);
+			if (ImGui::Selectable(szLabelBuf, gpGlobals->pDevGUI->m_iCurEnt == entities[i].first))
 			{
 				gpGlobals->pDevGUI->m_iCurEnt = entities[i].first;
 			}

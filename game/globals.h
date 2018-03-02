@@ -10,6 +10,7 @@ class event_handler;
 class icamera;
 class input;
 struct devgui_state;
+struct ccommand_def;
 
 struct engine_globals {
 	/// Engine Core
@@ -48,8 +49,13 @@ struct engine_globals {
 	/// Entity System
 	entsys* pEntSys;
 	// Entity Factory
-	entfmap_t* entityFactoryDictionary;
-	size_t iEntityFactoryDictionaryIndex;
+	entfmap_t* entityFactoryDictionary = nullptr;
+	size_t iEntityFactoryDictionaryIndex = 0;
+
+	/// Console
+	ccommand_def* pCommandDefs = nullptr;
+	size_t iCommandDefs = 0;
+	bool bConsoleOpen = false;
 };
 
 extern engine_globals* gpGlobals;

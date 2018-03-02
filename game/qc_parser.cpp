@@ -26,6 +26,12 @@ mdlc::qc_parser::qc_parser(std::string & iszFilename)
 	parse();
 }
 
+void mdlc::qc_parser::operator=(const qc_parser & other)
+{
+	// Copy commands only
+	m_commands = other.m_commands;
+}
+
 bool mdlc::qc_parser::is_cmd(const char* szCmd) const
 {
 	return std::any_of(m_commands.begin(), m_commands.end(), [&szCmd](const qc_command& cmd){

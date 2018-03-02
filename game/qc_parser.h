@@ -17,8 +17,11 @@ namespace mdlc {
 
 	class qc_parser {
 	public:
+		qc_parser() {}
 		qc_parser(const char* szFilename);
 		qc_parser(std::string& iszFilename);
+
+		void operator=(const qc_parser& other);
 
 		bool is_cmd(const char* cmd) const;
 

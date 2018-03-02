@@ -38,14 +38,6 @@ void input::release_key(long int keysym)
 	//if (m_keybinds.count(keysym) == 0)
 	//	return;
 	//m_action_state[m_keybinds[keysym]] = false;
-
-	if (keysym == SDLK_ESCAPE) {
-		if (SDL_CaptureMouse(m_bMouseCaptured ? SDL_FALSE : SDL_TRUE) == -1)
-		{
-			ASSERT_SDL2(0);
-		}
-		m_bMouseCaptured = !m_bMouseCaptured;
-	}
 }
 
 void input::bind_key(long int keysym, input_action ia)

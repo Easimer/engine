@@ -175,7 +175,7 @@ void mdlc::smd_parser::parse_line()
 			SMDP_VTX_STOF(iBoneID);											\
 			SMDP_VTX_STOF(px); SMDP_VTX_STOF(py); SMDP_VTX_STOF(pz);		\
 			SMDP_VTX_STOF(nx); SMDP_VTX_STOF(ny); SMDP_VTX_STOF(nz);		\
-			SMDP_VTX_STOF(u); SMDP_VTX_STOF(v);								\
+			SMDP_VTX_STOF(u); SMDP_VTX_STOF(v);						\
 			m_triangle.vertices.push_back(vertex);
 
 	case SMDP_STATE_TRIANGLE_VTX1:

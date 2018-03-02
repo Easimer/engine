@@ -21,6 +21,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "gui/imgui_impl_sdl_gl3.h"
+#include "console.h"
 
 static void opengl_msg_callback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*, const void*);
 
@@ -87,12 +88,15 @@ void renderer::render()
 			
 			pShader->set_mat_trans(glm::value_ptr(mat_trans));
 
+			// activate material
+			pShader->use_material(m_vecMaterials[m_mapMaterial[pCommands->iModelID]]);
+
 			// activate textures
-			for (size_t i = 0; i < m_mapTextures[pCommands->iModelID].size(); i++)
-			{
-				glActiveTexture(GL_TEXTURE0 + i); ASSERT_OPENGL();
-				glBindTexture(GL_TEXTURE_2D, m_mapTextures[pCommands->iModelID][i]); ASSERT_OPENGL();
-			}
+			//for (size_t i = 0; i < m_mapTextures[pCommands->iModelID].size(); i++)
+			//{
+			//	glActiveTexture(GL_TEXTURE0 + i); ASSERT_OPENGL();
+			//	glBindTexture(GL_TEXTURE_2D, m_mapTextures[pCommands->iModelID][i]); ASSERT_OPENGL();
+			//}
 
 			size_t nVertexCount = m_model_vertexcount[pCommands->iModelID];
 			nAllVertices += nVertexCount;
@@ -135,8 +139,10 @@ void renderer::render()
 		vecEvents.push_back(event);
 
 		// Toggle DevGUI
-		if (event.event.type == SDL_KEYDOWN && event.event.key.keysym.sym == SDLK_F10) {
+		if (event.event.type == SDL_KEYUP) {
+			if (event.event.key.keysym.sym == SDLK_F10) {
 				gpGlobals->pRenderer->toggle_devgui();
+			}
 		}
 	}
 	if(vecEvents.size() > 0 && !gpGlobals->bDevGUI)
@@ -329,14 +335,21 @@ model_id renderer::upload_model(const model& mdl)
 	glBindVertexArray(iVAO); ASSERT_OPENGL();
 	glGenBuffers(MDL_VBO_MAX, aiVBO); ASSERT_OPENGL();
 
-	// Load textures
-	std::vector<uint32_t> aTextures(mdl.materials.size(), 0);
-	for (size_t i = 0; i < mdl.materials.size(); i++)
-	{
-		uint32_t iTex = load_texture(mdl.materials[i].szName);
-		aTextures[i] = iTex;
-	}
-	m_mapTextures.emplace(iVAO, aTextures);
+	// Load material
+	//std::vector<uint32_t> aTextures(mdl.materials.size(), 0);
+	//for (size_t i = 0; i < mdl.materials.size(); i++)
+	//{
+		//uint32_t iTex = load_texture(mdl.materials[i].szName);
+		//aTextures[i] = iTex;
+	//}
+	//m_mapTextures.emplace(iVAO, aTextures);
+
+	//mdl.materials[0].iModelMaterial
+	
+	size_t iMaterial = load_material(mdl.materials[0].szName);
+	m_mapMaterial.emplace(iVAO, iMaterial);
+
+	PRINT_DBG("renderer::upload_model: material " << mdl.materials[0].szName << " (#" << iMaterial << ") assigned to model " << iVAO);
 
 	// Generate arrays
 	size_t nPositionsSiz = mdl.triangles.size() * 9;
@@ -363,7 +376,7 @@ model_id renderer::upload_model(const model& mdl)
 			aflNormals[iTriangle * 9 + iVertex * 3 + 2] = mdl.triangles[iTriangle].vertices[iVertex].nz;
 
 			aflUVs[iTriangle * 6 + iVertex * 2 + 0] = mdl.triangles[iTriangle].vertices[iVertex].u;
-			aflUVs[iTriangle * 6 + iVertex * 2 + 1] = mdl.triangles[iTriangle].vertices[iVertex].v;
+			aflUVs[iTriangle * 6 + iVertex * 2 + 1] = 1 - mdl.triangles[iTriangle].vertices[iVertex].v;
 
 			anBoneIDs[iTriangle * 3 + iVertex] = mdl.triangles[iTriangle].vertices[iVertex].iBoneID;
 			anMatIDs[iTriangle * 3 + iVertex] = mdl.triangles[iTriangle].iModelMaterial;
@@ -560,8 +573,41 @@ void renderer::toggle_devgui()
 	PRINT_DBG("DevGUI: " << gpGlobals->bDevGUI);
 }
 
+size_t renderer::load_material(const char * szFilename)
+{
+	mdlc::qc_parser qcp(szFilename);
+
+	material mat(qcp);
+	
+	auto iszShader = mat.get_shader();
+
+	for (auto& pShader : m_vecPrograms) {
+		if (pShader) {
+			if (iszShader == pShader->get_name()) {
+				pShader->load_material(mat);
+				break;
+			}
+		}
+	}
+
+	m_vecMaterials.push_back(mat);
+	size_t iRet = m_vecMaterials.size() - 1;
+	m_map_material_name.emplace(szFilename, m_vecMaterials.size() - 1);
+
+	return iRet;
+}
+
 static void opengl_msg_callback(GLenum iSource, GLenum iType, GLuint iID, GLenum iSeverity, GLsizei nLength, const GLchar* szMsg, const void* pUParam)
 {
 	fprintf(stderr, "[ OpenGL Message ] type = 0x%x, severity = 0x%x, message = %s\n",
 		iType, iSeverity, szMsg);
 }
+
+static void ccmd_dump_textures(const std::vector<std::string>& args)
+{
+
+}
+
+static ccommand_init dump_textures("dump_textures", (ccommand_handler*)&ccmd_dump_textures);
+
+//CCOMMAND_DEF(dump_textures, ccmd_dump_textures);
