@@ -346,6 +346,10 @@ model_id renderer::upload_model(const model& mdl)
 
 	//mdl.materials[0].iModelMaterial
 	
+	if (mdl.materials.size() == 0) {
+		PRINT_DBG("Model has no materials!");
+	}
+
 	size_t iMaterial = load_material(mdl.materials[0].szName);
 	m_mapMaterial.emplace(iVAO, iMaterial);
 

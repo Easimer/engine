@@ -24,6 +24,8 @@ namespace mdlc {
 		void parse();
 		void parse_line();
 
+		std::vector<std::string> tokenize(const std::string& line) const;
+
 	private:
 		int m_iLine;
 		int m_iSkeletonTime;

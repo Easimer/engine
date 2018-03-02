@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <enl/strstrip.h>
 #include <parseutils.h>
+#include <enl/benchmark.h>
 
 #define SMDP_STATE_START			0x00
 #define SMDP_STATE_GLOBAL			0x10
@@ -16,7 +17,7 @@
 
 #define SMDP_STATE_TRIANGLE			0x40
 
-#define SMDP_CHECK_END()	if(token == "end") { m_iState = SMDP_STATE_GLOBAL; return; }
+#define SMDP_CHECK_END()	if(aiTokens[0] == "end") { m_iState = SMDP_STATE_GLOBAL; return; }
 
 mdlc::smd_parser::smd_parser(const char * szFilename)
 {
@@ -46,11 +47,16 @@ void mdlc::smd_parser::parse()
 {
 	m_iLine = 0;
 	m_iState = SMDP_STATE_START;
+
+	benchmark bm;
+	bm.start();
 	while (m_file && !m_file.eof())
 	{
 		m_iLine++;
 		parse_line();
 	}
+	bm.end();
+	PRINT_DBG("Model loaded under " << bm.elapsed() << " secs");
 }
 
 #define SMDP_TOKEN(dst) std::getline(ss, dst, ' ');
@@ -58,20 +64,13 @@ void mdlc::smd_parser::parse()
 void mdlc::smd_parser::parse_line()
 {
 	std::string line;
-	std::string token;
 	std::getline(m_file, line);
-
-	char szLine[256] = { 0 };
-	char* szStrippedLine;
-	line.copy(szLine, 256);
-	szStrippedLine = strnlstrip(szLine, 256);
-
-	std::stringstream ss(szStrippedLine);
 
 	//std::cout << '\"' << szStrippedLine << '\"' << std::endl;
 	//std::cout << m_iLine << std::endl;
 
-	std::getline(ss, token, ' ');
+	//std::getline(ss, token, ' ');
+	auto aiTokens = tokenize(line);
 
 	//std::cout << "State is " << m_iState << std::endl;
 
@@ -94,36 +93,34 @@ void mdlc::smd_parser::parse_line()
 	switch (m_iState)
 	{
 	case SMDP_STATE_START:
-		if (token != "version")
+		if (aiTokens[0] != "version")
 		{
 			PRINT_ERR("expected \"version\" on line " << m_iLine);
 			return;
 		}
-		SMDP_TOKEN(token);
-		//PRINT_DBG("version " << token << " studiomdl file");
-		if (std::stoi(token) != 1)
+		if (std::stoi(aiTokens[1]) != 1)
 		{
-			PRINT_ERR("Unknown SMD version " << token << ", attempting parse anyway");
+			PRINT_ERR("Unknown SMD version " << aiTokens[1] << ", attempting parse anyway");
 		}
 		m_iState = SMDP_STATE_GLOBAL;
 		break;
 
 	case SMDP_STATE_GLOBAL:
-		if (token == "nodes")
+		if (aiTokens[0] == "nodes")
 			m_iState = SMDP_STATE_NODES;
-		else if (token == "skeleton")
+		else if (aiTokens[0] == "skeleton")
 			m_iState = SMDP_STATE_SKELETON;
-		else if (token == "triangles")
+		else if (aiTokens[0] == "triangles")
 			m_iState = SMDP_STATE_TRIANGLE;
-		else if (token == "end")
+		else if (aiTokens[0] == "end")
 			m_iState = SMDP_STATE_GLOBAL;
 		break;
 
 	case SMDP_STATE_NODES:
 		SMDP_CHECK_END();
-		bone_id = token;
-		SMDP_TOKEN(bone_name);
-		SMDP_TOKEN(bone_parent_id);
+		bone_id = aiTokens[0];
+		bone_name = aiTokens[1];
+		bone_parent_id = aiTokens[2];
 
 		bone_name = bone_name.substr(1, bone_name.size() - 2);
 
@@ -145,7 +142,7 @@ void mdlc::smd_parser::parse_line()
 		// check if material is already used
 		for (auto& mat : m_outmodel.materials)
 		{
-			if (strcmp(mat.szName, szStrippedLine) == 0)
+			if (strcmp(mat.szName, aiTokens[0].c_str()) == 0)
 			{
 				m_triangle.iModelMaterial = mat.iModelMaterial;
 				break;
@@ -155,8 +152,8 @@ void mdlc::smd_parser::parse_line()
 		if (m_triangle.iModelMaterial == -1)
 		{
 			m_outmodel.iLastMatID++;
-			strncpy(material.szName, szStrippedLine, SMD_MAX_MATERIAL_PATH_SIZ);
-			//PRINT_DBG("Added material " << m_outmodel.iLastMatID << ':' << szStrippedLine);
+			strncpy(material.szName, aiTokens[0].c_str(), SMD_MAX_MATERIAL_PATH_SIZ);
+			PRINT_DBG("Added material " << m_outmodel.iLastMatID << ':' << aiTokens[0].c_str());
 			material.iModelMaterial = m_outmodel.iLastMatID;
 			m_outmodel.materials.push_back(material);
 			m_triangle.iModelMaterial = m_outmodel.iLastMatID;
@@ -166,12 +163,12 @@ void mdlc::smd_parser::parse_line()
 		break;
 
 #define SMDP_VTX_STOF(var) vertex.var = std::stof(var)
+#define SMDP_TOK(var, i) var = aiTokens[i]
 #define SMDP_VTX()															\
-			iBoneID = token;												\
-			SMDP_TOKEN(px); SMDP_TOKEN(py); SMDP_TOKEN(pz);					\
-			SMDP_TOKEN(nx); SMDP_TOKEN(ny); SMDP_TOKEN(nz);					\
-			SMDP_TOKEN(u); SMDP_TOKEN(v);									\
-			SMDP_TOKEN(nulbuf); SMDP_TOKEN(nulbuf); SMDP_TOKEN(nulbuf);		\
+			SMDP_TOK(iBoneID, 0);												\
+			SMDP_TOK(px, 1); SMDP_TOK(py, 2); SMDP_TOK(pz, 3);					\
+			SMDP_TOK(nx, 4); SMDP_TOK(ny, 5); SMDP_TOK(nz, 6);					\
+			SMDP_TOK(u, 7); SMDP_TOK(v, 8);									\
 			SMDP_VTX_STOF(iBoneID);											\
 			SMDP_VTX_STOF(px); SMDP_VTX_STOF(py); SMDP_VTX_STOF(pz);		\
 			SMDP_VTX_STOF(nx); SMDP_VTX_STOF(ny); SMDP_VTX_STOF(nz);		\
@@ -197,5 +194,33 @@ void mdlc::smd_parser::parse_line()
 		m_triangle.vertices.clear();
 		break;
 	}
-	//std::cin >> line;
+}
+
+std::vector<std::string> mdlc::smd_parser::tokenize(const std::string & line) const
+{
+	std::vector<std::string> ret;
+
+	size_t iStart = 0;
+
+	bool bEnded = false;
+
+	for (size_t i = 0; i < line.size(); i++) {
+		if (line[i] == ' ' && !bEnded) {
+			bEnded = true;
+			ret.push_back(line.substr(iStart, i - iStart));
+		}
+		if (line[i] == ' ' && bEnded) {
+			continue;
+		}
+		if (line[i] != ' ' && bEnded) {
+			iStart = i;
+			bEnded = false;
+		}
+	}
+
+	if (!bEnded) {
+		ret.push_back(line.substr(iStart, line.size() - iStart));
+	}
+
+	return ret;
 }
