@@ -54,11 +54,11 @@ set(SRC_GFX
 	camera.cpp
 	camera.h
 
-	qc_parser.cpp
-	qc_parser.h
+	../public/src/qc_parser.cpp
+	../public/include/qc_parser.h
 
-	smd_parser.cpp
-	smd_parser.h
+	../public/src/smd_parser.cpp
+	../public/include/smd_parser.h
 
 	vector.cpp
 	vector.h
