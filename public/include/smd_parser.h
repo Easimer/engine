@@ -20,6 +20,11 @@ namespace mdlc {
 		model get_model() const {
 			return m_outmodel;
 		}
+
+		bool fail() const {
+			return m_bFail;
+		}
+
 	protected:
 		void parse();
 		void parse_line();
@@ -27,6 +32,7 @@ namespace mdlc {
 		std::vector<std::string> tokenize(const std::string& line) const;
 
 	private:
+		bool m_bFail = false;
 		int m_iLine;
 		int m_iSkeletonTime;
 		int m_iState;

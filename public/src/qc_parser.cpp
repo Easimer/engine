@@ -60,6 +60,16 @@ std::string mdlc::qc_parser::get_string(const char* szCmd) const
 	})->m_iszArg;
 }
 
+std::vector<std::string> mdlc::qc_parser::get_commands() const
+{
+	std::vector<std::string> ret;
+	for (auto& cmd : m_commands) {
+		ret.push_back(cmd.m_iszCmd);
+	}
+
+	return ret;
+}
+
 void mdlc::qc_parser::parse()
 {
 	m_iLine = 0;
@@ -113,7 +123,7 @@ void mdlc::qc_parser::parse_line()
 	while (!is_whitespace(line[i]))
 	{
 		c = line[i];
-		if (mdlc::is_letter(c))
+		if (mdlc::is_letter(c) || c == '_')
 		{
 			cmd << c;
 			i++;

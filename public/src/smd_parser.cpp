@@ -22,8 +22,11 @@
 mdlc::smd_parser::smd_parser(const char * szFilename)
 {
 	m_file = std::ifstream(szFilename);
-	if (!m_file)
-		throw std::runtime_error("smd_parser: cannot open " + std::string(szFilename));
+	if (!m_file) {
+		PRINT_ERR("smd_parser: cannot open " << szFilename);
+		//throw std::runtime_error("smd_parser: cannot open " + std::string(szFilename));
+		m_bFail = true;
+	}
 	parse();
 }
 
@@ -35,11 +38,10 @@ mdlc::smd_parser::smd_parser(std::string & iszFilename)
 	m_file = std::ifstream(iszFilename);
 	if (!m_file)
 	{
-		PRINT_ERR("smd_parser: cannot open " + iszFilename);
-		throw std::runtime_error("smd_parser: cannot open " + iszFilename);
+		PRINT_ERR("smd_parser: cannot open " << iszFilename);
+		//throw std::runtime_error("smd_parser: cannot open " + iszFilename);
+		m_bFail = true;
 	}
-	else
-		PRINT("Opened " << iszFilename);
 	parse();
 }
 

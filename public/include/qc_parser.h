@@ -29,6 +29,8 @@ namespace mdlc {
 		double get_float(const char* cmd) const;
 		std::string get_string(const char* cmd) const;
 
+		std::vector<std::string> get_commands() const;
+
 	protected:
 		void parse();
 		void parse_line();
