@@ -11,6 +11,14 @@ enum emf_file_type {
 };
 
 START_PACK;
+
+struct emf_manifest {
+	char szMaterial[256];
+	uint64_t nFramerate;
+	uint64_t nAnimations;
+	//char szAnimations[64][nAnimations];
+};
+
 struct emf_hdr {
 	uint64_t iID;
 	char szMaterial[256];
