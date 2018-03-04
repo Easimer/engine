@@ -30,8 +30,13 @@ int main(int argc, char** argv)
 				goto fail;
 			}
 			model mdl_mesh = smdp_mesh.get_model();
+			if (mdl_mesh.materials.size() == 0) {
+				PRINT_ERR("Mesh uses no material!");
+				return 1;
+			}
 			emfw.set_mesh(mdl_mesh.triangles);
 			emfw.add_bones(mdl_mesh.bones);
+			emfw.set_material(mdl_mesh.materials[0].szName);
 
 			PRINT("Mesh: " << iszMeshPath);
 		}
@@ -51,11 +56,13 @@ int main(int argc, char** argv)
 			if (cmd.find("animation_") == 0) {
 				std::string name = cmd.substr(cmd.find('_') + 1);
 				PRINT("Processing animation " << name);
+
+				// TODO:
+				emfw.add_animation(name, std::vector<model_keyframe>());
 			}
 		}
+		emfw.write();
 	}
-
-
 
 	fail:
 

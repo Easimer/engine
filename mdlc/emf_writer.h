@@ -13,9 +13,15 @@ public:
 	void set_collmesh(const std::vector<model_triangle>& triangles);
 	void add_animation(const std::string& name, const std::vector<model_keyframe>& animation);
 	void add_bones(const std::vector<model_bone>& bones);
+	void set_framerate(unsigned nFramerate) { m_nFramerate = nFramerate; }
+	void set_material(const std::string& iszMaterial) { m_iszMaterial = iszMaterial; }
+
+	void write() const;
 
 private:
 	std::string m_iszOutfile;
+	std::string m_iszMaterial;
+	unsigned m_nFramerate;
 
 	std::vector<model_triangle> m_mesh;
 	std::vector<model_triangle> m_collmesh;

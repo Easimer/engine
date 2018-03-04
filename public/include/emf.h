@@ -3,7 +3,10 @@
 #include <enl/platform.h>
 #include <cstdint>
 
+#define EMF_MAGIC (0xa655104063d85922)
+
 enum emf_file_type {
+	EMF_T_MANIFEST = 0x00,
 	EMF_T_VERTEXDATA = 0x01,
 	EMF_T_COLLDATA = 0x02,
 	EMF_T_SKELETON = 0x03,
@@ -21,7 +24,7 @@ struct emf_manifest {
 
 struct emf_hdr {
 	uint64_t iID;
-	char szMaterial[256];
+	uint64_t iType; // emf_file_type
 } PACKED;
 END_PACK
 
