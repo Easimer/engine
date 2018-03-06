@@ -19,7 +19,9 @@ public:
 
 	const mdlc::qc_parser& get_parser() const { return m_qcp; }
 
-	const std::string& get_shader() const;
+	int get_shader();
+
+	const std::string& get_shader_name() const { return m_iszShader; }
 
 	void set_texture(mat_tex_index iType, uint32_t iTex);
 
@@ -28,6 +30,8 @@ public:
 private:
 	mdlc::qc_parser m_qcp;
 	std::string m_iszShader;
+
+	int m_iShader;
 
 	uint32_t m_aiTextures[MAT_TEX_MAX];
 };

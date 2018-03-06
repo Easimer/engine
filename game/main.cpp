@@ -79,16 +79,21 @@ void thread_logic()
 
 	gpGlobals->pRenderer->begin_load();
 	gpGlobals->pRenderer->load_shader("data/shaders/model_dynamic.qc");
+	gpGlobals->pRenderer->load_shader("data/shaders/wireframe.qc");
 
 	gpGlobals->pEntSys->precache_entities();
+
+	c_base_prop* pAnarchist = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+	pAnarchist->set_model("data/models/anarchist.smd");
+	pAnarchist->spawn();
+
+	c_base_prop* pCSoldier = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+	pCSoldier->set_model("data/models/csoldier.smd");
+	pCSoldier->spawn();
 
 	c_base_prop* pWolf = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pWolf->set_model("data/models/wolf.smd");
 	pWolf->spawn();
-
-	c_base_prop* pWolf2 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
-	pWolf2->set_model("data/models/dog.smd");
-	pWolf2->spawn();
 
 	c_base_prop* pHat = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pHat->set_model("data/models/test_terrain.smd");

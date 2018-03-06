@@ -103,6 +103,8 @@ public:
 
 	size_t load_material(const char* szFilename);
 
+	int get_shader_program_index(const std::string& name) const;
+
 private:
 	renderer_drawmdl_cmdbuf m_cmdbuf;
 	renderer_load_cmdbuf m_gfx_ld_cmdbuf;
@@ -118,6 +120,7 @@ private:
 	// list of shaders
 	// TODO: make this a map<string [name], shader_program*>
 	std::vector<shader_program*> m_vecPrograms;
+	std::map<std::string, int> m_mapPrograms;
 	
 	// list of materials
 	std::vector<material> m_vecMaterials;

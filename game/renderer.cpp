@@ -73,11 +73,19 @@ void renderer::render()
 	if(m_cmdbuf.begin_read(&pCommands, &nCommands))
 	{
 		//PRINT_DBG("renderer::render: drawing " << nCommands << " models");
-		shader_program* pShader = m_vecPrograms[0];
-		glUseProgram(pShader->get_id());
 		gpGlobals->pStatistics->get_stat_u(ESTAT_C_RENDERER, "current draw commands") = nCommands;
 		while (nCommands--)
 		{
+			material curmat = m_vecMaterials[m_mapMaterial[pCommands->iModelID]];
+
+			//shader_program* pShader = m_vecPrograms[0];
+			int iShader = curmat.get_shader();
+			if (iShader == -1) {
+				iShader = 0;
+			}
+			shader_program* pShader = m_vecPrograms[iShader];
+			glUseProgram(pShader->get_id());
+
 			//PRINT_DBG("renderer::render: drawing model #" << pCommands->iModelID);
 			glBindVertexArray(pCommands->iModelID); ASSERT_OPENGL();
 			
@@ -89,7 +97,7 @@ void renderer::render()
 			pShader->set_mat_trans(glm::value_ptr(mat_trans));
 
 			// activate material
-			pShader->use_material(m_vecMaterials[m_mapMaterial[pCommands->iModelID]]);
+			pShader->use_material(curmat);
 
 			// activate textures
 			//for (size_t i = 0; i < m_mapTextures[pCommands->iModelID].size(); i++)
@@ -506,8 +514,11 @@ void renderer::load_loop()
 				break;
 			case GFX_LD_T_SHADER:
 				shader_program* pProgram = new shader_program(pCommands->szFilename);
-				PRINT_DBG("renderer: received shader load request for " << pProgram->get_name());
+				std::string iszShaderName = std::string(pProgram->get_name());
+				PRINT_DBG("renderer: received shader load request for " << iszShaderName);
 				m_vecPrograms.push_back(pProgram);
+				m_mapPrograms[iszShaderName] = (int)m_vecPrograms.size() - 1;
+				PRINT_DBG("Shader #" << m_mapPrograms[iszShaderName] << " is " << iszShaderName);
 				pProgram->set_mat_proj(glm::value_ptr(m_matProj));
 				break;
 			}
@@ -583,7 +594,7 @@ size_t renderer::load_material(const char * szFilename)
 
 	material mat(qcp);
 	
-	auto iszShader = mat.get_shader();
+	auto iszShader = mat.get_shader_name();
 
 	for (auto& pShader : m_vecPrograms) {
 		if (pShader) {
@@ -599,6 +610,16 @@ size_t renderer::load_material(const char * szFilename)
 	m_map_material_name.emplace(szFilename, m_vecMaterials.size() - 1);
 
 	return iRet;
+}
+
+int renderer::get_shader_program_index(const std::string & name) const
+{
+	if (m_mapPrograms.count(name)) {
+		return m_mapPrograms.at(name);
+	}
+
+	PRINT_ERR("Material requested unknown shader \"" << name << "\"!");
+	return -1;
 }
 
 static void opengl_msg_callback(GLenum iSource, GLenum iType, GLuint iID, GLenum iSeverity, GLsizei nLength, const GLchar* szMsg, const void* pUParam)
