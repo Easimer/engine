@@ -26,4 +26,6 @@ public:
 	virtual vector get_rot() const = 0;
 
 	virtual void update() = 0;
+
+	virtual void set_speed(float flNewSpeed) = 0;
 };

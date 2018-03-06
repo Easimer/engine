@@ -31,6 +31,10 @@ void input::press_key(long int keysym)
 	//const auto& ia = m_keybinds[keysym];
 	//m_action_state[ia] = true;
 	//check_conflicting_actions(ia);
+
+	if (keysym == SDLK_LSHIFT) {
+		gpGlobals->pCamera->set_speed(1.6);
+	}
 }
 
 void input::release_key(long int keysym)
@@ -38,6 +42,9 @@ void input::release_key(long int keysym)
 	//if (m_keybinds.count(keysym) == 0)
 	//	return;
 	//m_action_state[m_keybinds[keysym]] = false;
+	if (keysym == SDLK_LSHIFT) {
+		gpGlobals->pCamera->set_speed(0.8);
+	}
 }
 
 void input::bind_key(long int keysym, input_action ia)
