@@ -13,6 +13,8 @@ int main(int argc, char** argv)
 	if (argc < 2)
 		return 1;
 
+	_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
+
 	const char* pszQC = gpCmdline->GetArgument();
 
 	if (pszQC) {

@@ -65,6 +65,9 @@ set(SRC_GFX
 
 	material.cpp
 	material.h
+	
+	../public/src/emf_loader.cpp
+	../public/include/emf_loader.h
 )
 
 set(SRC_NOPCH

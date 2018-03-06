@@ -40,5 +40,6 @@ namespace mdlc {
 
 		model m_outmodel;
 		model_triangle m_triangle;
+		std::vector<model_keyframe> keyframes;
 	};
 }

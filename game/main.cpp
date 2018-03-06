@@ -83,17 +83,13 @@ void thread_logic()
 
 	gpGlobals->pEntSys->precache_entities();
 
-	c_base_prop* pAnarchist = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
-	pAnarchist->set_model("data/models/anarchist.smd");
-	pAnarchist->spawn();
+	c_base_prop* pDog1 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+	pDog1->set_model("data/models/dog.emf");
+	pDog1->spawn();
 
-	c_base_prop* pCSoldier = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
-	pCSoldier->set_model("data/models/csoldier.smd");
-	pCSoldier->spawn();
-
-	c_base_prop* pWolf = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
-	pWolf->set_model("data/models/wolf.smd");
-	pWolf->spawn();
+	c_base_prop* pDog2 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+	pDog2->set_model("data/models/dog.smd");
+	pDog2->spawn();
 
 	c_base_prop* pHat = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pHat->set_model("data/models/test_terrain.smd");

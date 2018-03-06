@@ -1,0 +1,54 @@
+include "base.fbs";
+
+// Engine Model Format schema
+
+namespace Schemas.Model;
+
+table Vertex {
+	bone : ulong;
+	pos : Vector3;
+	normal : Vector3;
+	u : float;
+	v : float;
+}
+
+table Triangle {
+	vertices : [Vertex];
+}
+
+table Bone {
+	id : ulong;
+	parent : ulong;
+	name : string;
+}
+
+table BoneState {
+	bone : ulong;
+	pos : Vector3;
+	rot : Vector3;
+}
+
+table Keyframe {
+	time : ulong;
+	bonestates : [BoneState];
+}
+
+table Animation {
+	name : string;
+	keyframes : [Keyframe];
+}
+
+table Model {
+	material : string;
+	framerate : short;
+	
+	
+	triangles : [Triangle];
+	
+	skeleton : [Bone];
+	
+	animations : [Animation];
+}
+
+root_type Model;
+//file_indentifier "EMF0";

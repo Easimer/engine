@@ -38,12 +38,12 @@ struct model_material {
 
 struct model_keyframe {
 	int iFrame;
-	std::pair<int, model_bone_state> bones;
+	std::vector<std::pair<int, model_bone_state>> bones;
 };
 
 struct model {
 	std::vector<model_bone> bones;
-	std::vector<model_keyframe> animation;
+	std::map<std::string, std::vector<model_keyframe>> animations;
 	std::vector<model_material> materials;
 	std::vector<model_triangle> triangles;
 

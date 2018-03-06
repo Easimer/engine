@@ -23,6 +23,8 @@
 #include "gui/imgui_impl_sdl_gl3.h"
 #include "console.h"
 
+#include <emf_loader.h>
+
 static void opengl_msg_callback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*, const void*);
 
 void renderer::open_window(const char * szTitle, int nWidth, int nHeight, bool bFullscreen)
@@ -495,15 +497,24 @@ void renderer::load_loop()
 		while (nCommands--)
 		{
 			model mdl;
-			mdlc::smd_parser parser;
+			mdlc::smd_parser parser_smd;
+			emf_loader parser_emf;
+
+			const std::string emf_ext("emf");
+
 			switch (pCommands->type)
 			{
 			case GFX_LD_T_MDL:
 				PRINT_DBG("renderer: received model load request for " << pCommands->szFilename);
-				parser = mdlc::smd_parser(pCommands->szFilename);
-				mdl = parser.get_model();
 
-
+				if (std::equal(emf_ext.rbegin(), emf_ext.rend(), std::string(pCommands->szFilename).rbegin())) {
+					parser_emf = emf_loader(pCommands->szFilename);
+					mdl = parser_emf.get_model();
+				}
+				else {
+					parser_smd = mdlc::smd_parser(pCommands->szFilename);
+					mdl = parser_smd.get_model();
+				}
 				m_iLoadedModelID = upload_model(mdl);
 				m_mapModels.emplace(std::string(pCommands->szFilename), m_iLoadedModelID);
 				PRINT_DBG("renderer: model uploaded!");

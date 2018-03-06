@@ -4,6 +4,9 @@
 #include <arch.h>
 #include <fstream>
 
+#include <schemas/model_generated.h>
+
+
 void emf_writer::set_outfile(const std::string & outfile)
 {
 	m_iszOutfile = outfile;
@@ -32,54 +35,121 @@ void emf_writer::add_bones(const std::vector<model_bone>& bones)
 }
 
 void emf_writer::write() const
-{
-	// construct filenames
-	std::string iszPathManifest = m_iszOutfile;
-	std::string iszPathMesh = m_iszOutfile + ".vtx";
-	std::string iszPathColl = m_iszOutfile + ".coll";
-	std::string iszPathSkel = m_iszOutfile + ".skel";
-	std::string iszPathAnim = m_iszOutfile + ".anim";
+{	
+	flatbuffers::FlatBufferBuilder fbb;
 
-	emf_hdr hdr;
-	hdr.iID = htonll(EMF_MAGIC);
+	// Serialize triangles
+	std::vector<flatbuffers::Offset<Schemas::Model::Triangle>> triangles;
+
+	for (auto& triangle : m_mesh) {
+		std::vector<flatbuffers::Offset<Schemas::Model::Vertex>> vertices;
+		// Serialize vertices
+		for (auto& vertex : triangle.vertices) {
+			Schemas::Model::VertexBuilder fbb_vertex(fbb);
+			auto pos= Schemas::Vector3(vertex.px, vertex.py, vertex.pz);
+			auto norm = Schemas::Vector3(vertex.nx, vertex.ny, vertex.nz);
+			fbb_vertex.add_pos(&pos);
+			fbb_vertex.add_normal(&norm);
+			fbb_vertex.add_u(vertex.u);
+			fbb_vertex.add_v(vertex.v);
+			fbb_vertex.add_bone(vertex.iBoneID);
+			vertices.push_back(fbb_vertex.Finish());
+		}
+		auto fb_vertices = fbb.CreateVector(vertices);
+
+		Schemas::Model::TriangleBuilder fbb_triangle(fbb);
+		fbb_triangle.add_vertices(fb_vertices);
+
+		triangles.push_back(fbb_triangle.Finish());
+	}
+
+	// Serialize skeleton
+	std::vector<flatbuffers::Offset<Schemas::Model::Bone>> bones;
+
+	for (auto& bone : m_bones) {
+		auto fb_bonename = fbb.CreateString(bone.szName);
+		Schemas::Model::BoneBuilder fbb_bone(fbb);
+
+		fbb_bone.add_id(bone.iID);
+		fbb_bone.add_name(fb_bonename);
+		fbb_bone.add_parent(bone.iParentID);
+		bones.push_back(fbb_bone.Finish());
+	}
+
+	// Serialize animations
+	std::vector<flatbuffers::Offset<Schemas::Model::Animation>> animations;
+
+	for (auto& kv_anim : m_animations) {
+		std::vector<flatbuffers::Offset<Schemas::Model::Keyframe>> keyframes;
+		for (auto& keyframe : kv_anim.second) {
+			// Serialize bone state
+
+			std::vector<flatbuffers::Offset<Schemas::Model::BoneState>> bonestates;
+
+			for (auto& state : keyframe.bones) {
+				Schemas::Vector3 pos(state.second.px, state.second.py, state.second.pz);
+				Schemas::Vector3 rot(state.second.rx, state.second.ry, state.second.rz);
+				Schemas::Model::BoneStateBuilder fbb_bonestate(fbb);
+				fbb_bonestate.add_bone(state.first);
+				fbb_bonestate.add_pos(&pos);
+				fbb_bonestate.add_rot(&rot);
+				bonestates.push_back(fbb_bonestate.Finish());
+			}
+			
+			auto fb_bonestates = fbb.CreateVector(bonestates);
+
+			Schemas::Model::KeyframeBuilder fbb_keyframe(fbb);
+			fbb_keyframe.add_time(keyframe.iFrame);
+			fbb_keyframe.add_bonestates(fb_bonestates);
+			keyframes.push_back(fbb_keyframe.Finish());
+		}
+		
+		auto fb_keyframes = fbb.CreateVector(keyframes);
+		auto fb_name = fbb.CreateString(kv_anim.first);
+
+		Schemas::Model::AnimationBuilder fb_animation(fbb);
+		fb_animation.add_name(fb_name);
+		fb_animation.add_keyframes(fb_keyframes);
+		animations.push_back(fb_animation.Finish());
+	}
+
+	// Create offset vectors
+
+	auto fb_triangles = fbb.CreateVector(triangles);
+	auto fb_bones = fbb.CreateVector(bones);
+	auto fb_material = fbb.CreateString(m_iszMaterial);
+	auto fb_animations = fbb.CreateVector(animations);
+
+	// Serialize model
+
+	Schemas::Model::ModelBuilder fbb_model(fbb);
+
+	fbb_model.add_material(fb_material);
+	fbb_model.add_framerate(m_nFramerate);
+	fbb_model.add_triangles(fb_triangles);
+	fbb_model.add_animations(fb_animations);
+	fbb_model.add_skeleton(fb_bones);
+
+	Schemas::Model::FinishModelBuffer(fbb, fbb_model.Finish());
 	
+	// Write model to file
 
-	// Write manifest
-	PRINT_DBG("Writing manifest");
-	
-	hdr.iType = htonll(EMF_T_MANIFEST);
-
-	std::ofstream hManifest(iszPathManifest, std::ios::out | std::ios::binary);
-	if (hManifest.fail()) {
-		PRINT_ERR("Cannot open manifest file for writing: " << iszPathManifest);
+	/*std::ofstream file(m_iszOutfile, std::ios::binary);
+	if (!file) {
+		PRINT_ERR("Cannot open outfile!");
 		return;
 	}
 
-	hManifest.write((const char*)&hdr, sizeof(hdr));
+	file.write((char*)fbb.GetBufferPointer(), fbb.GetSize());
+	file.close();*/
 
-	// Allocate mem for manifest struct and the animation names
-	emf_manifest* pManifest = (emf_manifest*)malloc(sizeof(emf_manifest) + m_animations.size() * 64 * sizeof(char));
-
-	strncpy(pManifest->szMaterial, m_iszMaterial.c_str(), 64);
-	pManifest->nAnimations = m_animations.size();
-	pManifest->nFramerate = m_nFramerate;
-	memset(pManifest->szMaterial, 0, 256);
-	strncpy(pManifest->szMaterial, m_iszMaterial.c_str(), 256);
-
-	/// Write animation names
-	char* pAnimNames = (char*)(pManifest + 1);
-	memset(pAnimNames, 0, 64 * sizeof(char) * m_animations.size());
-	for (auto& kv : m_animations) {
-		pAnimNames[0] = '\0';
-		pAnimNames += 64;
-		strncpy(pAnimNames, kv.first.c_str(), 64);
-		PRINT_DBG("Adding animation to manifest " << kv.first);
+	FILE* hFile = fopen(m_iszOutfile.c_str(), "wb");
+	if (!hFile) {
+		PRINT_ERR("Cannot open outfile!");
+		return;
 	}
 
-	hManifest.write((const char*)pManifest, sizeof(emf_manifest) + m_animations.size() * 64 * sizeof(char));
-	free(pManifest);
+	fwrite(fbb.GetBufferPointer(), 1, fbb.GetSize(), hFile);
 
-	PRINT_DBG("Written " << hManifest.cur << " bytes");
-
-	hManifest.close();
+	fclose(hFile);
 }

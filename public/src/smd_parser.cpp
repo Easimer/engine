@@ -5,6 +5,7 @@
 #include <enl/strstrip.h>
 #include <parseutils.h>
 #include <enl/benchmark.h>
+#include <enl/assert.h>
 
 #define SMDP_STATE_START			0x00
 #define SMDP_STATE_GLOBAL			0x10
@@ -61,8 +62,6 @@ void mdlc::smd_parser::parse()
 	PRINT_DBG("Model loaded under " << bm.elapsed() << " secs");
 }
 
-#define SMDP_TOKEN(dst) std::getline(ss, dst, ' ');
-
 void mdlc::smd_parser::parse_line()
 {
 	std::string line;
@@ -73,6 +72,8 @@ void mdlc::smd_parser::parse_line()
 
 	//std::getline(ss, token, ' ');
 	auto aiTokens = tokenize(line);
+	if (aiTokens.size() == 0)
+		return;
 
 	//std::cout << "State is " << m_iState << std::endl;
 
@@ -89,6 +90,10 @@ void mdlc::smd_parser::parse_line()
 	std::string px, py, pz;
 	std::string u, v;
 	std::string nx, ny, nz;
+	// Animation
+	model_keyframe new_kf;
+	model_keyframe cur_kf;
+	model_bone_state bs;
 
 	std::string nulbuf;
 
@@ -108,6 +113,8 @@ void mdlc::smd_parser::parse_line()
 		break;
 
 	case SMDP_STATE_GLOBAL:
+		if (aiTokens.size() == 0 || aiTokens[0] == "")
+			break;
 		if (aiTokens[0] == "nodes")
 			m_iState = SMDP_STATE_NODES;
 		else if (aiTokens[0] == "skeleton")
@@ -116,6 +123,8 @@ void mdlc::smd_parser::parse_line()
 			m_iState = SMDP_STATE_TRIANGLE;
 		else if (aiTokens[0] == "end")
 			m_iState = SMDP_STATE_GLOBAL;
+		else
+			PRINT_DBG("smd_parser expected nodes, skeleton, triangles or end on line " << m_iLine << ", got: " << aiTokens[0]);
 		break;
 
 	case SMDP_STATE_NODES:
@@ -135,6 +144,26 @@ void mdlc::smd_parser::parse_line()
 		break;
 	case SMDP_STATE_SKELETON:
 		SMDP_CHECK_END();
+		if (aiTokens[0] == "time") {
+			new_kf.iFrame = std::stoi(aiTokens[1]);
+			keyframes.push_back(new_kf);
+			break;
+		}
+
+		ASSERT(keyframes.size());
+
+		cur_kf = keyframes.back();
+
+		bs.px = std::stof(aiTokens[1]);
+		bs.py = std::stof(aiTokens[2]);
+		bs.pz = std::stof(aiTokens[3]);
+
+		bs.rx = std::stof(aiTokens[4]);
+		bs.ry = std::stof(aiTokens[5]);
+		bs.rz = std::stof(aiTokens[6]);
+
+		cur_kf.bones.push_back({ std::stoi(aiTokens[0]), bs });
+		
 		break;
 	case SMDP_STATE_TRIANGLE_MAT:
 		SMDP_CHECK_END();
@@ -155,7 +184,6 @@ void mdlc::smd_parser::parse_line()
 		{
 			m_outmodel.iLastMatID++;
 			strncpy(material.szName, aiTokens[0].c_str(), SMD_MAX_MATERIAL_PATH_SIZ);
-			PRINT_DBG("Added material " << m_outmodel.iLastMatID << ':' << aiTokens[0].c_str());
 			material.iModelMaterial = m_outmodel.iLastMatID;
 			m_outmodel.materials.push_back(material);
 			m_triangle.iModelMaterial = m_outmodel.iLastMatID;
@@ -201,15 +229,26 @@ void mdlc::smd_parser::parse_line()
 std::vector<std::string> mdlc::smd_parser::tokenize(const std::string & line) const
 {
 	std::vector<std::string> ret;
-
 	size_t iStart = 0;
-
 	bool bEnded = false;
 
 	for (size_t i = 0; i < line.size(); i++) {
+
+		if (line[i] == ' ') {
+			if (!bEnded) {
+				bEnded = true;
+				ret.push_back(line.substr(iStart, i - iStart));
+			}
+		}
+		else {
+			if (bEnded) {
+				iStart = i;
+				bEnded = false;
+			}
+		}
+		/*
 		if (line[i] == ' ' && !bEnded) {
-			bEnded = true;
-			ret.push_back(line.substr(iStart, i - iStart));
+			
 		}
 		if (line[i] == ' ' && bEnded) {
 			continue;
@@ -218,6 +257,7 @@ std::vector<std::string> mdlc::smd_parser::tokenize(const std::string & line) co
 			iStart = i;
 			bEnded = false;
 		}
+		*/
 	}
 
 	if (!bEnded) {
