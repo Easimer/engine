@@ -9,11 +9,52 @@
 #include "statistics.h"
 #include "devgui.h"
 
+#if defined(PLAT_LINUX)
+#include <unistd.h>
+#include <dirent.h>
+#endif
+
 void thread_logic();
 void thread_rendering();
 void thread_sound();
 
 #undef main // SDL_main seems to crash the program at the very end, so we're doing init ourselves
+
+/// Set the current working directory to the game root directory
+/// (we're launching from /bin/)
+bool set_workdir()
+{
+#if defined(PLAT_WINDOWS)
+	DWORD ftyp = GetFileAttributesA("data");
+	if (ftyp & FILE_ATTRIBUTE_DIRECTORY && ftyp != INVALID_FILE_ATTRIBUTES) {
+		PRINT_DBG("Already running from game rootdir!");
+		return true;
+	}
+
+	SetCurrentDirectory("..");
+	ftyp = GetFileAttributesA("data");
+	if (!(ftyp & FILE_ATTRIBUTE_DIRECTORY) || ftyp == INVALID_FILE_ATTRIBUTES) {
+		PRINT_ERR("Switched to parent dir, but data/ doesn't exist!");
+		return false;
+	}
+	return true;
+#elif defined(PLAT_LINUX)
+	if (chdir("..") == 0) {
+		DIR* pDir = opendir("data");
+		if (pDir) {
+			closedir(pDir);
+			return true;
+		}
+		else {
+			PRINT_ERR("Switched to parent dir, but data/ doesn't exist!");
+		}
+	}
+	else {
+		PRINT_ERR("Couldn't switch to parent dir!");
+	}
+	return false;
+#endif
+}
 
 int main(int argc, char** argv)
 {
@@ -21,6 +62,10 @@ int main(int argc, char** argv)
 
 	SDL_SetMainReady();
 	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_TIMER | SDL_INIT_VIDEO);
+
+	if (!set_workdir()) {
+		PRINT_ERR("Couldn't switch to rootdir!!!");
+	}
 
 	//PRINT_DBG(gpCmdline->GetExecName());
 	// init globals
@@ -89,7 +134,7 @@ void thread_logic()
 	pDog1->set_abspos(vec3(0.5, 0, -0.1));
 
 	c_base_prop* pDog2 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
-	pDog2->set_model("data/models/wolf.emf");
+	pDog2->set_model("data/models/dog.emf");
 	pDog2->spawn();
 	pDog2->set_abspos(vec3(-0.5, 0, 0));
 
