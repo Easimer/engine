@@ -33,8 +33,8 @@ struct Vertex FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_U = 10,
     VT_V = 12
   };
-  uint64_t bone() const {
-    return GetField<uint64_t>(VT_BONE, 0);
+  uint16_t bone() const {
+    return GetField<uint16_t>(VT_BONE, 0);
   }
   const Schemas::Vector3 *pos() const {
     return GetStruct<const Schemas::Vector3 *>(VT_POS);
@@ -50,7 +50,7 @@ struct Vertex FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint64_t>(verifier, VT_BONE) &&
+           VerifyField<uint16_t>(verifier, VT_BONE) &&
            VerifyField<Schemas::Vector3>(verifier, VT_POS) &&
            VerifyField<Schemas::Vector3>(verifier, VT_NORMAL) &&
            VerifyField<float>(verifier, VT_U) &&
@@ -62,8 +62,8 @@ struct Vertex FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
 struct VertexBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_bone(uint64_t bone) {
-    fbb_.AddElement<uint64_t>(Vertex::VT_BONE, bone, 0);
+  void add_bone(uint16_t bone) {
+    fbb_.AddElement<uint16_t>(Vertex::VT_BONE, bone, 0);
   }
   void add_pos(const Schemas::Vector3 *pos) {
     fbb_.AddStruct(Vertex::VT_POS, pos);
@@ -91,17 +91,17 @@ struct VertexBuilder {
 
 inline flatbuffers::Offset<Vertex> CreateVertex(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint64_t bone = 0,
+    uint16_t bone = 0,
     const Schemas::Vector3 *pos = 0,
     const Schemas::Vector3 *normal = 0,
     float u = 0.0f,
     float v = 0.0f) {
   VertexBuilder builder_(_fbb);
-  builder_.add_bone(bone);
   builder_.add_v(v);
   builder_.add_u(u);
   builder_.add_normal(normal);
   builder_.add_pos(pos);
+  builder_.add_bone(bone);
   return builder_.Finish();
 }
 
@@ -161,19 +161,19 @@ struct Bone FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_PARENT = 6,
     VT_NAME = 8
   };
-  uint64_t id() const {
-    return GetField<uint64_t>(VT_ID, 0);
+  uint16_t id() const {
+    return GetField<uint16_t>(VT_ID, 0);
   }
-  uint64_t parent() const {
-    return GetField<uint64_t>(VT_PARENT, 0);
+  uint16_t parent() const {
+    return GetField<uint16_t>(VT_PARENT, 0);
   }
   const flatbuffers::String *name() const {
     return GetPointer<const flatbuffers::String *>(VT_NAME);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint64_t>(verifier, VT_ID) &&
-           VerifyField<uint64_t>(verifier, VT_PARENT) &&
+           VerifyField<uint16_t>(verifier, VT_ID) &&
+           VerifyField<uint16_t>(verifier, VT_PARENT) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.Verify(name()) &&
            verifier.EndTable();
@@ -183,11 +183,11 @@ struct Bone FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
 struct BoneBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_id(uint64_t id) {
-    fbb_.AddElement<uint64_t>(Bone::VT_ID, id, 0);
+  void add_id(uint16_t id) {
+    fbb_.AddElement<uint16_t>(Bone::VT_ID, id, 0);
   }
-  void add_parent(uint64_t parent) {
-    fbb_.AddElement<uint64_t>(Bone::VT_PARENT, parent, 0);
+  void add_parent(uint16_t parent) {
+    fbb_.AddElement<uint16_t>(Bone::VT_PARENT, parent, 0);
   }
   void add_name(flatbuffers::Offset<flatbuffers::String> name) {
     fbb_.AddOffset(Bone::VT_NAME, name);
@@ -206,20 +206,20 @@ struct BoneBuilder {
 
 inline flatbuffers::Offset<Bone> CreateBone(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint64_t id = 0,
-    uint64_t parent = 0,
+    uint16_t id = 0,
+    uint16_t parent = 0,
     flatbuffers::Offset<flatbuffers::String> name = 0) {
   BoneBuilder builder_(_fbb);
+  builder_.add_name(name);
   builder_.add_parent(parent);
   builder_.add_id(id);
-  builder_.add_name(name);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<Bone> CreateBoneDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint64_t id = 0,
-    uint64_t parent = 0,
+    uint16_t id = 0,
+    uint16_t parent = 0,
     const char *name = nullptr) {
   return Schemas::Model::CreateBone(
       _fbb,
@@ -234,8 +234,8 @@ struct BoneState FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_POS = 6,
     VT_ROT = 8
   };
-  uint64_t bone() const {
-    return GetField<uint64_t>(VT_BONE, 0);
+  uint16_t bone() const {
+    return GetField<uint16_t>(VT_BONE, 0);
   }
   const Schemas::Vector3 *pos() const {
     return GetStruct<const Schemas::Vector3 *>(VT_POS);
@@ -245,7 +245,7 @@ struct BoneState FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint64_t>(verifier, VT_BONE) &&
+           VerifyField<uint16_t>(verifier, VT_BONE) &&
            VerifyField<Schemas::Vector3>(verifier, VT_POS) &&
            VerifyField<Schemas::Vector3>(verifier, VT_ROT) &&
            verifier.EndTable();
@@ -255,8 +255,8 @@ struct BoneState FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
 struct BoneStateBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_bone(uint64_t bone) {
-    fbb_.AddElement<uint64_t>(BoneState::VT_BONE, bone, 0);
+  void add_bone(uint16_t bone) {
+    fbb_.AddElement<uint16_t>(BoneState::VT_BONE, bone, 0);
   }
   void add_pos(const Schemas::Vector3 *pos) {
     fbb_.AddStruct(BoneState::VT_POS, pos);
@@ -278,13 +278,13 @@ struct BoneStateBuilder {
 
 inline flatbuffers::Offset<BoneState> CreateBoneState(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint64_t bone = 0,
+    uint16_t bone = 0,
     const Schemas::Vector3 *pos = 0,
     const Schemas::Vector3 *rot = 0) {
   BoneStateBuilder builder_(_fbb);
-  builder_.add_bone(bone);
   builder_.add_rot(rot);
   builder_.add_pos(pos);
+  builder_.add_bone(bone);
   return builder_.Finish();
 }
 

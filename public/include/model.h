@@ -9,8 +9,8 @@
 
 struct model_bone {
 	char szName[SMD_MAX_BONE_NAME_SIZ];
-	int iID;
-	int iParentID;
+	short iID;
+	short iParentID;
 };
 
 struct model_bone_state {
@@ -19,7 +19,7 @@ struct model_bone_state {
 };
 
 struct model_triangle_vertex {
-	int iBoneID;
+	short iBoneID;
 	float px, py, pz;
 	float nx, ny, nz;
 	float u, v;
@@ -38,7 +38,7 @@ struct model_material {
 
 struct model_keyframe {
 	int iFrame;
-	std::vector<std::pair<int, model_bone_state>> bones;
+	std::vector<std::pair<short, model_bone_state>> bones;
 };
 
 struct model {

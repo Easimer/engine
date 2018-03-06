@@ -84,12 +84,19 @@ void thread_logic()
 	gpGlobals->pEntSys->precache_entities();
 
 	c_base_prop* pDog1 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
-	pDog1->set_model("data/models/dog.emf");
+	pDog1->set_model("data/models/wolf.emf");
 	pDog1->spawn();
+	pDog1->set_abspos(vec3(0.5, 0, -0.1));
 
 	c_base_prop* pDog2 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
-	pDog2->set_model("data/models/dog.smd");
+	pDog2->set_model("data/models/wolf.emf");
 	pDog2->spawn();
+	pDog2->set_abspos(vec3(-0.5, 0, 0));
+
+	c_base_prop* pCSoldier = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+	pCSoldier->set_model("data/models/csoldier.emf");
+	pCSoldier->spawn();
+	pCSoldier->set_abspos(vec3(0, 0, -0.2));
 
 	c_base_prop* pHat = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pHat->set_model("data/models/test_terrain.smd");
