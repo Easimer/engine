@@ -10,6 +10,12 @@ namespace Schemas {
 
 struct Vector3;
 
+struct Vector4;
+
+struct ColorRGB;
+
+struct ColorRGBA;
+
 MANUALLY_ALIGNED_STRUCT(4) Vector3 FLATBUFFERS_FINAL_CLASS {
  private:
   float x_;
@@ -36,6 +42,97 @@ MANUALLY_ALIGNED_STRUCT(4) Vector3 FLATBUFFERS_FINAL_CLASS {
   }
 };
 STRUCT_END(Vector3, 12);
+
+MANUALLY_ALIGNED_STRUCT(4) Vector4 FLATBUFFERS_FINAL_CLASS {
+ private:
+  float x_;
+  float y_;
+  float z_;
+  float w_;
+
+ public:
+  Vector4() {
+    memset(this, 0, sizeof(Vector4));
+  }
+  Vector4(float _x, float _y, float _z, float _w)
+      : x_(flatbuffers::EndianScalar(_x)),
+        y_(flatbuffers::EndianScalar(_y)),
+        z_(flatbuffers::EndianScalar(_z)),
+        w_(flatbuffers::EndianScalar(_w)) {
+  }
+  float x() const {
+    return flatbuffers::EndianScalar(x_);
+  }
+  float y() const {
+    return flatbuffers::EndianScalar(y_);
+  }
+  float z() const {
+    return flatbuffers::EndianScalar(z_);
+  }
+  float w() const {
+    return flatbuffers::EndianScalar(w_);
+  }
+};
+STRUCT_END(Vector4, 16);
+
+MANUALLY_ALIGNED_STRUCT(4) ColorRGB FLATBUFFERS_FINAL_CLASS {
+ private:
+  float r_;
+  float g_;
+  float b_;
+
+ public:
+  ColorRGB() {
+    memset(this, 0, sizeof(ColorRGB));
+  }
+  ColorRGB(float _r, float _g, float _b)
+      : r_(flatbuffers::EndianScalar(_r)),
+        g_(flatbuffers::EndianScalar(_g)),
+        b_(flatbuffers::EndianScalar(_b)) {
+  }
+  float r() const {
+    return flatbuffers::EndianScalar(r_);
+  }
+  float g() const {
+    return flatbuffers::EndianScalar(g_);
+  }
+  float b() const {
+    return flatbuffers::EndianScalar(b_);
+  }
+};
+STRUCT_END(ColorRGB, 12);
+
+MANUALLY_ALIGNED_STRUCT(4) ColorRGBA FLATBUFFERS_FINAL_CLASS {
+ private:
+  float r_;
+  float g_;
+  float b_;
+  float a_;
+
+ public:
+  ColorRGBA() {
+    memset(this, 0, sizeof(ColorRGBA));
+  }
+  ColorRGBA(float _r, float _g, float _b, float _a)
+      : r_(flatbuffers::EndianScalar(_r)),
+        g_(flatbuffers::EndianScalar(_g)),
+        b_(flatbuffers::EndianScalar(_b)),
+        a_(flatbuffers::EndianScalar(_a)) {
+  }
+  float r() const {
+    return flatbuffers::EndianScalar(r_);
+  }
+  float g() const {
+    return flatbuffers::EndianScalar(g_);
+  }
+  float b() const {
+    return flatbuffers::EndianScalar(b_);
+  }
+  float a() const {
+    return flatbuffers::EndianScalar(a_);
+  }
+};
+STRUCT_END(ColorRGBA, 16);
 
 }  // namespace Schemas
 

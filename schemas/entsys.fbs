@@ -1,0 +1,46 @@
+include "base.fbs";
+
+// Engine Entity System schemas
+
+namespace Schemas.EntitySystem;
+
+enum ValueType : ubyte {
+	Vec3,
+	Vec4,
+	RGB,
+	RGBA,
+	Str,
+	Float,
+	Int
+}
+
+table Value {
+	type : ValueType;
+	vec3 : Vector3;
+	vec4 : Vector4;
+	rgb : ColorRGB;
+	rgba : ColorRGBA;
+	string : string;
+	float : float;
+	int : int;
+}
+
+table KeyValue {
+	key : string;
+	value : Value;
+}
+
+table IOEvent {
+	output : string;
+	targetname : string;
+	input : string;
+	argument : string;
+	delay : float;
+	once : bool;
+}
+
+table Entity {
+	classname : string (required);
+	keyvalues : [KeyValue];
+	outputs : [IOEvent];
+}
