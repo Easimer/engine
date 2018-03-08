@@ -12,6 +12,17 @@ enum shader_tex_type {
 	SHADERTEX_MAX		= 4
 };
 
+struct shader_point_light {
+	vec3 pos;
+	float flConstant;
+	float flLinear;
+	float flQuadratic;
+
+	vec3 ambient;
+	vec3 diffuse;
+	vec3 specular;
+};
+
 class shader_program {
 public:
 	shader_program(const char* szFilename);
@@ -36,6 +47,16 @@ public:
 	// Set as current material
 	void use_material(const material& mat);
 
+	void set_vec3(const std::string& name, const vec3& v);
+	void set_vec4(const std::string& name, const float* v);
+	void set_mat4(const std::string& name, const void* m);
+
+	void set_light1(const shader_point_light& l);
+	void set_light2(const shader_point_light& l);
+
+protected:
+	int get_uniform_location(const mdlc::qc_parser& qcp, const std::string& name, int* pLocation);
+
 private:
 	uint32_t m_iID;
 
@@ -50,6 +71,11 @@ private:
 	int m_iUniformTex3;
 	int m_iUniformTex4;
 	int m_iUniformTex5;
+
+	int m_iUniformLight1;
+	int m_iUniformLight2;
+
+	bool m_bLit;
 
 	char m_szName[64] = { 0 };
 	char m_szDescription[128] = { 0 };

@@ -60,38 +60,9 @@ shader_program::shader_program(const char * szFilename) :
 
 	glUseProgram(m_iID); ASSERT_OPENGL();
 
-	if (parser.is_cmd("uniformtrans"))
-	{
-		m_iUniformMatTrans = glGetUniformLocation(m_iID, parser.get_string("uniformtrans").c_str()); ASSERT_OPENGL();
-		ASSERT(m_iUniformMatTrans != -1);
-	}
-	else
-	{
-		PRINT_ERR("uniformtrans undefined for shader " << m_szName);
-		return;
-	}
-
-	if (parser.is_cmd("uniformview"))
-	{
-		m_iUniformMatView = glGetUniformLocation(m_iID, parser.get_string("uniformview").c_str()); ASSERT_OPENGL();
-		ASSERT(m_iUniformMatView != -1);
-	}
-	else
-	{
-		PRINT_ERR("uniformview undefined for shader " << m_szName);
-		return;
-	}
-
-	if (parser.is_cmd("uniformproj"))
-	{
-		m_iUniformMatProj = glGetUniformLocation(m_iID, parser.get_string("uniformproj").c_str()); ASSERT_OPENGL();
-		ASSERT(m_iUniformMatProj != -1);
-	}
-	else
-	{
-		PRINT_ERR("uniformproj undefined for shader " << m_szName);
-		return;
-	}
+	get_uniform_location(parser, "uniformtrans", &m_iUniformMatTrans);
+	get_uniform_location(parser, "uniformview", &m_iUniformMatView);
+	get_uniform_location(parser, "uniformproj", &m_iUniformMatProj);
 
 	m_iUniformTex1 = glGetUniformLocation(m_iID, "tex_tex1"); ASSERT_OPENGL();
 	m_iUniformTex2 = glGetUniformLocation(m_iID, "tex_tex2"); ASSERT_OPENGL();
@@ -244,5 +215,63 @@ void shader_program::use_material(const material & mat)
 	for (size_t i = 0; i < SHADERTEX_MAX; i++) {
 		glActiveTexture(GL_TEXTURE0 + i); ASSERT_OPENGL();
 		glBindTexture(GL_TEXTURE_2D, mat.get_texture((mat_tex_index)i)); ASSERT_OPENGL();
+	}
+}
+
+void shader_program::set_vec3(const std::string & name, const vec3 & v)
+{
+	RESTRICT_THREAD_RENDERING;
+	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
+	if(iLoc != -1)
+		glUniform3fv(iLoc, 1, v.ptr()); ASSERT_OPENGL();
+	
+}
+
+void shader_program::set_vec4(const std::string & name, const float * v)
+{
+	RESTRICT_THREAD_RENDERING;
+	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
+	if (iLoc != -1)
+		glUniform4fv(iLoc, 1, v); ASSERT_OPENGL();
+}
+
+void shader_program::set_mat4(const std::string & name, const void * m)
+{
+	RESTRICT_THREAD_RENDERING;
+	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
+	if (iLoc != -1)
+		glUniformMatrix4fv(iLoc, 1, GL_FALSE, (const GLfloat*)m); ASSERT_OPENGL();
+}
+
+void shader_program::set_light1(const shader_point_light& l)
+{
+}
+
+void shader_program::set_light2(const shader_point_light& l)
+{
+}
+
+int shader_program::get_uniform_location(const mdlc::qc_parser& qcp, const std::string& name, int* pLocation)
+{
+	const char* pszCmd = name.c_str();
+	if (qcp.is_cmd(pszCmd))
+	{
+		std::string iszUniform = qcp.get_string(pszCmd).c_str();
+		const char* szUniform = iszUniform.c_str();
+		int iLoc = glGetUniformLocation(m_iID, szUniform); ASSERT_OPENGL();
+		if (pLocation) {
+			*pLocation= iLoc;
+		}
+
+		if (iLoc == -1) {
+			PRINT_ERR("shader_program[" << m_szName << "]: uniform not found: \"" << szUniform << "\"");
+		}
+
+		return iLoc;
+	}
+	else
+	{
+		PRINT_ERR("shader_program[" << m_szName << "]: missing key: \"" << name << "\"");
+		return -1;
 	}
 }
