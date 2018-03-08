@@ -88,14 +88,17 @@ void mdlc::qc_parser::parse_line()
 		return;
 	}
 
-	if (line[0] == '/' && line[1] == '/') { // Comment
-		return;
-	}
-
 	i = 0;
 
 	while (line[i] == ' ')
 		i++;
+
+	if (line.size() < i + 3) {
+		return;
+	}
+	if (line[i] == '/' && line[i + 1] == '/') { // Comment
+		return;
+	}
 
 	if (line[i] != '$')
 	{

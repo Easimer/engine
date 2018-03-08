@@ -1,5 +1,6 @@
 #pragma once
 // QC parser
+// Implementation of version 2
 // Simplified version of the Valve QC format
 // https://developer.valvesoftware.com/wiki/QC
 // No options, no $include
