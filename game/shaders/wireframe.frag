@@ -14,7 +14,17 @@ in flat uint mat;
 
 out vec4 FragColor;
 
+float lambert(vec3 N, vec3 L)
+{
+  vec3 n = normalize(N);
+  vec3 l = normalize(L);
+  float res = dot(n, l);
+  return max(res, 0.0);
+}
+
 void main()
 {
-	FragColor = texture2D(tex_diffuse, uv);
+	float res = lambert(normal, vec3(0, 0, -100));
+	FragColor = vec4(res, res, res, 1.0);
+	
 }
