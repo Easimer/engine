@@ -92,9 +92,11 @@ void renderer::render()
 			glBindVertexArray(pCommands->iModelID); ASSERT_OPENGL();
 			
 			glm::mat4 mat_trans(1.0);
-			mat_trans = glm::scale(mat_trans, glm::vec3(pCommands->flScale, pCommands->flScale, pCommands->flScale));
-			mat_trans = pCommands->matRotation * mat_trans;
 			mat_trans = glm::translate(mat_trans, glm::vec3(pCommands->vecPosition[0], pCommands->vecPosition[1], pCommands->vecPosition[2]));
+			mat_trans = mat_trans * pCommands->matRotation;
+			mat_trans = glm::scale(mat_trans, glm::vec3(pCommands->flScale, pCommands->flScale, pCommands->flScale));
+			
+			
 			
 			pShader->set_mat_trans(glm::value_ptr(mat_trans));
 
