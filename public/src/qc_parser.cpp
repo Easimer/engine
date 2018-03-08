@@ -97,9 +97,13 @@ void mdlc::qc_parser::parse_line()
 	size_t i;
 	char c;
 
-	if (line.size() < 2) // i.e.: "$a"
+	if (line.size() < 2) // i.e.: empty line or "$a"
 	{
 		//PRINT_ERR("ERR1: line" << m_iLine << " too short");
+		return;
+	}
+
+	if (line[0] == '/' && line[1] == '/') { // Comment
 		return;
 	}
 
@@ -134,6 +138,8 @@ void mdlc::qc_parser::parse_line()
 			break;
 		}
 	}
+
+	i++;
 
 	while (c == ' ' || c == '\t') {
 		c = line[++i];
