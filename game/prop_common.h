@@ -33,6 +33,18 @@ public:
 		m_flScale = flScale;
 	}
 
+	/// Is the prop static?
+	/// Static props have the transformation matrix precached.
+	virtual bool is_static() const {
+		return false;
+	}
+
+	/// Returns the transformation matrix.
+	/// Only used if the prop is marked static.
+	virtual glm::mat4 get_transform_matrix() const {
+		return glm::mat4(1.0);
+	}
+
 protected:
 	char m_szModel[128] = { 0 };
 	float m_flScale = 1.0f;

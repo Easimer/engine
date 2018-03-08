@@ -129,11 +129,18 @@ void entsys::draw_entities()
 	{
 		if (pEnt->is_drawable())
 		{
+			c_base_prop* pProp = dynamic_cast<c_base_prop*>(pEnt);
 			drawcmd_t c;
 			c.iModelID = pEnt->m_iModelID;
 			c.vecPosition = pEnt->get_abspos();
-			c.matRotation = pEnt->get_rotation_matrix();
-			c.flScale = pEnt->get_scale();
+			if (pProp && pProp->is_static()) {
+				c.matRotation = pProp->get_transform_matrix();
+				c.bMatRotationIsTransformation = true;
+			}
+			else {
+				c.matRotation = pEnt->get_rotation_matrix();
+				c.flScale = pEnt->get_scale();
+			}
 
 			float flDist = (vecCamera - pEnt->get_abspos()).length_sq();
 			vecDrawCmdsDists.push_back({ c, flDist });

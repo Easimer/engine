@@ -38,6 +38,7 @@ set(SRC_ENTSYS
 
 	prop_common.h
 	prop_dynamic.cpp
+	prop_static.cpp
 )
 
 set(SRC_GFX

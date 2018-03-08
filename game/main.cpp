@@ -143,7 +143,7 @@ void thread_logic()
 	pCSoldier->spawn();
 	pCSoldier->set_abspos(vec3(0, 0, -0.2));
 
-	c_base_prop* pHat = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+	c_base_prop* pHat = (c_base_prop*)CreateEntityNoSpawn("prop_static");
 	pHat->set_model("data/models/test_terrain.smd");
 	pHat->spawn();
 	//gpGlobals->pEntSys->kill_entity(pHat);
