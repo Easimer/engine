@@ -15,7 +15,7 @@ shader_program::shader_program(const char * szFilename) :
 	mdlc::qc_parser parser(szFilename);
 	
 	
-	if (parser.is_cmd("vertexshader") && parser.is_cmd("fragmentshader"))
+	if (parser.is_cmd("vertex_shader") && parser.is_cmd("fragment_shader"))
 	{
 		PRINT_DBG("vertex and frag shader defined");
 	}
@@ -31,7 +31,7 @@ shader_program::shader_program(const char * szFilename) :
 	}
 	else
 	{
-		PRINT_ERR("Shader has undefined name!");
+		PRINT_ERR("Shader has no name!");
 		return;
 	}
 	if (parser.is_cmd("description"))
@@ -41,8 +41,8 @@ shader_program::shader_program(const char * szFilename) :
 
 	m_iID = glCreateProgram(); ASSERT_OPENGL();
 
-	auto vert = parser.get_string("vertexshader");
-	auto frag = parser.get_string("fragmentshader");
+	auto vert = parser.get_string("vertex_shader");
+	auto frag = parser.get_string("fragment_shader");
 
 	m_pShaderVert = new shader(vert.c_str(), SHADER_T_VERTEX);
 	ASSERT(m_pShaderVert);
@@ -60,9 +60,9 @@ shader_program::shader_program(const char * szFilename) :
 
 	glUseProgram(m_iID); ASSERT_OPENGL();
 
-	get_uniform_location(parser, "uniformtrans", &m_iUniformMatTrans);
-	get_uniform_location(parser, "uniformview", &m_iUniformMatView);
-	get_uniform_location(parser, "uniformproj", &m_iUniformMatProj);
+	get_uniform_location(parser, "uniform_trans", &m_iUniformMatTrans);
+	get_uniform_location(parser, "uniform_view", &m_iUniformMatView);
+	get_uniform_location(parser, "uniform_proj", &m_iUniformMatProj);
 
 	m_iUniformTex1 = glGetUniformLocation(m_iID, "tex_tex1"); ASSERT_OPENGL();
 	m_iUniformTex2 = glGetUniformLocation(m_iID, "tex_tex2"); ASSERT_OPENGL();
@@ -78,23 +78,23 @@ shader_program::shader_program(const char * szFilename) :
 
 	glUseProgram(0);
 
-	if (parser.is_cmd("diffusekey"))
-		m_mapTexKey.emplace(SHADERTEX_DIFFUSE, parser.get_string("diffusekey"));
-	if (parser.is_cmd("normalkey"))
-		m_mapTexKey.emplace(SHADERTEX_NORMAL, parser.get_string("normalkey"));
-	if (parser.is_cmd("specularkey"))
-		m_mapTexKey.emplace(SHADERTEX_SPECULAR, parser.get_string("specularkey"));
-	if (parser.is_cmd("opacitykey"))
-		m_mapTexKey.emplace(SHADERTEX_OPACITY, parser.get_string("opacitykey"));
+	if (parser.is_cmd("diffuse_key"))
+		m_mapTexKey.emplace(SHADERTEX_DIFFUSE, parser.get_string("diffuse_key"));
+	if (parser.is_cmd("normal_key"))
+		m_mapTexKey.emplace(SHADERTEX_NORMAL, parser.get_string("normal_key"));
+	if (parser.is_cmd("specular_key"))
+		m_mapTexKey.emplace(SHADERTEX_SPECULAR, parser.get_string("specular_key"));
+	if (parser.is_cmd("opacity_key"))
+		m_mapTexKey.emplace(SHADERTEX_OPACITY, parser.get_string("opacity_key"));
 
-	if (parser.is_cmd("diffusedefault"))
-		m_mapTexDefault.emplace(SHADERTEX_DIFFUSE, parser.get_string("diffusedefault"));
-	if (parser.is_cmd("normaldefault"))
-		m_mapTexDefault.emplace(SHADERTEX_NORMAL, parser.get_string("normaldefault"));
-	if (parser.is_cmd("speculardefault"))
-		m_mapTexDefault.emplace(SHADERTEX_SPECULAR, parser.get_string("speculardefault"));
-	if (parser.is_cmd("opacitydefault"))
-		m_mapTexDefault.emplace(SHADERTEX_OPACITY, parser.get_string("opacitydefault"));
+	if (parser.is_cmd("diffuse_default"))
+		m_mapTexDefault.emplace(SHADERTEX_DIFFUSE, parser.get_string("diffuse_default"));
+	if (parser.is_cmd("normal_default"))
+		m_mapTexDefault.emplace(SHADERTEX_NORMAL, parser.get_string("normal_default"));
+	if (parser.is_cmd("specular_default"))
+		m_mapTexDefault.emplace(SHADERTEX_SPECULAR, parser.get_string("specular_default"));
+	if (parser.is_cmd("opacity_default"))
+		m_mapTexDefault.emplace(SHADERTEX_OPACITY, parser.get_string("opacity_default"));
 }
 
 shader_program::~shader_program()

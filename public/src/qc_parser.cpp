@@ -99,7 +99,7 @@ void mdlc::qc_parser::parse_line()
 
 	if (line.size() < 2) // i.e.: "$a"
 	{
-		PRINT_ERR("ERR1: line" << m_iLine << " too short");
+		//PRINT_ERR("ERR1: line" << m_iLine << " too short");
 		return;
 	}
 
