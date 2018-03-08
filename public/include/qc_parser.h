@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <fstream>
 
 namespace mdlc {
@@ -39,6 +40,7 @@ namespace mdlc {
 		int m_iLine;
 		std::ifstream m_file;
 
-		std::vector<qc_command> m_commands;
+		//std::vector<qc_command> m_commands;
+		std::map<std::string, std::string> m_commands;
 	};
 }

@@ -34,37 +34,29 @@ void mdlc::qc_parser::operator=(const qc_parser & other)
 
 bool mdlc::qc_parser::is_cmd(const char* szCmd) const
 {
-	return std::any_of(m_commands.begin(), m_commands.end(), [&szCmd](const qc_command& cmd){
-		return cmd.m_iszCmd == szCmd;
-	});
+	return m_commands.count(std::string(szCmd)) == 1;
 }
 
 int mdlc::qc_parser::get_int(const char* szCmd) const
 {
-	return std::stoi(std::find_if(m_commands.begin(), m_commands.end(), [&szCmd](const qc_command& cmd) {
-		return cmd.m_iszCmd == szCmd;
-	})->m_iszArg);
+	return std::stoi(m_commands.at(std::string(szCmd)));
 }
 
 double mdlc::qc_parser::get_float(const char* szCmd) const
 {
-	return std::stod(std::find_if(m_commands.begin(), m_commands.end(), [&szCmd](const qc_command& cmd) {
-		return cmd.m_iszCmd == szCmd;
-	})->m_iszArg);
+	return std::stod(m_commands.at(std::string(szCmd)));
 }
 
 std::string mdlc::qc_parser::get_string(const char* szCmd) const
 {
-	return std::find_if(m_commands.begin(), m_commands.end(), [&szCmd](const qc_command& cmd) {
-		return cmd.m_iszCmd == szCmd;
-	})->m_iszArg;
+	return m_commands.at(std::string(szCmd));
 }
 
 std::vector<std::string> mdlc::qc_parser::get_commands() const
 {
 	std::vector<std::string> ret;
 	for (auto& cmd : m_commands) {
-		ret.push_back(cmd.m_iszCmd);
+		ret.push_back(cmd.first);
 	}
 
 	return ret;
@@ -78,13 +70,6 @@ void mdlc::qc_parser::parse()
 		m_iLine++;
 		parse_line();
 	}
-
-	for (auto& cmd : m_commands)
-	{
-		//PRINT_DBG("Command: \"" << cmd.m_iszCmd << "\" Argument: \"" << cmd.m_iszArg << "\"");
-	}
-
-	m_commands.push_back({ "<invalid>", "<invalid>" });
 }
 
 void mdlc::qc_parser::parse_line()
@@ -182,6 +167,6 @@ void mdlc::qc_parser::parse_line()
 		}
 	}
 
-	over:
-	m_commands.push_back({ cmd.str(), arg.str() });
+over:
+	m_commands.emplace(cmd.str(), arg.str());
 }
