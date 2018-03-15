@@ -69,14 +69,13 @@ shader_program::shader_program(const char * szFilename) :
 	m_iUniformTex3 = glGetUniformLocation(m_iID, "tex_tex3"); ASSERT_OPENGL();
 	m_iUniformTex4 = glGetUniformLocation(m_iID, "tex_tex4"); ASSERT_OPENGL();
 	m_iUniformTex5 = glGetUniformLocation(m_iID, "tex_tex5"); ASSERT_OPENGL();
+	m_iUniformTime = glGetUniformLocation(m_iID, "game_time"); ASSERT_OPENGL();
 
 	glUniform1i(m_iUniformTex1, 0); ASSERT_OPENGL();
 	glUniform1i(m_iUniformTex2, 1); ASSERT_OPENGL();
 	glUniform1i(m_iUniformTex3, 2); ASSERT_OPENGL();
 	glUniform1i(m_iUniformTex4, 3); ASSERT_OPENGL();
 	glUniform1i(m_iUniformTex5, 4); ASSERT_OPENGL();
-
-	glUseProgram(0);
 
 	if (parser.is_cmd("diffuse_key"))
 		m_mapTexKey.emplace(SHADERTEX_DIFFUSE, parser.get_string("diffuse_key"));
@@ -95,6 +94,40 @@ shader_program::shader_program(const char * szFilename) :
 		m_mapTexDefault.emplace(SHADERTEX_SPECULAR, parser.get_string("specular_default"));
 	if (parser.is_cmd("opacity_default"))
 		m_mapTexDefault.emplace(SHADERTEX_OPACITY, parser.get_string("opacity_default"));
+
+	m_bLit = parser.is_cmd("lit") && parser.get_int("lit") == 1;
+	if (m_bLit) {
+		bool bAllParametersSpecified =
+			parser.is_cmd("light_pos_x") && parser.is_cmd("light_pos_y") && parser.is_cmd("light_pos_z") &&
+			parser.is_cmd("light_color_r") && parser.is_cmd("light_color_g") && parser.is_cmd("light_color_b") && parser.is_cmd("light_color_a");
+		if (!bAllParametersSpecified) {
+			m_bLit = false;
+			PRINT_ERR("Shader " << m_szName << " is marked as 'lit' but one or more lighting parameters are missing!");
+		}
+		else {
+			auto iszPosX = parser.get_string("light_pos_x");
+			auto iszPosY = parser.get_string("light_pos_y");
+			auto iszPosZ = parser.get_string("light_pos_z");
+			auto iszColorR = parser.get_string("light_color_r");
+			auto iszColorG = parser.get_string("light_color_g");
+			auto iszColorB = parser.get_string("light_color_b");
+			auto iszColorA = parser.get_string("light_color_a");
+
+				m_aiUniformLight.flPosX = glGetUniformLocation(m_iID, iszPosX.c_str()); ASSERT_OPENGL();
+				if (m_aiUniformLight.flPosX == -1) PRINT_ERR("Failed getting uniform: light_pos_x");
+				m_aiUniformLight.flPosY = glGetUniformLocation(m_iID, iszPosY.c_str()); ASSERT_OPENGL();
+				if (m_aiUniformLight.flPosY == -1) PRINT_ERR("Failed getting uniform: light_pos_y");
+				m_aiUniformLight.flPosZ = glGetUniformLocation(m_iID, iszPosZ.c_str()); ASSERT_OPENGL();
+				if (m_aiUniformLight.flPosZ == -1) PRINT_ERR("Failed getting uniform: light_pos_z");
+				
+				m_aiUniformLight.flColorR = glGetUniformLocation(m_iID, iszColorR.c_str()); ASSERT_OPENGL();
+				m_aiUniformLight.flColorG = glGetUniformLocation(m_iID, iszColorG.c_str()); ASSERT_OPENGL();
+				m_aiUniformLight.flColorB = glGetUniformLocation(m_iID, iszColorB.c_str()); ASSERT_OPENGL();
+				m_aiUniformLight.flColorA = glGetUniformLocation(m_iID, iszColorA.c_str()); ASSERT_OPENGL();
+		}
+	}
+
+	glUseProgram(0);
 }
 
 shader_program::~shader_program()
@@ -243,12 +276,37 @@ void shader_program::set_mat4(const std::string & name, const void * m)
 		glUniformMatrix4fv(iLoc, 1, GL_FALSE, (const GLfloat*)m); ASSERT_OPENGL();
 }
 
-void shader_program::set_light1(const shader_point_light& l)
+void shader_program::set_bool(const std::string & name, bool v)
 {
+	RESTRICT_THREAD_RENDERING;
+	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
+	if (iLoc != -1)
+		glUniform1i(iLoc, (v ? 1 : 0)); ASSERT_OPENGL();
 }
 
-void shader_program::set_light2(const shader_point_light& l)
+void shader_program::set_light(const shader_light & l, size_t iLight)
 {
+	RESTRICT_THREAD_RENDERING;
+
+	glUseProgram(m_iID); ASSERT_OPENGL();
+	glUniform1f(m_aiUniformLight.flPosX, l.pos[0]); ASSERT_OPENGL();
+	glUniform1f(m_aiUniformLight.flPosY, l.pos[1]); ASSERT_OPENGL();
+	glUniform1f(m_aiUniformLight.flPosZ, l.pos[2]); ASSERT_OPENGL();
+	glUniform1f(m_aiUniformLight.flColorR, l.color.r); ASSERT_OPENGL();
+	glUniform1f(m_aiUniformLight.flColorG, l.color.g); ASSERT_OPENGL();
+	glUniform1f(m_aiUniformLight.flColorB, l.color.b); ASSERT_OPENGL();
+	glUniform1f(m_aiUniformLight.flColorA, l.color.a); ASSERT_OPENGL();
+	glUseProgram(0); ASSERT_OPENGL();
+}
+
+void shader_program::set_light1(const shader_light& l)
+{
+	set_light(l, 0);
+}
+
+void shader_program::set_light2(const shader_light& l)
+{
+	//set_light(l, 1);
 }
 
 int shader_program::get_uniform_location(const mdlc::qc_parser& qcp, const std::string& name, int* pLocation)

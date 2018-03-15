@@ -7,6 +7,9 @@ public:
 	DEC_CLASS(prop_dynamic, c_base_prop);
 	void precache();
 	void spawn();
+
+	BEGIN_KEYVALUES(c_prop_dynamic)
+	END_KEYVALUES()
 };
 
 REGISTER_ENTITY(c_prop_dynamic, prop_dynamic);
@@ -23,4 +26,5 @@ void c_prop_dynamic::spawn()
 	set_abspos(vec3_origin);
 	SET_MODEL(m_szModel);
 	SetNextThink(DONT_THINK);
+	m_nFilter = ENT_FILTER_PROP;
 }

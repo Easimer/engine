@@ -16,6 +16,8 @@ public:
 	void set_framerate(unsigned nFramerate) { m_nFramerate = nFramerate; }
 	void set_material(const std::string& iszMaterial) { m_iszMaterial = iszMaterial; }
 
+	const std::string& get_outfile() const { return m_iszOutfile; }
+
 	void write() const;
 
 private:

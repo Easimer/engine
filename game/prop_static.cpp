@@ -23,6 +23,9 @@ public:
 		return m_matTrans;
 	}
 
+	BEGIN_KEYVALUES(c_prop_static)
+	END_KEYVALUES()
+
 private:
 	glm::mat4 m_matTrans;
 };
@@ -42,4 +45,5 @@ void c_prop_static::spawn()
 	m_matTrans = glm::scale(glm::mat4(1.0), glm::vec3(m_flScale, m_flScale, m_flScale));
 	m_matTrans = glm::eulerAngleXYZ(m_vecRot[0], m_vecRot[1], m_vecRot[2]) * m_matTrans;
 	m_matTrans = glm::translate(m_matTrans,(glm::vec3)m_vecPos);
+	m_nFilter = ENT_FILTER_PROP;
 }

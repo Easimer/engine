@@ -17,6 +17,9 @@ CMDBUF_BEGIN_CMD(drawcmd_t)
 	vec vecPosition;
 	glm::mat4 matRotation;
 	float flScale = 1;
+	bool bMatRotationIsTransformation = false; // matRotation is the whole transformation matrix
+
+	shader_light lights[2];
 CMDBUF_END_CMD(drawcmd_t)
 
 CMDBUF_DEF(renderer_drawmdl_cmdbuf, drawcmd_t, ENTSYS_MAX_ENTITIES, false, false);
@@ -116,6 +119,8 @@ private:
 	bool m_bLoading = true;
 
 	size_t m_iLoadedModelID = 0;
+
+	bool m_bDrawNormalsOnly = false;
 
 	// list of shaders
 	// TODO: make this a map<string [name], shader_program*>

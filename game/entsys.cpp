@@ -4,6 +4,7 @@
 #include "renderer.h"
 #include "icamera.h"
 #include "prop_common.h"
+#include "light_base.h"
 #include <algorithm>
 #include <limits>
 
@@ -141,6 +142,28 @@ void entsys::draw_entities()
 				c.matRotation = pEnt->get_rotation_matrix();
 				c.flScale = pEnt->get_scale();
 			}
+
+			base_entity* lights[2] = { nullptr };
+
+			size_t nLights = UTIL_NearestEntities(pEnt->get_abspos(), lights, 2, ENT_FILTER_LIGHT);
+
+			if (nLights > 0) {
+				base_light* pLight1 = dynamic_cast<base_light*>(lights[0]);
+				if (pLight1) {
+					pLight1->get_light(c.lights[0]);
+				}
+				if (nLights > 1) {
+					base_light* pLight2 = dynamic_cast<base_light*>(lights[1]);
+					if (pLight2) {
+						pLight2->get_light(c.lights[1]);
+					}
+				}
+				else {
+					pLight1->get_light(c.lights[1]);
+				}
+			}
+
+			gpGlobals->pStatistics->get_stat_i(ESTAT_C_RENDERER, "lights") = nLights;
 
 			float flDist = (vecCamera - pEnt->get_abspos()).length_sq();
 			vecDrawCmdsDists.push_back({ c, flDist });

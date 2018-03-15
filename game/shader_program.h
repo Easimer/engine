@@ -3,6 +3,7 @@
 #include "shader.h"
 #include "material.h"
 #include "qc_parser.h"
+#include "light.h"
 
 enum shader_tex_type {
 	SHADERTEX_DIFFUSE	= 0,
@@ -12,15 +13,9 @@ enum shader_tex_type {
 	SHADERTEX_MAX		= 4
 };
 
-struct shader_point_light {
-	vec3 pos;
-	float flConstant;
-	float flLinear;
-	float flQuadratic;
-
-	vec3 ambient;
-	vec3 diffuse;
-	vec3 specular;
+struct shader_program_light_uniform {
+	int flPosX, flPosY, flPosZ;
+	int flColorR, flColorG, flColorB, flColorA;
 };
 
 class shader_program {
@@ -51,11 +46,14 @@ public:
 	void set_vec4(const std::string& name, const float* v);
 	void set_mat4(const std::string& name, const void* m);
 
-	void set_light1(const shader_point_light& l);
-	void set_light2(const shader_point_light& l);
+	void set_bool(const std::string& name, bool v);
+
+	void set_light1(const shader_light& l);
+	void set_light2(const shader_light& l);
 
 protected:
 	int get_uniform_location(const mdlc::qc_parser& qcp, const std::string& name, int* pLocation);
+	void set_light(const shader_light& l, size_t iLight);
 
 private:
 	uint32_t m_iID;
@@ -71,9 +69,9 @@ private:
 	int m_iUniformTex3;
 	int m_iUniformTex4;
 	int m_iUniformTex5;
+	int m_iUniformTime;
 
-	int m_iUniformLight1;
-	int m_iUniformLight2;
+	shader_program_light_uniform m_aiUniformLight;
 
 	bool m_bLit;
 

@@ -134,7 +134,7 @@ void thread_logic()
 	pDog1->set_abspos(vec3(0.5, 0, -0.1));
 
 	c_base_prop* pDog2 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
-	pDog2->set_model("data/models/dog.emf");
+	pDog2->set_model("data/models/traffic_barrel.emf");
 	pDog2->spawn();
 	pDog2->set_abspos(vec3(-0.5, 0, 0));
 
@@ -147,6 +147,14 @@ void thread_logic()
 	pHat->set_model("data/models/test_terrain.smd");
 	pHat->spawn();
 	//gpGlobals->pEntSys->kill_entity(pHat);
+
+	base_entity* pLight = CreateEntityNoSpawn("light_point");
+	if (pLight) {
+		pLight->spawn();
+		auto pLightColor = pLight->get_keyvalue<KV_T_RGBA>("color");
+		pLightColor = { 1, 1, 1, 1 };
+		pLight->set_abspos(vec3(0, 1, 0));
+	}
 	
 	PRINT_DBG("===========");
 	PRINT_DBG("End of loading");

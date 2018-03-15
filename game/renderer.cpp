@@ -87,6 +87,7 @@ void renderer::render()
 			}
 			shader_program* pShader = m_vecPrograms[iShader];
 			glUseProgram(pShader->get_id());
+			pShader->set_bool("bDebugDrawNormalsOnly", m_bDrawNormalsOnly);
 
 			//PRINT_DBG("renderer::render: drawing model #" << pCommands->iModelID);
 			glBindVertexArray(pCommands->iModelID); ASSERT_OPENGL();
@@ -101,22 +102,14 @@ void renderer::render()
 				mat_trans = mat_trans * pCommands->matRotation;
 				mat_trans = glm::scale(mat_trans, glm::vec3(pCommands->flScale, pCommands->flScale, pCommands->flScale));
 			}
-			
-			
-			
-			
+
+			pShader->set_light1(pCommands->lights[0]);
+			//pShader->set_light2(pCommands->lights[1]);
 			
 			pShader->set_mat_trans(glm::value_ptr(mat_trans));
 
 			// activate material
 			pShader->use_material(curmat);
-
-			// activate textures
-			//for (size_t i = 0; i < m_mapTextures[pCommands->iModelID].size(); i++)
-			//{
-			//	glActiveTexture(GL_TEXTURE0 + i); ASSERT_OPENGL();
-			//	glBindTexture(GL_TEXTURE_2D, m_mapTextures[pCommands->iModelID][i]); ASSERT_OPENGL();
-			//}
 
 			size_t nVertexCount = m_model_vertexcount[pCommands->iModelID];
 			nAllVertices += nVertexCount;
@@ -529,6 +522,7 @@ void renderer::load_loop()
 				m_mapModels.emplace(std::string(pCommands->szFilename), m_iLoadedModelID);
 				PRINT_DBG("renderer: model uploaded!");
 				while (m_iLoadedModelID) {
+					
 					Sleep(1);
 				}
 				PRINT_DBG("renderer: model delivered!");

@@ -2,22 +2,37 @@
 
 #include "basethinker.h"
 #include "vector.h"
+#include "keyvalues.h"
 
 #define DEC_CLASS(classname, basename) \
 	typedef basename BaseClass; \
 	virtual const char* get_classname() { return #classname; }
+
 #define REGISTER_ENTITY(classname, mapname) static entity_factory<classname> mapname(#mapname);
+
+// Entity filters
+/// Match all entities / Don't filter
+#define ENT_FILTER_ALL		(0)
+/// Match all props
+#define ENT_FILTER_PROP		(1 << 0)
+/// Match all lights
+#define ENT_FILTER_LIGHT	(1 << 1)
 
 class base_entity : public base_thinker
 {
 public:
 	~base_entity() {}
+	/// Precache resources here
 	virtual void precache() = 0;
+
 	virtual void spawn();
+
+	/// Should we even bother drawing the entity?
 	virtual bool is_drawable() {
 		return false;
 	}
 
+	/// DO NOT override! Use DEC_CLASS instead!
 	virtual const char* get_classname() = 0;
 
 	// Returns with the absolute position of the entity.
@@ -74,6 +89,23 @@ public:
 		strncpy(m_szTargetname, szNewname, 128);
 	}
 
+	template<keyvalues_type T>
+	keyvalue_ptr<T> get_keyvalue(const std::string& name) {
+		keyvalue_ptr<T> ptr;
+		size_t iOff = m_keyvalues[{name, T}];
+		ASSERT(iOff);
+		ptr.m_pKv = ((char*)this) + iOff;
+		return ptr;
+	}
+
+	virtual keyvalues_container& get_keyvalues() {
+		return m_keyvalues;
+	}
+
+	virtual void load_keyvalues() = 0;
+
+	int get_filter() const { return m_nFilter; }
+
 protected:
 	// This is the absolute pos if this ent has no parent
 	// Otherwise this is relative
@@ -92,6 +124,14 @@ protected:
 
 	// human-readable name in the IO system
 	char m_szTargetname[128] = {0};
+
+	// base keyvalues
+	keyvalues_container m_keyvalues = {
+		{{"position", KV_T_VECTOR3}, classoffset(base_entity, m_vecPos)},
+		{{"rotation", KV_T_VECTOR3 }, classoffset(base_entity, m_vecRot)},
+	};
+
+	int m_nFilter = 0;
 
 private:
 	friend class entsys;

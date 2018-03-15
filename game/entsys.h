@@ -4,6 +4,7 @@
 #include <list>
 #include <map>
 #include <enl/cmdbuf.h>
+#include "entsearch.h"
 
 #define ENTSYS_MAX_ENTITIES 1024
 

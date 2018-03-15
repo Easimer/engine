@@ -10,10 +10,10 @@ int main(int argc, char** argv)
 {
 	CMDLINE_INIT();
 
-	if (argc < 2)
+	if (argc < 2) {
+		PRINT_ERR("Usage: " << argv[0] << " input.qc");
 		return 1;
-
-	_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
+	}
 
 	const char* pszQC = gpCmdline->GetArgument();
 
@@ -63,6 +63,7 @@ int main(int argc, char** argv)
 				emfw.add_animation(name, std::vector<model_keyframe>());
 			}
 		}
+		PRINT("Writing to outfile \"" << emfw.get_outfile() << '\"');
 		emfw.write();
 	}
 

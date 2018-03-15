@@ -12,6 +12,8 @@ void base_entity::spawn()
 	SetNextThink(DONT_THINK);
 
 	m_bSpawned = true;
+
+	load_keyvalues();
 }
 
 vec3 base_entity::get_abspos() const

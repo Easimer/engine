@@ -80,6 +80,8 @@ void renderer::draw_debug_tools()
 		ImGui::Text("Rotation:\t (%f; %f; %f)\n", cam_rot[0], cam_rot[1], cam_rot[2]);
 		ImGui::EndGroup();
 
+		ImGui::Checkbox("Draw normals only", &m_bDrawNormalsOnly);
+
 		ImGui::End();
 	}
 
@@ -189,6 +191,33 @@ void renderer::draw_debug_tools()
 						upd.iszString = std::string(gpGlobals->pDevGUI->m_szModelPath);
 						entsys_updates.push_back(upd);
 					}
+				}
+
+				auto keyvalues = pEnt->get_keyvalues();
+				for (const auto& kv : keyvalues) {
+					switch (kv.first.second) {
+					case KV_T_FLOAT:
+						ImGui::InputFloat(kv.first.first.c_str(), pEnt->get_keyvalue<KV_T_FLOAT>(kv.first.first).ptr());
+						break;
+					case KV_T_RGBA:
+						float rgba[4];
+						auto col = pEnt->get_keyvalue<KV_T_RGBA>(kv.first.first);
+
+						rgba[0] = col->r;
+						rgba[1] = col->g;
+						rgba[2] = col->b;
+						rgba[3] = col->a;
+
+						ImGui::ColorEdit4(kv.first.first.c_str(), rgba);
+
+						col->r = rgba[0];
+						col->g = rgba[1];
+						col->b = rgba[2];
+						col->a = rgba[3];
+						break;
+					}
+						
+
 				}
 
 				if (ImGui::Button("Kill Entity")) {

@@ -36,9 +36,28 @@ set(SRC_ENTSYS
 	entityfactory.h
 	entsys.h
 
+	keyvalues.h
+	
+	entsearch.cpp
+	entsearch.h
+)
+
+set(SRC_ENTSYS_PROP
 	prop_common.h
 	prop_dynamic.cpp
 	prop_static.cpp
+)
+
+set(SRC_ENTSYS_LIGHT
+	light.h
+
+	light_base.h
+	
+	light_point.cpp
+	light_point.h
+
+	light_global.cpp
+	light_global.h
 )
 
 set(SRC_GFX
@@ -69,6 +88,8 @@ set(SRC_GFX
 	
 	../public/src/emf_loader.cpp
 	../public/include/emf_loader.h
+
+	../public/include/octree.h
 )
 
 set(SRC_NOPCH
@@ -102,6 +123,8 @@ ENDIF()
 add_executable(game
 	${SRC_CORE}
 	${SRC_ENTSYS}
+	${SRC_ENTSYS_PROP}
+	${SRC_ENTSYS_LIGHT}
 	${SRC_GFX}
 	${SRC_RES_SHADERS}
 	${SRC_NOPCH}
@@ -120,6 +143,8 @@ IF(WIN32)
 source_group("Source Files" FILES ${SRC_GAME})
 source_group("Source Files\\Model Loader" FILES ${SRC_MDLLDR})
 source_group("Source Files\\Entity System" FILES ${SRC_ENTSYS})
+source_group("Source Files\\Entity System\\Props" FILES ${SRC_ENTSYS_PROP})
+source_group("Source Files\\Entity System\\Lighting" FILES ${SRC_ENTSYS_LIGHT})
 source_group("Source Files\\Graphics" FILES ${SRC_GFX})
 source_group("Source Files\\GUI" FILES ${SRC_GUI})
 source_group("Shader Source Files" FILES ${SRC_RES_SHADERS})

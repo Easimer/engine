@@ -91,6 +91,10 @@ public:
 		return ret;
 	}
 
+	const float* ptr() const {
+		return m_aflValues;
+	}
+
 private:
 	float m_aflValues[3] = { 0 };
 };
@@ -99,3 +103,5 @@ typedef vector vec;
 typedef vector vec3;
 
 #define vec3_origin vec3(0,0,0)
+
+std::ostream& operator<<(std::ostream& s, const vector& v);

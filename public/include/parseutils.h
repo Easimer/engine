@@ -28,7 +28,7 @@ namespace mdlc {
 
 	inline bool is_path(char c)
 	{
-		return is_alphanum(c) || c == '.' || c == '\\' || c == '/' || c == '-' || c == '_' || c == '+' || c == ' ' || c == ',';
+		return is_alphanum(c) || c == '.' || c == '\\' || c == '/' || c == '-' || c == '_' || c == '+' || c == ' ' || c == ',' || c == '[' || c == ']' || c == '%' || c == '(' || c == ')';
 	}
 
 	inline bool is_whitespace(char c)
