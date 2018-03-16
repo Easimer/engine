@@ -88,8 +88,9 @@ set(SRC_GFX
 	
 	../public/src/emf_loader.cpp
 	../public/include/emf_loader.h
-
-	../public/include/octree.h
+	
+	framebuffer.cpp
+	framebuffer.h
 )
 
 set(SRC_NOPCH

@@ -7,6 +7,7 @@
 #include <map>
 #include <glm/fwd.hpp>
 #include <glm/mat4x4.hpp>
+#include "framebuffer.h"
 
 //
 // model draw cmdbuf
@@ -142,6 +143,8 @@ private:
 	std::map<std::string, uint32_t> m_map_texture_name;
 	// maps material id to model_id
 	std::map<model_id, size_t> m_mapMaterial;
+
+	std::vector<framebuffer> m_vecFramebuffers;
 
 	int m_nScreenWidth, m_nScreenHeight;
 
