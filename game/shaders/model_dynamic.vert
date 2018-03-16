@@ -15,14 +15,20 @@ out vec3 normal;
 out vec2 uv;
 out uint bone;
 out flat uint mat;
+out vec3 frag_pos;
+out float dist;
 
 void main()
 {
-	gl_Position = mat_proj * mat_view * mat_trans * vec4(in_pos.x, in_pos.y, in_pos.z, 1.0);
+	vec4 pos4 = vec4(in_pos.x, in_pos.y, in_pos.z, 1.0);
+	gl_Position = mat_proj * mat_view * mat_trans * pos4;
 	
 	pos = in_pos;
 	normal = in_normal;
 	uv = in_uv;
 	bone = in_bone;
 	mat = in_mat;
+
+	frag_pos = vec3(mat_trans * pos4);
+	dist = -(mat_view * pos4).z;
 }
