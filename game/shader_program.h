@@ -16,6 +16,7 @@ enum shader_tex_type {
 struct shader_program_light_uniform {
 	int flPosX, flPosY, flPosZ;
 	int flColorR, flColorG, flColorB, flColorA;
+	int bLight;
 };
 
 class shader_program {
@@ -48,12 +49,11 @@ public:
 
 	void set_bool(const std::string& name, bool v);
 
-	void set_light1(const shader_light& l);
-	void set_light2(const shader_light& l);
+	void set_local_light(const shader_light& l);
+	void set_global_light(const shader_light& l);
 
 protected:
 	int get_uniform_location(const mdlc::qc_parser& qcp, const std::string& name, int* pLocation);
-	void set_light(const shader_light& l, size_t iLight);
 
 private:
 	uint32_t m_iID;
@@ -71,7 +71,8 @@ private:
 	int m_iUniformTex5;
 	int m_iUniformTime;
 
-	shader_program_light_uniform m_aiUniformLight;
+	shader_program_light_uniform m_aiUniformLightLocal;
+	shader_program_light_uniform m_aiUniformLightGlobal;
 
 	bool m_bLit;
 

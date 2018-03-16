@@ -10,8 +10,9 @@ public:
 	KEYFIELD(m_colColor, KV_T_RGBA, "color");
 	END_KEYVALUES()
 
-	void precache() {}
-	void spawn() {
+	virtual void precache() {}
+
+	virtual void spawn() {
 		BaseClass::spawn();
 		m_nFilter = ENT_FILTER_LIGHT_LOCAL;
 	}

@@ -103,7 +103,8 @@ void renderer::render()
 				mat_trans = glm::scale(mat_trans, glm::vec3(pCommands->flScale, pCommands->flScale, pCommands->flScale));
 			}
 
-			pShader->set_light1(pCommands->light_local);
+			pShader->set_local_light(pCommands->light_local);
+			pShader->set_global_light(pCommands->light_global);
 			
 			pShader->set_mat_trans(glm::value_ptr(mat_trans));
 

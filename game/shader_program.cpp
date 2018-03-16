@@ -95,35 +95,81 @@ shader_program::shader_program(const char * szFilename) :
 	if (parser.is_cmd("opacity_default"))
 		m_mapTexDefault.emplace(SHADERTEX_OPACITY, parser.get_string("opacity_default"));
 
+	set_bool("bDebugDrawNormalsOnly", false);
+
 	m_bLit = parser.is_cmd("lit") && parser.get_int("lit") == 1;
 	if (m_bLit) {
-		bool bAllParametersSpecified =
-			parser.is_cmd("light_pos_x") && parser.is_cmd("light_pos_y") && parser.is_cmd("light_pos_z") &&
-			parser.is_cmd("light_color_r") && parser.is_cmd("light_color_g") && parser.is_cmd("light_color_b") && parser.is_cmd("light_color_a");
+		std::vector<std::string> all_parameters = {
+			"light_no_global",
+			"lightl_pos_x", "lightl_pos_y","lightl_pos_z",
+			"lightg_rot_x", "lightg_rot_y","lightg_rot_z",
+			"lightl_color_r", "lightl_color_g","lightl_color_b","lightl_color_a",
+			"lightg_color_r", "lightg_color_g","lightg_color_b","lightg_color_a",
+		};
+		std::vector<std::string> missing_parameters;
+
+		bool bAllParametersSpecified = true;
+
+		for (auto& param : all_parameters) {
+			if (!parser.is_cmd(param.c_str())) {
+				bAllParametersSpecified = false;
+				missing_parameters.push_back(param);
+			}
+		}
+
 		if (!bAllParametersSpecified) {
 			m_bLit = false;
-			PRINT_ERR("Shader " << m_szName << " is marked as 'lit' but one or more lighting parameters are missing!");
+			PRINT_ERR("Shader " << m_szName << " is marked as 'lit' but one or more lighting parameters are missing: ");
+			for (auto& param : missing_parameters) {
+				PRINT_ERR(param);
+			}
+			PRINT_ERR("======= End of missing parameters, cut here =======");
 		}
 		else {
-			auto iszPosX = parser.get_string("light_pos_x");
-			auto iszPosY = parser.get_string("light_pos_y");
-			auto iszPosZ = parser.get_string("light_pos_z");
-			auto iszColorR = parser.get_string("light_color_r");
-			auto iszColorG = parser.get_string("light_color_g");
-			auto iszColorB = parser.get_string("light_color_b");
-			auto iszColorA = parser.get_string("light_color_a");
+			// Local color position
+			auto iszPosLX = parser.get_string("lightl_pos_x");
+			auto iszPosLY = parser.get_string("lightl_pos_y");
+			auto iszPosLZ = parser.get_string("lightl_pos_z");
 
-				m_aiUniformLight.flPosX = glGetUniformLocation(m_iID, iszPosX.c_str()); ASSERT_OPENGL();
-				if (m_aiUniformLight.flPosX == -1) PRINT_ERR("Failed getting uniform: light_pos_x");
-				m_aiUniformLight.flPosY = glGetUniformLocation(m_iID, iszPosY.c_str()); ASSERT_OPENGL();
-				if (m_aiUniformLight.flPosY == -1) PRINT_ERR("Failed getting uniform: light_pos_y");
-				m_aiUniformLight.flPosZ = glGetUniformLocation(m_iID, iszPosZ.c_str()); ASSERT_OPENGL();
-				if (m_aiUniformLight.flPosZ == -1) PRINT_ERR("Failed getting uniform: light_pos_z");
-				
-				m_aiUniformLight.flColorR = glGetUniformLocation(m_iID, iszColorR.c_str()); ASSERT_OPENGL();
-				m_aiUniformLight.flColorG = glGetUniformLocation(m_iID, iszColorG.c_str()); ASSERT_OPENGL();
-				m_aiUniformLight.flColorB = glGetUniformLocation(m_iID, iszColorB.c_str()); ASSERT_OPENGL();
-				m_aiUniformLight.flColorA = glGetUniformLocation(m_iID, iszColorA.c_str()); ASSERT_OPENGL();
+			// Global light rotation
+			auto iszRotGX = parser.get_string("lightg_rot_x");
+			auto iszRotGY = parser.get_string("lightg_rot_y");
+			auto iszRotGZ = parser.get_string("lightg_rot_z");
+
+			// Local light color
+			auto iszColorLR = parser.get_string("lightl_color_r");
+			auto iszColorLG = parser.get_string("lightl_color_g");
+			auto iszColorLB = parser.get_string("lightl_color_b");
+			auto iszColorLA = parser.get_string("lightl_color_a");
+
+			// Global light color
+			auto iszColorGR = parser.get_string("lightg_color_r");
+			auto iszColorGG = parser.get_string("lightg_color_g");
+			auto iszColorGB = parser.get_string("lightg_color_b");
+			auto iszColorGA = parser.get_string("lightg_color_a");
+
+			auto iszDisabledL = parser.get_string("lightl_disabled");
+			auto iszDisabledG = parser.get_string("lightg_disabled");
+
+#define GET_LIGHT_UNILOC(type, tar, id) m_aiUniformLight##type .tar = glGetUniformLocation(m_iID, isz##id.c_str()); ASSERT_OPENGL(); if(m_aiUniformLight##type .tar == -1) PRINT_ERR("Failed getting uniform: " << isz##id);
+
+			GET_LIGHT_UNILOC(Local, flPosX, PosLX);
+			GET_LIGHT_UNILOC(Local, flPosY, PosLY);
+			GET_LIGHT_UNILOC(Local, flPosZ, PosLZ);
+			GET_LIGHT_UNILOC(Local, flColorR, ColorLR);
+			GET_LIGHT_UNILOC(Local, flColorG, ColorLG);
+			GET_LIGHT_UNILOC(Local, flColorB, ColorLB);
+			GET_LIGHT_UNILOC(Local, flColorA, ColorLA);
+			GET_LIGHT_UNILOC(Local, bLight, DisabledL);
+
+			GET_LIGHT_UNILOC(Global, flPosX, RotGX);
+			GET_LIGHT_UNILOC(Global, flPosY, RotGY);
+			GET_LIGHT_UNILOC(Global, flPosZ, RotGZ);
+			GET_LIGHT_UNILOC(Global, flColorR, ColorGR);
+			GET_LIGHT_UNILOC(Global, flColorG, ColorGG);
+			GET_LIGHT_UNILOC(Global, flColorB, ColorGB);
+			GET_LIGHT_UNILOC(Global, flColorA, ColorGA);
+			GET_LIGHT_UNILOC(Global, bLight, DisabledG);
 		}
 	}
 
@@ -284,29 +330,54 @@ void shader_program::set_bool(const std::string & name, bool v)
 		glUniform1i(iLoc, (v ? 1 : 0)); ASSERT_OPENGL();
 }
 
-void shader_program::set_light(const shader_light & l, size_t iLight)
+void shader_program::set_local_light(const shader_light & l)
 {
 	RESTRICT_THREAD_RENDERING;
 
-	glUseProgram(m_iID); ASSERT_OPENGL();
-	glUniform1f(m_aiUniformLight.flPosX, l.pos[0]); ASSERT_OPENGL();
-	glUniform1f(m_aiUniformLight.flPosY, l.pos[1]); ASSERT_OPENGL();
-	glUniform1f(m_aiUniformLight.flPosZ, l.pos[2]); ASSERT_OPENGL();
-	glUniform1f(m_aiUniformLight.flColorR, l.color.r); ASSERT_OPENGL();
-	glUniform1f(m_aiUniformLight.flColorG, l.color.g); ASSERT_OPENGL();
-	glUniform1f(m_aiUniformLight.flColorB, l.color.b); ASSERT_OPENGL();
-	glUniform1f(m_aiUniformLight.flColorA, l.color.a); ASSERT_OPENGL();
-	glUseProgram(0); ASSERT_OPENGL();
+	if (l.iType == shader_light_type::SLT_GLOBAL) {
+		PRINT_DBG("shader_program::set_local_light: shader_light passed to me describes a global light, redirected!");
+		set_global_light(l);
+		return;
+	}
+
+	glUseProgram(m_iID);
+	if (l.iType == shader_light_type::SLT_DISABLED) {
+		glUniform1i(m_aiUniformLightLocal.bLight, 1);
+		return;
+	}
+	glUniform1i(m_aiUniformLightLocal.bLight, 0);
+	glUniform1f(m_aiUniformLightLocal.flPosX, l.pos[0]);
+	glUniform1f(m_aiUniformLightLocal.flPosY, l.pos[1]);
+	glUniform1f(m_aiUniformLightLocal.flPosZ, l.pos[2]);
+	glUniform1f(m_aiUniformLightLocal.flColorR, l.color.r);
+	glUniform1f(m_aiUniformLightLocal.flColorG, l.color.g);
+	glUniform1f(m_aiUniformLightLocal.flColorB, l.color.b);
+	glUniform1f(m_aiUniformLightLocal.flColorA, l.color.a);
 }
 
-void shader_program::set_light1(const shader_light& l)
+void shader_program::set_global_light(const shader_light & l)
 {
-	set_light(l, 0);
-}
+	RESTRICT_THREAD_RENDERING;
 
-void shader_program::set_light2(const shader_light& l)
-{
-	//set_light(l, 1);
+	if (l.iType == shader_light_type::SLT_POINT) {
+		PRINT_DBG("shader_program::set_global_light: shader_light passed to me describes a local light, redirected!");
+		set_local_light(l);
+		return;
+	}
+
+	glUseProgram(m_iID);
+	if (l.iType == shader_light_type::SLT_DISABLED) {
+		glUniform1i(m_aiUniformLightGlobal.bLight, 1);
+		return;
+	}
+	glUniform1i(m_aiUniformLightGlobal.bLight, 0);
+	glUniform1f(m_aiUniformLightGlobal.flPosX, l.pos[0]);
+	glUniform1f(m_aiUniformLightGlobal.flPosY, l.pos[1]);
+	glUniform1f(m_aiUniformLightGlobal.flPosZ, l.pos[2]);
+	glUniform1f(m_aiUniformLightGlobal.flColorR, l.color.r);
+	glUniform1f(m_aiUniformLightGlobal.flColorG, l.color.g);
+	glUniform1f(m_aiUniformLightGlobal.flColorB, l.color.b);
+	glUniform1f(m_aiUniformLightGlobal.flColorA, l.color.a);
 }
 
 int shader_program::get_uniform_location(const mdlc::qc_parser& qcp, const std::string& name, int* pLocation)

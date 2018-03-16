@@ -4,7 +4,7 @@
 
 class c_light_global : public base_light {
 public:
-	DEC_CLASS(c_light_global, base_light);
+	DEC_CLASS(light_global, base_light);
 	BEGIN_KEYVALUES(c_light_global)
 	KEYFIELD(m_vecPos, KV_T_VECTOR3, "position");
 	KEYFIELD(m_vecRot, KV_T_VECTOR3, "rotation");
@@ -12,12 +12,12 @@ public:
 	KEYFIELD(m_flAngle, KV_T_FLOAT, "angle");
 	END_KEYVALUES()
 
-	void precache() {}
-	void spawn() {
-		m_nFilter = ENT_FILTER_LIGHT_GLOBAL;
-	}
+	void precache();
+	void spawn();
 
-	void get_light(shader_light& l);
+	bool is_drawable() override;
+
+	void get_light(shader_light& l) override;
 
 private:
 	float m_flAngle;

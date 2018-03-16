@@ -155,6 +155,12 @@ void thread_logic()
 		pLightColor = { 1, 1, 1, 1 };
 		pLight->set_abspos(vec3(0, 1, 0));
 	}
+
+	base_entity* pLightGlobal = CreateEntity("light_global");
+	if (pLightGlobal) {
+		pLightGlobal->set_abspos(vec3(-1.5, 0.5, 0));
+		pLightGlobal->set_rotation(vec3(0, glm::radians(90.0f), glm::radians(90.0f)));
+	}
 	
 	PRINT_DBG("===========");
 	PRINT_DBG("End of loading");

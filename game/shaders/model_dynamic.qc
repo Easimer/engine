@@ -24,10 +24,25 @@ $opacity_default		"data/textures/builtin/opacity_flat.png"
 // Shader is lit
 $lit					"1"
 
-$light_pos_x			"light_pos_x"
-$light_pos_y			"light_pos_y"
-$light_pos_z			"light_pos_z"
-$light_color_r			"light_color_r"
-$light_color_g			"light_color_g"
-$light_color_b			"light_color_b"
-$light_color_a			"light_color_a"
+// light_no_global: set to true when global lighting should not be used
+$light_no_global		"light_no_global"
+
+// Local light parameters
+$lightl_pos_x			"lightl_pos_x"
+$lightl_pos_y			"lightl_pos_y"
+$lightl_pos_z			"lightl_pos_z"
+$lightl_color_r			"lightl_color_r"
+$lightl_color_g			"lightl_color_g"
+$lightl_color_b			"lightl_color_b"
+$lightl_color_a			"lightl_color_a"
+$lightl_disabled		"lightl_disabled"
+
+// Global light parameters
+$lightg_rot_x			"lightg_rot_x"
+$lightg_rot_y			"lightg_rot_y"
+$lightg_rot_z			"lightg_rot_z"
+$lightg_color_r			"lightg_color_r"
+$lightg_color_g			"lightg_color_g"
+$lightg_color_b			"lightg_color_b"
+$lightg_color_a			"lightg_color_a"
+$lightg_disabled		"lightg_disabled"

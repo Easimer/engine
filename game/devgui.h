@@ -8,6 +8,7 @@ struct devgui_state {
 	bool m_bShowRendererDebug = false;
 	bool m_bShowStatistics = false;
 	bool m_bShowInspector = false;
+	bool m_bDrawGlobalLightGizmo = false;
 
 	// Entity Creator
 	bool m_bShowEntityCreate = false;

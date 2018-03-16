@@ -81,6 +81,7 @@ void renderer::draw_debug_tools()
 		ImGui::EndGroup();
 
 		ImGui::Checkbox("Draw normals only", &m_bDrawNormalsOnly);
+		ImGui::Checkbox("Draw global light gizmo", &gpGlobals->pDevGUI->m_bDrawGlobalLightGizmo);
 
 		ImGui::End();
 	}

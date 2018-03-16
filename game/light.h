@@ -9,7 +9,8 @@ struct color_rgba {
 enum shader_light_type {
 	SLT_POINT = 0,
 	SLT_GLOBAL = 1,
-	SLT_MAX = 2
+	SLT_DISABLED = 2,
+	SLT_MAX = 3
 };
 
 struct shader_light {
