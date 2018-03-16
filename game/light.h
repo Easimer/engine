@@ -15,9 +15,5 @@ enum shader_light_type {
 struct shader_light {
 	int iType;
 	vec3 pos;
-	float flConstant;
-	float flLinear;
-	float flQuadratic;
-
 	color_rgba color;
 };

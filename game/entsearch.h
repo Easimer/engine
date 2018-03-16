@@ -5,6 +5,7 @@
 #include "globals.h"
 #include <cmath>
 #include <algorithm>
+#include <regex>
 
 template<typename T>
 inline
@@ -20,7 +21,7 @@ _abs(T&& val) {
 	return std::fabs(std::forward<T>(val));
 }
 
-/// Finds the `nMax` entities within a sphere around the point `center` in an `nRadius`. nFilter filters the entities by flags: see ENT_FILTER_*
+// Finds the `nMax` entities within a sphere around the point `center` in an `nRadius`. nFilter filters the entities by flags: see ENT_FILTER_*
 template<typename Tr, typename Tv>
 inline size_t UTIL_EntitiesInSphere(const Tv& center, Tr nRadius, base_entity** pResults, size_t nMax, int nFilter = ENT_FILTER_ALL) {
 	// Index in pResults
@@ -57,7 +58,7 @@ inline size_t UTIL_EntitiesInSphere(const Tv& center, Tr nRadius, base_entity** 
 	return iIndex;
 }
 
-/// Finds the `nMax` entities nearest to the point `center`. nFilter filters the entities by flags: see ENT_FILTER_*
+// Finds the `nMax` entities nearest to the point `center`. nFilter filters the entities by flags: see ENT_FILTER_*
 template<typename Tv, typename Tr = float>
 size_t UTIL_NearestEntities(const Tv& center, base_entity** pResults, size_t nMax, int nFilter = ENT_FILTER_ALL) {
 	std::vector<std::pair<size_t, char[64]>> vecEnts;
@@ -96,4 +97,80 @@ size_t UTIL_NearestEntities(const Tv& center, base_entity** pResults, size_t nMa
 	}
 
 	return nCount;
+}
+
+// Search for an entity by classname using a regex
+// Returns first match, or if no entities match, nullptr
+// Best used to find entities that are never used more than once
+// (e.g. game state, global light, etc.)
+//
+// Hint: "^light_.*" matches all classnames starting with "light_"
+template<typename T>
+base_entity* UTIL_FindEntityByClassname(const T& sClassnameRegex) {
+	static_assert(std::is_same<T, std::string>::value || std::is_same<T, char*>::value || std::is_convertible<T, std::string>::value || std::is_convertible<T, char*>::value, "Regex type is not a string or not convertible to string");
+	std::vector<std::pair<size_t, char[64]>> vecEnts;
+	gpGlobals->pEntSys->get_entities(vecEnts);
+
+	std::regex re(sClassnameRegex);
+
+	for (auto&& kv : vecEnts) {
+		if (std::regex_match(kv.second, re)) {
+			return gpGlobals->pEntSys->get_entity(kv.first);
+		}
+	}
+	return nullptr;
+}
+
+// Search for entities by classname using a regex
+// Returns first match, or if no entities match, nullptr
+//
+// Hint: "^light_.*" matches all classnames starting with "light_"
+template<typename T>
+size_t UTIL_FindEntitiesByClassname(const T& sClassnameRegex, base_entity** pResults, size_t nMax) {
+	static_assert(std::is_same<T, std::string>::value || std::is_same<T, char*>::value || std::is_convertible<T, std::string>::value || std::is_convertible<T, char*>::value, "Regex type is not a string or not convertible to string");
+	std::vector<std::pair<size_t, char[64]>> vecEnts;
+	size_t iIndex = 0;
+	gpGlobals->pEntSys->get_entities(vecEnts);
+
+	std::regex re(sClassnameRegex);
+
+	for (auto&& kv : vecEnts) {
+		if (std::regex_match(kv.second, re)) {
+			pResults[iIndex] = gpGlobals->pEntSys->get_entity(kv.first);
+			iIndex++;
+			if (iIndex == nMax) {
+				return iIndex;
+			}
+		}
+	}
+	return iIndex;
+}
+
+// Find the nearest entity from a base_entity* array of `nMax` size
+template<typename Tv, typename Tr = float>
+base_entity* UTIL_NearestEntity(const Tv& center, base_entity** pResults, size_t nMax) {
+
+	if (!pResults || !nMax)
+		return nullptr;
+
+	if (nMax == 1)
+		return *pResults;
+
+	base_entity* pNearest = nullptr;
+	float flDistance = -1;
+
+	for (size_t i = 0; i < nMax; i++) {
+		base_entity* pEnt = pResults[i];
+		vec3 pos = pEnt->get_abspos();
+		Tr nDeltaX = _abs<Tr>(center[0] - pos[0]);
+		Tr nDeltaY = _abs<Tr>(center[1] - pos[1]);
+		Tr nDeltaZ = _abs<Tr>(center[2] - pos[2]);
+		Tr nLengthSquare = nDeltaX * nDeltaX + nDeltaY * nDeltaY + nDeltaZ * nDeltaZ;
+		if (nLengthSquare < flDistance || flDistance < 0) {
+			flDistance = nLengthSquare;
+			pNearest = pEnt;
+		}
+	}
+
+	return pNearest;
 }

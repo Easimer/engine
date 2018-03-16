@@ -143,23 +143,14 @@ void entsys::draw_entities()
 				c.flScale = pEnt->get_scale();
 			}
 
-			base_entity* lights[2] = { nullptr };
+			base_entity* light_local;
 
-			size_t nLights = UTIL_NearestEntities(pEnt->get_abspos(), lights, 2, ENT_FILTER_LIGHT);
+			size_t nLights = UTIL_NearestEntities(pEnt->get_abspos(), &light_local, 1, ENT_FILTER_LIGHT_LOCAL);
 
-			if (nLights > 0) {
-				base_light* pLight1 = dynamic_cast<base_light*>(lights[0]);
-				if (pLight1) {
-					pLight1->get_light(c.lights[0]);
-				}
-				if (nLights > 1) {
-					base_light* pLight2 = dynamic_cast<base_light*>(lights[1]);
-					if (pLight2) {
-						pLight2->get_light(c.lights[1]);
-					}
-				}
-				else {
-					pLight1->get_light(c.lights[1]);
+			if (nLights > 0 && light_local) {
+				base_light* pLight = dynamic_cast<base_light*>(light_local);
+				if (pLight) {
+					pLight->get_light(c.light_local);
 				}
 			}
 

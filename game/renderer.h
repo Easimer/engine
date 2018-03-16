@@ -20,7 +20,8 @@ CMDBUF_BEGIN_CMD(drawcmd_t)
 	float flScale = 1;
 	bool bMatRotationIsTransformation = false; // matRotation is the whole transformation matrix
 
-	shader_light lights[2];
+	shader_light light_local;
+	shader_light light_global;
 CMDBUF_END_CMD(drawcmd_t)
 
 CMDBUF_DEF(renderer_drawmdl_cmdbuf, drawcmd_t, ENTSYS_MAX_ENTITIES, false, false);

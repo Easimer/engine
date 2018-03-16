@@ -10,13 +10,15 @@
 
 #define REGISTER_ENTITY(classname, mapname) static entity_factory<classname> mapname(#mapname);
 
-// Entity filters
-/// Match all entities / Don't filter
-#define ENT_FILTER_ALL		(0)
-/// Match all props
-#define ENT_FILTER_PROP		(1 << 0)
-/// Match all lights
-#define ENT_FILTER_LIGHT	(1 << 1)
+/// Entity filters
+// Match all entities / Don't filter
+#define ENT_FILTER_ALL				(0)
+// Match all props
+#define ENT_FILTER_PROP				(1 << 0)
+// Match all local lights
+#define ENT_FILTER_LIGHT_LOCAL		(1 << 1)
+// Match the global light
+#define ENT_FILTER_LIGHT_GLOBAL		(1 << 2)
 
 class base_entity : public base_thinker
 {

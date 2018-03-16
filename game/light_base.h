@@ -13,8 +13,4 @@ public:
 	END_KEYVALUES()
 protected:
 	color_rgba m_colColor;
-	float m_flAttenConstant;
-	float m_flAttenLinear;
-	float m_flAttenQuadratic;
-	float m_flBrightness;
 };
