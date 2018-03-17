@@ -5,8 +5,6 @@ cmake_minimum_required(VERSION 3.2.3)
 #set(CMAKE_VS_PLATFORM_TOOLSET "Windows7.1SDK" CACHE STRING "CMAKE_VS_PLATFORM_TOOLSET" FORCE)
 #ENDIF()
 
-project(klog)
-
 vs_pch(stdafx)
 
 # Add source files here

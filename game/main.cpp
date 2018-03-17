@@ -109,8 +109,6 @@ int main(int argc, char** argv)
 
 	CMDLINE_SHUTDOWN();
 
-	SDL_Quit();
-
 	return 0;
 }
 
