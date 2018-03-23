@@ -69,18 +69,59 @@ void renderer::render()
 
 	// Draw models
 	drawcmd_t* pCommands;
+	drawcmd_t* pCurCommand;
 	size_t nCommands = 0;
+	size_t iCommands = 0;
 	size_t nAllVertices = 0;
 	//while (m_cmdbuf.is_empty());
 	if(m_cmdbuf.begin_read(&pCommands, &nCommands))
 	{
 		//PRINT_DBG("renderer::render: drawing " << nCommands << " models");
 		gpGlobals->pStatistics->get_stat_u(ESTAT_C_RENDERER, "current draw commands") = nCommands;
-		while (nCommands--)
-		{
-			material curmat = m_vecMaterials[m_mapMaterial[pCommands->iModelID]];
+		// Generate global light depth map
+		iCommands = nCommands;
+		pCurCommand = pCommands;
+		// Generate view matrix
+		// The global light's "position" is some units above the camera and
+		// it looks at the camera
+		/*m_pShaderDepth->use();
+		glm::vec3 campos = glm::vec3(gpGlobals->pCamera->get_pos());
+		glm::vec3 glpos(campos[0], campos[1] + 4, campos[2]);
+		glm::mat4 mat_view = glm::lookAt(glpos, campos, glm::vec3(0.0f, 1.0f, 0.0f));
+		m_pShaderDepth->set_mat_view(glm::value_ptr(mat_view));
+		glViewport(0, 0, FB_SHADOW_MAP_WIDTH, FB_SHADOW_MAP_HEIGHT);  ASSERT_OPENGL();
+		m_pDepthBuffer->bind();
+		glClear(GL_DEPTH_BUFFER_BIT); ASSERT_OPENGL();
+		while (iCommands--) {
+			m_pShaderDepth->set_bool("bDebugDrawNormalsOnly", false);
+			glBindVertexArray(pCurCommand->iModelID); ASSERT_OPENGL();
+			// Generate model trans. matrix
+			glm::mat4 mat_trans(1.0);
 
-			//shader_program* pShader = m_vecPrograms[0];
+			if (pCurCommand->bMatRotationIsTransformation) {
+				mat_trans = pCurCommand->matRotation;
+			} else {
+				mat_trans = glm::translate(mat_trans, glm::vec3(pCurCommand->vecPosition[0], pCurCommand->vecPosition[1], pCurCommand->vecPosition[2]));
+				mat_trans = mat_trans * pCurCommand->matRotation;
+				mat_trans = glm::scale(mat_trans, glm::vec3(pCurCommand->flScale, pCurCommand->flScale, pCurCommand->flScale));
+			}
+			m_pShaderDepth->set_mat_trans(glm::value_ptr(mat_trans));
+			size_t nVertexCount = m_model_vertexcount[pCurCommand->iModelID];
+
+			glDrawArrays(GL_TRIANGLES, 0, nVertexCount); ASSERT_OPENGL();
+
+			pCurCommand++;
+		}
+		m_pDepthBuffer->unbind();*/
+		// Draw scene normally
+		glViewport(0, 0, m_nScreenWidth, m_nScreenHeight);  ASSERT_OPENGL();
+		iCommands = nCommands;
+		pCurCommand = pCommands;
+
+		while (iCommands--)
+		{
+			material curmat = m_vecMaterials[m_mapMaterial[pCurCommand->iModelID]];
+
 			int iShader = curmat.get_shader();
 			if (iShader == -1) {
 				iShader = 0;
@@ -90,33 +131,36 @@ void renderer::render()
 			pShader->set_bool("bDebugDrawNormalsOnly", m_bDrawNormalsOnly);
 
 			//PRINT_DBG("renderer::render: drawing model #" << pCommands->iModelID);
-			glBindVertexArray(pCommands->iModelID); ASSERT_OPENGL();
+			glBindVertexArray(pCurCommand->iModelID); ASSERT_OPENGL();
 			
 			glm::mat4 mat_trans(1.0);
 
-			if (pCommands->bMatRotationIsTransformation) {
-				mat_trans = pCommands->matRotation;
+			if (pCurCommand->bMatRotationIsTransformation) {
+				mat_trans = pCurCommand->matRotation;
 			}
 			else {
-				mat_trans = glm::translate(mat_trans, glm::vec3(pCommands->vecPosition[0], pCommands->vecPosition[1], pCommands->vecPosition[2]));
-				mat_trans = mat_trans * pCommands->matRotation;
-				mat_trans = glm::scale(mat_trans, glm::vec3(pCommands->flScale, pCommands->flScale, pCommands->flScale));
+				mat_trans = glm::translate(mat_trans, glm::vec3(pCurCommand->vecPosition[0], pCurCommand->vecPosition[1], pCurCommand->vecPosition[2]));
+				mat_trans = mat_trans * pCurCommand->matRotation;
+				mat_trans = glm::scale(mat_trans, glm::vec3(pCurCommand->flScale, pCurCommand->flScale, pCurCommand->flScale));
 			}
 
-			pShader->set_local_light(pCommands->light_local);
-			pShader->set_global_light(pCommands->light_global);
+			pShader->set_local_light(pCurCommand->light_local);
+			pShader->set_global_light(pCurCommand->light_global);
 			
 			pShader->set_mat_trans(glm::value_ptr(mat_trans));
 
 			// activate material
 			pShader->use_material(curmat);
+			// Bind depth buffer texture
+			//m_pDepthBuffer->bind_texture();
+			//pShader->set_mat4("mat_lightspace", glm::value_ptr(mat_view));
 
-			size_t nVertexCount = m_model_vertexcount[pCommands->iModelID];
+			size_t nVertexCount = m_model_vertexcount[pCurCommand->iModelID];
 			nAllVertices += nVertexCount;
 
 			glDrawArrays(GL_TRIANGLES, 0, nVertexCount); ASSERT_OPENGL();
 
-			pCommands++;
+			pCurCommand++;
 		}
 
 		m_cmdbuf.end_read();
@@ -193,11 +237,10 @@ bool renderer::init_gl()
 
 	SDL_GL_SetSwapInterval(-1);
 
-	int nWidth, nHeight;
-	SDL_GetWindowSize(m_pWindow, &nWidth, &nHeight);
+	SDL_GetWindowSize(m_pWindow, &m_nScreenWidth, &m_nScreenHeight);
 
-	glViewport(0, 0, nWidth, nHeight);
-	ASSERT_OPENGL();
+	//glViewport(0, 0, m_nWidth, m_nHeight);
+	//ASSERT_OPENGL();
 	glClearColor(0.39215686274f, 0.58431372549f, 0.9294117647f, 1.0f);
 	ASSERT_OPENGL();
 
@@ -218,12 +261,36 @@ bool renderer::init_gl()
 	glDebugMessageCallback((GLDEBUGPROC)opengl_msg_callback, 0);
 #endif
 
+	// Add depth map framebuffer
+	m_pDepthBuffer = new framebuffer();
+	ASSERT(m_pDepthBuffer);
+	if (m_pDepthBuffer) {
+		m_pDepthBuffer->disable_color_buffer();
+		m_pDepthBuffer->add_depth_texture();
+		
+		m_pShaderDepth = new shader_program("data/shaders/depth_map.qc");
+		if (m_pShaderDepth) {
+			glm::mat4 depth_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
+			m_pShaderDepth->set_mat_proj(glm::value_ptr(depth_proj));
+		}
+
+		if (!m_pDepthBuffer->fail()) {
+			PRINT_DBG("Depth map framebuffer is complete!");
+		}
+	}
+
 	return true;
 }
 
 void renderer::shutdown_gl()
 {
 	RESTRICT_THREAD_RENDERING;
+
+	if (m_pDepthBuffer) {
+		delete m_pDepthBuffer;
+		if (m_pShaderDepth)
+			delete m_pShaderDepth;
+	}
 
 	for (auto pProgram : m_vecPrograms)
 	{

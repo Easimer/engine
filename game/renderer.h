@@ -145,7 +145,9 @@ private:
 	// maps material id to model_id
 	std::map<model_id, size_t> m_mapMaterial;
 
-	std::vector<framebuffer> m_vecFramebuffers;
+
+	framebuffer* m_pDepthBuffer;
+	shader_program* m_pShaderDepth;
 
 	int m_nScreenWidth, m_nScreenHeight;
 

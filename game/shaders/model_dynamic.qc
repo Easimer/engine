@@ -21,6 +21,8 @@ $normal_default			"data/textures/builtin/normal_flat.png"
 $opacity_key			"opacity"
 $opacity_default		"data/textures/builtin/opacity_flat.png"
 
+$depth_texture			"tex_depth"
+
 // Shader is lit
 $lit					"1"
 

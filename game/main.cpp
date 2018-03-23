@@ -123,6 +123,7 @@ void thread_logic()
 	gpGlobals->pRenderer->begin_load();
 	gpGlobals->pRenderer->load_shader("data/shaders/model_dynamic.qc");
 	gpGlobals->pRenderer->load_shader("data/shaders/wireframe.qc");
+	//gpGlobals->pRenderer->load_shader("data/shaders/depth_map.qc"); // hardcoded into renderer
 
 	gpGlobals->pEntSys->precache_entities();
 
@@ -135,6 +136,11 @@ void thread_logic()
 	pDog2->set_model("data/models/traffic_barrel.emf");
 	pDog2->spawn();
 	pDog2->set_abspos(vec3(-0.5, 0, 0));
+
+	c_base_prop* pArthas = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+	pArthas->set_model("data/models/arthas.emf");
+	pArthas->spawn();
+	pArthas->set_abspos(vec3(-0.5, 0, -1));
 
 	c_base_prop* pCSoldier = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pCSoldier->set_model("data/models/csoldier.emf");

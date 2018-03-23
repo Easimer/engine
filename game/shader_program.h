@@ -10,7 +10,8 @@ enum shader_tex_type {
 	SHADERTEX_NORMAL	= 1,
 	SHADERTEX_SPECULAR	= 2,
 	SHADERTEX_OPACITY	= 3,
-	SHADERTEX_MAX		= 4
+	SHADERTEX_MAX		= 4,
+	SHADERTEX_DEPTH		= 5,
 };
 
 struct shader_program_light_uniform {
@@ -70,6 +71,7 @@ private:
 	int m_iUniformTex4;
 	int m_iUniformTex5;
 	int m_iUniformTime;
+	int m_iUniformDepthTexture;
 
 	shader_program_light_uniform m_aiUniformLightLocal;
 	shader_program_light_uniform m_aiUniformLightGlobal;

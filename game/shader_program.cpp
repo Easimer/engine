@@ -173,6 +173,13 @@ shader_program::shader_program(const char * szFilename) :
 		}
 	}
 
+	if (parser.is_cmd("depth_texture")) {
+		get_uniform_location(parser, "depth_texture", &m_iUniformDepthTexture);
+		glUniform1i(m_iUniformDepthTexture, 5); ASSERT_OPENGL();
+	} else {
+		m_iUniformDepthTexture = -1;
+	}
+
 	glUseProgram(0);
 }
 

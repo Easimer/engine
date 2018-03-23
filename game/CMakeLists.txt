@@ -101,6 +101,14 @@ set(SRC_RES_SHADERS
 	shaders/model_dynamic.qc
 	shaders/model_dynamic.frag
 	shaders/model_dynamic.vert
+
+	shaders/wireframe.qc
+	shaders/wireframe.frag
+	shaders/wireframe.vert
+
+	shaders/depth_map.qc
+	shaders/depth_map.frag
+	shaders/depth_map.vert
 )
 
 set(SRC_GUI

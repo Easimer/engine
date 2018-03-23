@@ -34,7 +34,7 @@ void entsys::update_entities()
 		{
 			if (nUpdates != 0)
 			{
-				PRINT_DBG("entsys: received " << nUpdates << " updates");
+				//PRINT_DBG("entsys: received " << nUpdates << " updates");
 				while (nUpdates--)
 				{
 					auto pEnt = get_entity(pUpdate->nEntityID);
