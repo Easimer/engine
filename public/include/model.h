@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <map>
 
 #define SMD_MAX_BONE_NAME_SIZ 64
 #define SMD_MAX_MATERIAL_PATH_SIZ 128

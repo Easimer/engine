@@ -7,6 +7,7 @@
 #include "light_base.h"
 #include <algorithm>
 #include <limits>
+#include "entsearch.h"
 
 entsys::entsys()
 {

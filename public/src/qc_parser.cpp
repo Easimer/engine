@@ -3,6 +3,7 @@
 #include <sstream>
 #include <algorithm>
 #include <parseutils.h>
+#include <print.h>
 
 mdlc::qc_parser::qc_parser(const char * szFilename)
 {

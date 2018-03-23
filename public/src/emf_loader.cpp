@@ -5,6 +5,7 @@
 #include <flatbuffers/flatbuffers.h>
 #include <schemas/model_generated.h>
 #include <enl/benchmark.h>
+#include <enl/assert.h>
 
 emf_loader::emf_loader(const std::string & filename)
 {

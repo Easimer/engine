@@ -5,7 +5,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_image.h>
-#include <GL/glu.h>
+//#include <GL/glu.h>
 #include <assert_opengl.h>
 
 #include "qc_parser.h"
@@ -324,7 +324,7 @@ model_id renderer::load_model(const char * szFilename)
 		PRINT_DBG("renderer::load_model: waiting to upload...");
 	}*/
 	while (m_iLoadedModelID) {
-		Sleep(1);
+		std::this_thread::sleep_for(std::chrono::duration<int>(1));
 	}
 
 	gfx_load_cmd_t c;
@@ -336,7 +336,7 @@ model_id renderer::load_model(const char * szFilename)
 	//PRINT_DBG("renderer::load_model: waiting for upload...");
 	// wait for renderer thread to upload the model
 	while (m_iLoadedModelID == 0) {
-		Sleep(1);
+		std::this_thread::sleep_for(std::chrono::duration<int>(1));
 	}
 	//PRINT_DBG("renderer::load_model: received model id!");
 	// save model id
@@ -351,7 +351,7 @@ void renderer::load_models(std::vector<std::string> filenames)
 {
 	RESTRICT_THREAD_LOGIC;
 	while (m_iLoadedModelID) {
-		Sleep(1);
+		std::this_thread::sleep_for(std::chrono::duration<int>(1));
 	}
 
 	gfx_load_cmd_t c;
@@ -590,7 +590,7 @@ void renderer::load_loop()
 				PRINT_DBG("renderer: model uploaded!");
 				while (m_iLoadedModelID) {
 					
-					Sleep(1);
+					std::this_thread::sleep_for(std::chrono::duration<int>(1));
 				}
 				PRINT_DBG("renderer: model delivered!");
 				break;
