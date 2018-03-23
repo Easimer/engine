@@ -1,8 +1,8 @@
 #pragma once
 
-#include "baseentity.h"
-#include "vector.h"
 #include "globals.h"
+#include "vector.h"
+#include "baseentity.h"
 #include <cmath>
 #include <algorithm>
 #include <regex>
