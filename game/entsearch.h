@@ -1,11 +1,17 @@
 #pragma once
 
-#include "baseentity.h"
-#include "vector.h"
 #include "globals.h"
+#include "vector.h"
+#include "entsys.h"
+#include "baseentity.h"
 #include <cmath>
 #include <algorithm>
 #include <regex>
+
+#ifndef gpGlobals
+struct engine_globals;
+extern engine_globals* gpGlobals;
+#endif
 
 template<typename T>
 inline

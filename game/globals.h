@@ -1,6 +1,6 @@
 #pragma once
 
-#include "entityfactory.h"
+//#include "entityfactory.h"
 #include "statistics.h"
 
 struct entfmap_t;

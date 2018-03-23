@@ -6,6 +6,8 @@
 #include <parseutils.h>
 #include <enl/benchmark.h>
 #include <enl/assert.h>
+#include <print.h>
+#include <cstring>
 
 #define SMDP_STATE_START			0x00
 #define SMDP_STATE_GLOBAL			0x10

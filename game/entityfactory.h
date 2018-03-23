@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stdafx.h"
+#include "globals.h"
 #include "baseentity.h"
 
 class ientity_factory {

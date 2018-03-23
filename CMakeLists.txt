@@ -56,6 +56,12 @@ include_directories(${CMAKE_SOURCE_DIR}/libenl/include/)
 link_directories(${CMAKE_SOURCE_DIR}/public/lib/)
 include_directories(${CMAKE_SOURCE_DIR}/public/include/)
 
+IF(WIN32)
+include_directories(${CMAKE_SOURCE_DIR}/public/include/win32/)
+ENDIF()
+
+include_directories(/usr/include/directfb/)
+
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/build/" CACHE STRING "Deploy dir" FORCE)
 set (CMAKE_CXX_STANDARD 17)
 IF(CMAKE_BUILD_TYPE MATCHES "Debug")
