@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <parseutils.h>
 #include <print.h>
+#include <cstring>
 
 mdlc::qc_parser::qc_parser(const char * szFilename)
 {

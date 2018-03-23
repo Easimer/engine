@@ -141,7 +141,11 @@ add_executable(game
 
 vs_link_static(game)
 
+IF(UNIX AND NOT APPLE)
+target_link_libraries(game enl SDL2main SDL2 SDL2_image SDL2_mixer SDL2_ttf imgui dl pthread)
+ELSE()
 target_link_libraries(game enl SDL2main SDL2 SDL2_image SDL2_mixer SDL2_ttf imgui)
+ENDIF()
 install(TARGETS game DESTINATION bin/)
 install(FILES ${SRC_RES_SHADERS} DESTINATION data/shaders/)
 
