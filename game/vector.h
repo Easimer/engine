@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef sqrt
+#include <cmath>
+#endif
+
 #define vec_x m_aflValues[0]
 #define vec_y m_aflValues[1]
 #define vec_z m_aflValues[2]
