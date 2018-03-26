@@ -2,6 +2,8 @@ set(SRC
 	stdafx.cpp
 	stdafx.h
 
+	object.cpp
+
 	aabb.cpp
 	bounding_sphere.cpp
 	plane.cpp
@@ -10,6 +12,7 @@ set(SRC
 set(SRC_PUBLIC
 	../public/include/phys/phys.h
 	../public/include/phys/vector.h
+	../public/include/phys/object.h
 
 	../public/include/phys/aabb.h
 	../public/include/phys/bounding_sphere.h

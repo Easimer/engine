@@ -57,6 +57,18 @@ namespace phys {
 			return ret;
 		}
 
+		void operator+=(const vector3<T>& other) {
+			m_nValues[0] += other.x();
+			m_nValues[1] += other.y();
+			m_nValues[2] += other.z();
+		}
+
+		void operator-=(const vector3<T>& other) {
+			m_nValues[0] -= other.x();
+			m_nValues[1] -= other.y();
+			m_nValues[2] -= other.z();
+		}
+
 	protected:
 		T m_nValues[3];
 	};
@@ -91,9 +103,9 @@ namespace phys {
 	template<typename T>
 	vector3<T> operator/(const vector3<T>& lhs, T rhs) {
 		vector3<T> ret;
-		ret[0] = rhs[0] / rhs;
-		ret[1] = rhs[1] / rhs;
-		ret[2] = rhs[2] / rhs;
+		ret[0] = lhs[0] / rhs;
+		ret[1] = lhs[1] / rhs;
+		ret[2] = lhs[2] / rhs;
 		return ret;
 	}
 

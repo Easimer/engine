@@ -12,9 +12,11 @@ plane phys::plane::normalized() const
 intersect_result phys::intersect(const phys::plane& p, const phys::bounding_sphere& s)
 {
 	intersect_result ret;
-	float flDistanceCenter = std::fabs(dot<float>(p.normal, s.center()) + p.distance());
+	float flDistanceCenter = std::fabs(dot<float>(p.normal(), s.center()) + p.distance());
 	float flDistanceSphere = flDistanceCenter - s.radius();
 
 	ret.distance = flDistanceSphere;
 	ret.hit = flDistanceSphere < 0;
+
+	return ret;
 }

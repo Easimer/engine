@@ -2,6 +2,7 @@
 #include <phys/phys.h>
 #include <phys/aabb.h>
 #include <phys/bounding_sphere.h>
+#include <phys/object.h>
 
 int main(int argc, char** argv)
 {
@@ -33,6 +34,13 @@ int main(int argc, char** argv)
 	PRINT_DBG("aabb1-aabb3: " << res2.hit << ", dist: " << res2.distance);
 	PRINT_DBG("aabb1-aabb4: " << res3.hit << ", dist: " << res3.distance);
 	PRINT_DBG("aabb1-aabb5: " << res4.hit << ", dist: " << res4.distance);
+
+	phys::object test(phys::vector3<float>(0, 1, 0), phys::vector3<float>(1, 2, 3));
+
+	test.integrate(20);
+
+	PRINT_DBG(test.position());
+	PRINT_DBG(test.velocity());
 
 	return 0;
 }
