@@ -37,6 +37,26 @@ namespace phys {
 			return x() * x() + y() * y() + z() * z();
 		}
 
+		// Returns greater component
+		inline T max() const {
+			float ret = x();
+			if (y() > ret)
+				ret = y();
+			if (z() > ret)
+				ret = z();
+			return ret;
+		}
+
+		// Returns smallest component
+		inline T min() const {
+			float ret = x();
+			if (y() < ret)
+				ret = y();
+			if (z() < ret)
+				ret = z();
+			return ret;
+		}
+
 	protected:
 		T m_nValues[3];
 	};
@@ -83,4 +103,26 @@ namespace phys {
 		return os;
 	}
 
+	template<typename T>
+	vector3<T> max(const vector3<T>& lhs, const vector3<T>& rhs) {
+		vector3<T> ret;
+		ret[0] = lhs.x() > rhs.x() ? lhs.x() : rhs.x();
+		ret[1] = lhs.y() > rhs.y() ? lhs.y() : rhs.y();
+		ret[2] = lhs.z() > rhs.z() ? lhs.z() : rhs.z();
+		return ret;
+	}
+
+	template<typename T>
+	vector3<T> min(const vector3<T>& lhs, const vector3<T>& rhs) {
+		vector3<T> ret;
+		ret.x() = lhs.x() < rhs.x() ? lhs.x() : rhs.x();
+		ret.y() = lhs.y() < rhs.y() ? lhs.y() : rhs.y();
+		ret.z() = lhs.z() < rhs.z() ? lhs.z() : rhs.z();
+		return ret;
+	}
+
+	template<typename T>
+	inline T dot(const vector3<T>& lhs, const vector3<T>& rhs) {
+		return lhs.x() * rhs.x() + lhs.y() * rhs.y() + lhs.z() * rhs.z();
+	}
 }
