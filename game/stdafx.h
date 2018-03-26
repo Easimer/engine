@@ -7,3 +7,4 @@
 #include "baseentity.h"
 #include "entityfactory.h"
 #include "entsys.h"
+#include <phys/simulation.h>

@@ -3,6 +3,14 @@
 #include <iostream>
 #include <cmath>
 
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
 namespace phys {
 	template<typename T>
 	class vector3 {

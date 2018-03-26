@@ -44,6 +44,7 @@ set(SRC_ENTSYS_PROP
 	prop_common.h
 	prop_dynamic.cpp
 	prop_static.cpp
+	prop_physics.cpp
 )
 
 set(SRC_ENTSYS_LIGHT
@@ -141,10 +142,12 @@ add_executable(game
 
 vs_link_static(game)
 
+SET(GAME_LIBRARIES enl SDL2main SDL2 SDL2_image SDL2_mixer SDL2_ttf imgui phys)
+
 IF(UNIX AND NOT APPLE)
-target_link_libraries(game enl SDL2main SDL2 SDL2_image SDL2_mixer SDL2_ttf imgui dl pthread)
+target_link_libraries(game ${GAME_LIBRARIES} dl pthread)
 ELSE()
-target_link_libraries(game enl SDL2main SDL2 SDL2_image SDL2_mixer SDL2_ttf imgui)
+target_link_libraries(game ${GAME_LIBRARIES})
 ENDIF()
 install(TARGETS game DESTINATION bin/)
 install(FILES ${SRC_RES_SHADERS} DESTINATION data/shaders/)

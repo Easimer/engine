@@ -12,6 +12,10 @@ class input;
 struct devgui_state;
 struct ccommand_def;
 
+namespace phys {
+	class simulation;
+}
+
 struct engine_globals {
 	/// Engine Core
 	// Renderer
@@ -56,6 +60,9 @@ struct engine_globals {
 	ccommand_def* pCommandDefs = nullptr;
 	size_t iCommandDefs = 0;
 	bool bConsoleOpen = false;
+
+	/// Physics simulation
+	phys::simulation* pPhysSimulation = nullptr;
 };
 
 extern engine_globals* gpGlobals;

@@ -78,6 +78,7 @@ int main(int argc, char** argv)
 	gpGlobals->pInput = new input();
 	gpGlobals->pStatistics = new estat_container();
 	gpGlobals->pDevGUI = new devgui_state();
+	gpGlobals->pPhysSimulation = new phys::simulation();
 	
 	// Start main threads
 
@@ -99,6 +100,7 @@ int main(int argc, char** argv)
 		delete[] gpGlobals->pCommandDefs;
 	if (gpGlobals->entityFactoryDictionary)
 		delete[] gpGlobals->entityFactoryDictionary;
+	delete gpGlobals->pPhysSimulation;
 	delete gpGlobals->pDevGUI;
 	delete gpGlobals->pStatistics;
 	delete gpGlobals->pInput;
@@ -183,6 +185,8 @@ void thread_logic()
 		{
 			gpGlobals->pEventHandler->update();
 			gpGlobals->pInput->update();
+
+			gpGlobals->pPhysSimulation->simulate(flSinceLastUpdate);
 
 			gpGlobals->pEntSys->update_entities();
 

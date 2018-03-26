@@ -4,9 +4,10 @@
 
 using namespace phys;
 
-void phys::simulation::add_object(const object& obj)
+size_t phys::simulation::add_object(const object& obj)
 {
 	m_objects.push_back(obj);
+	return m_objects.size() - 1;
 }
 
 void phys::simulation::simulate(float delta)
