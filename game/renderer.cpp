@@ -280,6 +280,7 @@ bool renderer::init_gl()
 		if (!m_pDepthBuffer->fail()) {
 			PRINT_DBG("Depth map framebuffer is complete!");
 		}
+		m_pDepthBuffer->unbind();
 	}
 
 	return true;
