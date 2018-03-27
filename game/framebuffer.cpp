@@ -93,7 +93,8 @@ bool framebuffer::fail() const
 #endif
 		return true;
 	}
-	GLenum iStatus = glCheckNamedFramebufferStatus(m_iID, GL_FRAMEBUFFER);  ASSERT_OPENGL();
+	glBindFramebuffer(GL_FRAMEBUFFER, m_iID); ASSERT_OPENGL();
+	GLenum iStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);  ASSERT_OPENGL();
 	if (iStatus != GL_FRAMEBUFFER_COMPLETE) {
 #ifdef PLAT_DEBUG
 		PRINT_DBG("framebuffer::fail");
