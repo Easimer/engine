@@ -48,14 +48,18 @@ void renderer::draw_debug_tools()
 		{
 			bool bToggleRendererDebug = false;
 			bool bToggleStatistics = false;
+			bool bTogglePhysics = false;
 			ImGui::MenuItem("Renderer Debug", NULL, &bToggleRendererDebug);
 			ImGui::MenuItem("Engine Statistics", NULL, &bToggleStatistics);
+			ImGui::MenuItem("Physics objects", NULL, &bTogglePhysics);
 			ImGui::EndMenu();
 
 			if (bToggleRendererDebug)
 				gpGlobals->pDevGUI->m_bShowRendererDebug = !gpGlobals->pDevGUI->m_bShowRendererDebug;
 			if (bToggleStatistics)
 				gpGlobals->pDevGUI->m_bShowStatistics = !gpGlobals->pDevGUI->m_bShowStatistics;
+			if (bTogglePhysics)
+				gpGlobals->pDevGUI->m_bShowPhysics = !gpGlobals->pDevGUI->m_bShowPhysics;
 		}
 		ImGui::EndMainMenuBar();
 	}
@@ -154,7 +158,7 @@ void renderer::draw_debug_tools()
 				upd.nEntityID = gpGlobals->pDevGUI->m_iCurEnt;
 
 				ImGui::Text(pEnt->get_classname());
-
+				/*
 				auto vecPos = pEnt->get_abspos();
 				aflPos[0] = vecPos[0];
 				aflPos[1] = vecPos[1];
@@ -193,7 +197,7 @@ void renderer::draw_debug_tools()
 						entsys_updates.push_back(upd);
 					}
 				}
-
+				*/
 				auto keyvalues = pEnt->get_keyvalues();
 				for (const auto& kv : keyvalues) {
 					switch (kv.first.second) {
@@ -215,6 +219,17 @@ void renderer::draw_debug_tools()
 						col->g = rgba[1];
 						col->b = rgba[2];
 						col->a = rgba[3];
+						break;
+					case KV_T_INT:
+						ImGui::InputInt(kv.first.first.c_str(), pEnt->get_keyvalue<KV_T_INT>(kv.first.first).ptr());
+						break;
+					case KV_T_VECTOR3:
+						float vec[3];
+						auto vector = pEnt->get_keyvalue<KV_T_VECTOR3>(kv.first.first);
+						vec[0] = vector->operator[](0);
+						vec[1] = vector->operator[](1);
+						vec[2] = vector->operator[](2);
+						ImGui::InputFloat3(kv.first.first.c_str(), vec, -1, ImGuiInputTextFlags_ReadOnly);
 						break;
 					}
 						
@@ -251,6 +266,35 @@ void renderer::draw_debug_tools()
 			upd.iszString = std::string(gpGlobals->pDevGUI->m_szClassname);
 			strncpy(upd.szString, gpGlobals->pDevGUI->m_szTargetname, 128);
 			gpGlobals->pDevGUI->m_bShowEntityCreate = false;
+		}
+		ImGui::End();
+	}
+
+	if (ImGui::Begin("Physical objects", &gpGlobals->pDevGUI->m_bShowPhysics))
+	{
+		ImGui::ListBoxHeader("");
+		for (size_t i = 1; i < gpGlobals->pPhysSimulation->size(); i++) {
+			char label[16];
+			snprintf(label, 16, "%llu", i);
+			if (ImGui::Selectable(label, i == gpGlobals->pDevGUI->m_iCurPhysObj))
+			{
+				gpGlobals->pDevGUI->m_iCurPhysObj = i;
+			}
+		}
+		ImGui::ListBoxFooter();
+		if (gpGlobals->pDevGUI->m_iCurPhysObj) {
+			auto obj = gpGlobals->pPhysSimulation->get_object(gpGlobals->pDevGUI->m_iCurPhysObj);
+			float p[3];
+			p[0] = obj.position()[0];
+			p[1] = obj.position()[1];
+			p[2] = obj.position()[2];
+			ImGui::InputFloat3("position", p, -1, ImGuiInputTextFlags_ReadOnly);
+			p[0] = obj.velocity()[0];
+			p[1] = obj.velocity()[1];
+			p[2] = obj.velocity()[2];
+			ImGui::InputFloat3("velocity", p, -1, ImGuiInputTextFlags_ReadOnly);
+			int ct = obj.collider().type();
+			ImGui::InputInt("collider.type", &ct, 0, 0, ImGuiInputTextFlags_ReadOnly);
 		}
 		ImGui::End();
 	}

@@ -5,9 +5,9 @@
 
 void base_entity::spawn()
 {
-	m_vecPos = vec3_origin;
-	m_vecRot = vec3_origin;
-	set_parent(NULL);
+	//m_vecPos = vec3_origin;
+	//m_vecRot = vec3_origin;
+	//set_parent(NULL);
 
 	SetNextThink(DONT_THINK);
 

@@ -1,20 +1,17 @@
 #include "stdafx.h"
 #include "prop_common.h"
-
-class c_prop_physics : public c_base_prop {
-public:
-	DEC_CLASS(prop_physics, c_base_prop);
-	~c_prop_physics();
-	void spawn() override;
-	void precache() override;
-
-	BEGIN_KEYVALUES(c_prop_physics)
-	END_KEYVALUES()
-private:
-	size_t m_iPhysicsHandle = 0;
-};
+#include "prop_physics.h"
+#include <phys/bounding_sphere.h>
 
 REGISTER_ENTITY(c_prop_physics, prop_physics);
+
+c_prop_physics::c_prop_physics()
+{
+	if (gpGlobals->pPhysSimulation) {
+		phys::object obj;
+		m_iPhysicsHandle = gpGlobals->pPhysSimulation->add_object(obj);
+	}
+}
 
 c_prop_physics::~c_prop_physics()
 {
@@ -27,19 +24,30 @@ void c_prop_physics::spawn()
 {
 	BaseClass::spawn();
 	precache();
-	set_abspos(vec3_origin);
 	SET_MODEL(m_szModel);
-	SetNextThink(DONT_THINK);
 	m_nFilter = ENT_FILTER_PROP;
 
-	if (gpGlobals->pPhysSimulation) {
-		phys::vector3<float> pos(m_vecPos[0], m_vecPos[1], m_vecPos[2]);
-		phys::object obj(pos);
-		m_iPhysicsHandle = gpGlobals->pPhysSimulation->add_object(obj);
-	}
+	SetThink(&c_prop_physics::think);
+	SetNextThink(gpGlobals->curtime + 1 / 64);
 }
 
 void c_prop_physics::precache()
 {
 	BaseClass::precache();
+}
+
+void c_prop_physics::think()
+{
+	auto phys_object = gpGlobals->pPhysSimulation->get_object(m_iPhysicsHandle);
+	auto newpos = phys_object.position();
+	// TODO: write vector(phys::vector3<float>) constructor
+	m_vecPos[0] = newpos.x();
+	m_vecPos[1] = newpos.y();
+	m_vecPos[2] = newpos.z();
+	SetNextThink(gpGlobals->curtime + 1 / 64);
+
+	auto velocity = phys_object.velocity();
+	m_vecVelocity[0] = velocity.x();
+	m_vecVelocity[1] = velocity.y();
+	m_vecVelocity[2] = velocity.z();
 }

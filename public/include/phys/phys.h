@@ -9,5 +9,11 @@ namespace phys {
 		std::vector<vector3<float>> points;
 
 		float distance;
+
+		operator bool() const {
+			return hit;
+		}
 	};
 }
+
+#include <phys/collider.h>

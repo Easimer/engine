@@ -9,7 +9,7 @@ namespace phys {
 		size_t add_object(const phys::object& obj);
 		void simulate(float delta);
 
-		const phys::object& get_object(size_t iIndex) const;
+		phys::object& get_object(size_t iIndex);
 		size_t size() const { return m_objects.size(); }
 	private:
 		std::vector<phys::object> m_objects;

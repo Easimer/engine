@@ -13,7 +13,8 @@ enum keyvalues_type {
 	KV_T_RGBA		= 2,
 	KV_T_STRING		= 3,
 	KV_T_FLOAT		= 4,
-	KV_T_MAX		= 5
+	KV_T_INT		= 5,
+	KV_T_MAX		= 6
 };
 
 typedef std::map<std::pair<std::string, keyvalues_type>, size_t> keyvalues_container;
@@ -60,3 +61,4 @@ DEF_KV_PTR(KV_T_STRING, std::string);
 DEF_KV_PTR(KV_T_FLOAT, float);
 DEF_KV_PTR(KV_T_RGBA, color_rgba);
 DEF_KV_PTR(KV_T_VECTOR3, vec3);
+DEF_KV_PTR(KV_T_INT, int);

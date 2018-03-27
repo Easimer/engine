@@ -9,6 +9,9 @@
 #include "statistics.h"
 #include "devgui.h"
 
+#include "prop_physics.h"
+#include <phys/bounding_sphere.h>
+
 #if defined(PLAT_LINUX)
 #include <unistd.h>
 #include <dirent.h>
@@ -129,7 +132,7 @@ void thread_logic()
 
 	gpGlobals->pEntSys->precache_entities();
 
-	c_base_prop* pDog1 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+	/*c_base_prop* pDog1 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pDog1->set_model("data/models/wolf.emf");
 	pDog1->spawn();
 	pDog1->set_abspos(vec3(0.5, 0, -0.1));
@@ -152,14 +155,40 @@ void thread_logic()
 	c_base_prop* pHat = (c_base_prop*)CreateEntityNoSpawn("prop_static");
 	pHat->set_model("data/models/test_terrain.smd");
 	pHat->spawn();
-	//gpGlobals->pEntSys->kill_entity(pHat);
+	//gpGlobals->pEntSys->kill_entity(pHat);*/
+
+	c_prop_physics* pSphere = (c_prop_physics*)CreateEntityNoSpawn("prop_physics");
+	if (pSphere) {
+		pSphere->set_model("data/models/sphere.smd");
+		pSphere->set_abspos(vec3(-10, 0, 0));
+		phys::object& phys = gpGlobals->pPhysSimulation->get_object(pSphere->physics_handle());
+		phys::vector3<float> origin(-10, 0, 0);
+		phys.position(origin);
+		phys.velocity(phys::vector3<float>(1, 0, 0));
+		
+		phys.collider(phys::bounding_sphere(origin, 1));
+		pSphere->spawn();
+	}
+
+	c_prop_physics* pSphere2 = (c_prop_physics*)CreateEntityNoSpawn("prop_physics");
+	if (pSphere2) {
+		pSphere2->set_model("data/models/sphere.smd");
+		pSphere2->set_abspos(vec3(10, 0, 0));
+		phys::object& phys = gpGlobals->pPhysSimulation->get_object(pSphere2->physics_handle());
+		phys::vector3<float> origin(10, 0, 0);
+		phys.position(origin);
+		phys.velocity(phys::vector3<float>(-1, 0, 0));
+		phys.collider(phys::bounding_sphere(origin, 1));
+		pSphere2->spawn();
+		
+	}
 
 	base_entity* pLight = CreateEntityNoSpawn("light_point");
 	if (pLight) {
 		pLight->spawn();
 		auto pLightColor = pLight->get_keyvalue<KV_T_RGBA>("color");
 		pLightColor = { 1, 1, 1, 1 };
-		pLight->set_abspos(vec3(0, 1, 0));
+		pLight->set_abspos(vec3(0, 10, 0));
 	}
 
 	base_entity* pLightGlobal = CreateEntity("light_global");

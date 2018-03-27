@@ -5,6 +5,7 @@ set(SRC
 	simulation.cpp
 	object.cpp
 
+	collider.cpp
 	aabb.cpp
 	bounding_sphere.cpp
 	plane.cpp
@@ -16,6 +17,7 @@ set(SRC_PUBLIC
 	../public/include/phys/simulation.h
 	../public/include/phys/object.h
 
+	../public/include/phys/collider.h
 	../public/include/phys/aabb.h
 	../public/include/phys/bounding_sphere.h
 	../public/include/phys/plane.h

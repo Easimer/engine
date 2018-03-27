@@ -10,8 +10,7 @@ intersect_result phys::intersect(const bounding_sphere & lhs, const bounding_sph
 	float rad_distance = lhs.radius() + rhs.radius();
 	float cnt_distance = (lhs.center() - rhs.center()).length();
 	float hit_distance = cnt_distance - rad_distance;
-
-	PRINT_DBG(lhs.center() << ',' << rhs.center());
+	PRINT_DBG(lhs.center() << ',' << rhs.center() << ',' << (lhs.center() - rhs.center()));
 
 	if (cnt_distance < rad_distance) {
 		res.hit = true;
@@ -22,4 +21,9 @@ intersect_result phys::intersect(const bounding_sphere & lhs, const bounding_sph
 	}
 
 	return res;
+}
+
+void phys::bounding_sphere::transform(const vector3<float>& translation)
+{
+	m_vecCenter += translation;
 }
