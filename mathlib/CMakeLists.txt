@@ -5,7 +5,6 @@ set(SRC
 
 set(SRC_PUBLIC
 	../public/include/math/vector.h
-	../public/include/math/matrix.h
 )
 
 vs_pch(stdafx)

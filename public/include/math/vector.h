@@ -12,6 +12,9 @@
 #endif
 
 namespace math {
+
+	const float EPSILON = 0.000001f;
+
 	template<typename T>
 	class vector3 {
 	public:
@@ -189,5 +192,13 @@ namespace math {
 	template<typename T>
 	inline vector3<T> operator-(const vector3<T>& v) {
 		return vector3<T>(v[0], v[1], v[2]);
+	}
+
+	template<typename T>
+	inline bool operator==(const vector3<T>& lhs, const vector3<T>& rhs) {
+		if (std::abs(lhs.x() - rhs.x()) > EPSILON) return false;
+		if (std::abs(lhs.y() - rhs.y()) > EPSILON) return false;
+		if (std::abs(lhs.z() - rhs.z()) > EPSILON) return false;
+		return true;
 	}
 }
