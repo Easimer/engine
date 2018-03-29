@@ -17,30 +17,38 @@ namespace phys {
 	public:
 		vector3(T v1 = (T)0, T v2 = (T)0, T v3 = (T)0) : m_nValues{ v1, v2, v3 } {}
 
+		// Returns nth component of the vector
 		inline T operator[](size_t iIndex) const {
 			return m_nValues[iIndex];
 		}
 
+		// Returns nth component of the vector
 		inline T& operator[](size_t iIndex) {
 			return m_nValues[iIndex];
 		}
 
+		// Returns X component of the vector
 		inline T x() const {
 			return m_nValues[0];
 		}
 
+		// Returns Y component of the vector
 		inline T y() const {
 			return m_nValues[1];
 		}
 
+		// Returns Z component of the vector
 		inline T z() const {
 			return m_nValues[2];
 		}
 
+		// Returns length of the vector
 		T length() const {
 			return std::sqrt(length_sq());
 		}
 
+		// Returns length squared of the vector
+		// (won't perform sqrt)
 		inline T length_sq() const {
 			return x() * x() + y() * y() + z() * z();
 		}
@@ -77,11 +85,27 @@ namespace phys {
 			m_nValues[2] -= other.z();
 		}
 
+		// Normalizes the vector
 		void normalize() {
 			float len = length();
 			m_nValues[0] /= len;
 			m_nValues[1] /= len;
 			m_nValues[2] /= len;
+		}
+
+		// Returns the normalized vector
+		vector3<T> normalized() const {
+			vector3<T> ret;
+			T len = length();
+			ret[0] = x() / len;
+			ret[1] = y() / len;
+			ret[2] = z() / len;
+			return ret;
+		}
+
+		// Pointer to the underlying structure
+		const T* ptr() const {
+			return m_nValues;
 		}
 
 	protected:
