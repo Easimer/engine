@@ -10,7 +10,9 @@
 #include "devgui.h"
 
 #include "prop_physics.h"
-#include <phys/bounding_sphere.h>
+#include <phys/phys.h>
+#include <phys/simulation.h>
+#include <phys/mesh.h>
 
 #if defined(PLAT_LINUX)
 #include <unistd.h>
@@ -161,12 +163,12 @@ void thread_logic()
 	if (pSphere) {
 		pSphere->set_model("data/models/sphere.smd");
 		pSphere->set_abspos(vec3(-10, 0, 0));
-		phys::object& phys = gpGlobals->pPhysSimulation->get_object(pSphere->physics_handle());
+		/*phys::object& phys = gpGlobals->pPhysSimulation->get_object(pSphere->physics_handle());
 		phys::vector3<float> origin(-10, 0, 0);
 		phys.position(origin);
 		phys.velocity(phys::vector3<float>(1, 0, 0));
 		
-		phys.collider(phys::bounding_sphere(origin, 1));
+		phys.collider(phys::bounding_sphere(origin, 1));*/
 		pSphere->spawn();
 	}
 
@@ -174,11 +176,11 @@ void thread_logic()
 	if (pSphere2) {
 		pSphere2->set_model("data/models/sphere.smd");
 		pSphere2->set_abspos(vec3(10, 0, 0));
-		phys::object& phys = gpGlobals->pPhysSimulation->get_object(pSphere2->physics_handle());
+		/*phys::object& phys = gpGlobals->pPhysSimulation->get_object(pSphere2->physics_handle());
 		phys::vector3<float> origin(10, 0, 0);
 		phys.position(origin);
 		phys.velocity(phys::vector3<float>(-1, 0, 0));
-		phys.collider(phys::bounding_sphere(origin, 1));
+		phys.collider(phys::bounding_sphere(origin, 1));*/
 		pSphere2->spawn();
 		
 	}

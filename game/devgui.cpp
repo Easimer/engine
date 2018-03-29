@@ -293,8 +293,8 @@ void renderer::draw_debug_tools()
 			p[1] = obj.velocity()[1];
 			p[2] = obj.velocity()[2];
 			ImGui::InputFloat3("velocity", p, -1, ImGuiInputTextFlags_ReadOnly);
-			int ct = obj.collider().type();
-			ImGui::InputInt("collider.type", &ct, 0, 0, ImGuiInputTextFlags_ReadOnly);
+			//int ct = obj.collider().type();
+			//ImGui::InputInt("collider.type", &ct, 0, 0, ImGuiInputTextFlags_ReadOnly);
 		}
 		ImGui::End();
 	}

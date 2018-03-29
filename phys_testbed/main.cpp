@@ -1,46 +1,40 @@
 #include "stdafx.h"
 #include <phys/phys.h>
-#include <phys/aabb.h>
-#include <phys/bounding_sphere.h>
 #include <phys/object.h>
+#include <phys/mesh.h>
 
 int main(int argc, char** argv)
 {
-	phys::bounding_sphere s1(phys::vector3<float>(0, 0, 0), 1);
-	phys::bounding_sphere s2(phys::vector3<float>(0, 3, 0), 1);
-	phys::bounding_sphere s3(phys::vector3<float>(0, 0, 2), 1);
-	phys::bounding_sphere s4(phys::vector3<float>(1, 0, 0), 1);
-
-	auto res1 = phys::intersect(s1, s2);
-	auto res2 = phys::intersect(s1, s3);
-	auto res3 = phys::intersect(s1, s4);
-
-	PRINT_DBG("s1-s2: " << res1.hit << ", dist: " << res1.distance);
-	PRINT_DBG("s1-s3: " << res2.hit << ", dist: " << res2.distance);
-	PRINT_DBG("s1-s4: " << res3.hit << ", dist: " << res3.distance);
-
-	phys::aabb aabb1(phys::vector3<float>(0, 0, 0), phys::vector3<float>(1, 1, 1));
-	phys::aabb aabb2(phys::vector3<float>(1, 1, 1), phys::vector3<float>(2, 2, 2));
-	phys::aabb aabb3(phys::vector3<float>(1, 0, 0), phys::vector3<float>(2, 1, 1));
-	phys::aabb aabb4(phys::vector3<float>(0, 0, -2), phys::vector3<float>(1, 1, -1));
-	phys::aabb aabb5(phys::vector3<float>(0, 0.5f, 0), phys::vector3<float>(1, 1.5f, 1));
-
-	res1 = phys::intersect(aabb1, aabb2);
-	res2 = phys::intersect(aabb1, aabb3);
-	res3 = phys::intersect(aabb1, aabb4);
-	auto res4 = phys::intersect(aabb1, aabb5);
-
-	PRINT_DBG("aabb1-aabb2: " << res1.hit << ", dist: " << res1.distance);
-	PRINT_DBG("aabb1-aabb3: " << res2.hit << ", dist: " << res2.distance);
-	PRINT_DBG("aabb1-aabb4: " << res3.hit << ", dist: " << res3.distance);
-	PRINT_DBG("aabb1-aabb5: " << res4.hit << ", dist: " << res4.distance);
-
 	phys::object test(phys::vector3<float>(0, 1, 0), phys::vector3<float>(1, 2, 3));
 
 	test.integrate(20);
 
 	PRINT_DBG(test.position());
 	PRINT_DBG(test.velocity());
+
+	phys::triangle t1;
+	phys::triangle t2;
+	t1.vertices.push_back(phys::vector3<float>(-1, 0, 0));
+	t1.vertices.push_back(phys::vector3<float>(1, 0, 0));
+	t1.vertices.push_back(phys::vector3<float>(0, 1, 0));
+
+	phys::ray r1;
+	r1.origin = phys::vector3<float>(0, 0.5, 1);
+	r1.dir = phys::vector3<float>(0, 0, -1);
+
+	auto res = phys::intersect_triangle_ray(r1, t1);
+	PRINT_DBG("Raycast: hit(" << res.hit << "), dist: " << res.distance);
+
+	t1.vertices.clear();
+	t1.vertices.push_back(phys::vector3<float>(0, 0, 0));
+	t1.vertices.push_back(phys::vector3<float>(2, 0, 0));
+	t1.vertices.push_back(phys::vector3<float>(1, 2, 0));
+	t2.vertices.push_back(phys::vector3<float>(1, 1, 0));
+	t2.vertices.push_back(phys::vector3<float>(2, -1, 0));
+	t2.vertices.push_back(phys::vector3<float>(3, 1, 0));
+
+	res = phys::intersect_triangles(t1, t2);
+	PRINT_DBG("2tri: hit(" << res.hit << "), dist: " << res.distance);
 
 	return 0;
 }

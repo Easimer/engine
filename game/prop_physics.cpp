@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "prop_common.h"
 #include "prop_physics.h"
-#include <phys/bounding_sphere.h>
+#include <phys/mesh.h>
 
 REGISTER_ENTITY(c_prop_physics, prop_physics);
 

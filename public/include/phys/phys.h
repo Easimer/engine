@@ -1,12 +1,12 @@
 #pragma once
 
 #include <vector>
-#include <phys/vector.h>
+#include <math/vector.h>
 
 namespace phys {
 	struct intersect_result {
 		bool hit = false;
-		std::vector<vector3<float>> points;
+		vector3<float> point;
 
 		float distance;
 
@@ -15,5 +15,3 @@ namespace phys {
 		}
 	};
 }
-
-#include <phys/collider.h>

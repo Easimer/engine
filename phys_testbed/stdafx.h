@@ -3,5 +3,5 @@
 #include <phys/phys.h>
 #include <print.h>
 
-#include <phys/vector.h>
-#include <phys/bounding_sphere.h>
+#include <math/vector.h>
+#include <phys/mesh.h>
