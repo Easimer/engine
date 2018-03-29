@@ -130,8 +130,8 @@ pp. 199-202 */
         } \
 }
 
-int coplanar_tri_tri(vector3<float>& N, vector3<float>& V0, vector3<float>& V1, vector3<float>& V2,
-	vector3<float>& U0, vector3<float>& U1, vector3<float>& U2)
+int coplanar_tri_tri(math::vector3<float>& N, math::vector3<float>& V0, math::vector3<float>& V1, math::vector3<float>& V2,
+	math::vector3<float>& U0, math::vector3<float>& U1, math::vector3<float>& U2)
 {
 	float A[3];
 	short i0, i1;
@@ -181,13 +181,13 @@ int coplanar_tri_tri(vector3<float>& N, vector3<float>& V0, vector3<float>& V1, 
 
 static int NoDivTriTriIsect(const triangle& v, const triangle& u)
 {
-	vector3<float> E1, E2;
-	vector3<float> N1, N2;
+	math::vector3<float> E1, E2;
+	math::vector3<float> N1, N2;
 	float d1, d2;
 	//float E1[3], E2[3];
 	//float N1[3], N2[3], d1, d2;
 	float du0, du1, du2, dv0, dv1, dv2;
-	vector3<float> D;
+	math::vector3<float> D;
 	float isect1[2], isect2[2];
 	float du0du1, du0du2, dv0dv1, dv0dv2;
 	short index;
@@ -195,12 +195,12 @@ static int NoDivTriTriIsect(const triangle& v, const triangle& u)
 	float up0, up1, up2;
 	float bb, cc, max;
 
-	vector3<float> V0 = v[0];
-	vector3<float> V1 = v[1];
-	vector3<float> V2 = v[2];
-	vector3<float> U0 = u[0];
-	vector3<float> U1 = u[1];
-	vector3<float> U2 = u[2];
+	math::vector3<float> V0 = v[0];
+	math::vector3<float> V1 = v[1];
+	math::vector3<float> V2 = v[2];
+	math::vector3<float> U0 = u[0];
+	math::vector3<float> U1 = u[1];
+	math::vector3<float> U2 = u[2];
 	/* compute plane equation of triangle(V0,V1,V2) */
 	SUB(E1, V1, V0);
 	SUB(E2, V2, V0);
@@ -307,12 +307,12 @@ intersect_result phys::intersect_triangle_ray(const ray& r, const triangle& tri)
 {
 	intersect_result ret;
 	ret.hit = false;
-	phys::vector3<float> v1 = tri.vertices[0];
-	phys::vector3<float> v2 = tri.vertices[1];
-	phys::vector3<float> v3 = tri.vertices[2];
-	phys::vector3<float> orig = r.origin;
-	phys::vector3<float> dir = r.dir;
-	phys::vector3<float> e1, e2, pvec, qvec, tvec;
+	math::vector3<float> v1 = tri.vertices[0];
+	math::vector3<float> v2 = tri.vertices[1];
+	math::vector3<float> v3 = tri.vertices[2];
+	math::vector3<float> orig = r.origin;
+	math::vector3<float> dir = r.dir;
+	math::vector3<float> e1, e2, pvec, qvec, tvec;
 
 	e1 = v2 - v1;
 	e2 = v3 - v1;

@@ -40,7 +40,7 @@ void c_prop_physics::think()
 {
 	auto phys_object = gpGlobals->pPhysSimulation->get_object(m_iPhysicsHandle);
 	auto newpos = phys_object.position();
-	// TODO: write vector(phys::vector3<float>) constructor
+	// TODO: write vector(math::vector3<float>) constructor
 	m_vecPos[0] = newpos.x();
 	m_vecPos[1] = newpos.y();
 	m_vecPos[2] = newpos.z();

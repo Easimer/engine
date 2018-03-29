@@ -7,14 +7,14 @@
 namespace phys {
 
 	struct ray {
-		vector3<float> origin;
-		vector3<float> dir;
+		math::vector3<float> origin;
+		math::vector3<float> dir;
 	};
 
 	struct triangle {
-		std::vector<phys::vector3<float>> vertices;
+		std::vector<math::vector3<float>> vertices;
 
-		inline const phys::vector3<float>& operator[](size_t iIndex) const {
+		inline const math::vector3<float>& operator[](size_t iIndex) const {
 			return vertices[iIndex];
 		}
 	};

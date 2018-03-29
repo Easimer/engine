@@ -6,7 +6,7 @@
 namespace phys {
 	struct intersect_result {
 		bool hit = false;
-		vector3<float> point;
+		math::vector3<float> point;
 
 		float distance;
 

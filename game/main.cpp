@@ -164,9 +164,9 @@ void thread_logic()
 		pSphere->set_model("data/models/sphere.smd");
 		pSphere->set_abspos(vec3(-10, 0, 0));
 		/*phys::object& phys = gpGlobals->pPhysSimulation->get_object(pSphere->physics_handle());
-		phys::vector3<float> origin(-10, 0, 0);
+		math::vector3<float> origin(-10, 0, 0);
 		phys.position(origin);
-		phys.velocity(phys::vector3<float>(1, 0, 0));
+		phys.velocity(math::vector3<float>(1, 0, 0));
 		
 		phys.collider(phys::bounding_sphere(origin, 1));*/
 		pSphere->spawn();
@@ -177,9 +177,9 @@ void thread_logic()
 		pSphere2->set_model("data/models/sphere.smd");
 		pSphere2->set_abspos(vec3(10, 0, 0));
 		/*phys::object& phys = gpGlobals->pPhysSimulation->get_object(pSphere2->physics_handle());
-		phys::vector3<float> origin(10, 0, 0);
+		math::vector3<float> origin(10, 0, 0);
 		phys.position(origin);
-		phys.velocity(phys::vector3<float>(-1, 0, 0));
+		phys.velocity(math::vector3<float>(-1, 0, 0));
 		phys.collider(phys::bounding_sphere(origin, 1));*/
 		pSphere2->spawn();
 		

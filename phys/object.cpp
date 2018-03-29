@@ -5,6 +5,6 @@
 
 void phys::object::integrate(float delta)
 {
-	vector3<float> diff = delta * m_velocity;
+	math::vector3<float> diff = delta * m_velocity;
 	m_position += diff;
 }

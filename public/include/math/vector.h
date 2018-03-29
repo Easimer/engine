@@ -11,7 +11,7 @@
 #undef max
 #endif
 
-namespace phys {
+namespace math {
 	template<typename T>
 	class vector3 {
 	public:
