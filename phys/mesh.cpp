@@ -2,6 +2,8 @@
 #include <phys/phys.h>
 #include <phys/mesh.h>
 #include <model.h>
+#include <future>
+#include <mutex>
 
 using namespace phys;
 
@@ -301,6 +303,91 @@ intersect_result phys::intersect_triangles(const triangle& lhs, const triangle& 
 	intersect_result ret;
 	ret.hit = NoDivTriTriIsect(lhs, rhs) == 1;
 	return ret;
+}
+
+phys::triangle mt2pt(const model_triangle& t) {
+	phys::triangle ret;
+	for (const auto& v : t.vertices) {
+		ret.vertices.push_back(math::vector3<float>(v.px, v.py, v.pz));
+	}
+	ASSERT(ret.vertices.size() >= 3);
+	return ret;
+}
+
+// egy batch mérete
+static const size_t BATCH_SIZE = 8;
+
+intersect_result phys::intersect(const mesh& lhs, const mesh& rhs)
+{
+	intersect_result ret;
+	
+	for (size_t i = 0; i < lhs.size(); i++) {
+		for (size_t j = 0; j < rhs.size(); j++) {
+			phys::triangle l = mt2pt(lhs[i]);
+			phys::triangle r = mt2pt(lhs[j]);
+			ret = phys::intersect_triangles(l, r);
+			if (ret.hit) {
+				return ret;
+			}
+		}
+	}
+
+	ret.hit = false;
+	return ret;
+	//
+	// MT
+	//
+	//std::list<std::future<intersect_result>> futures;
+
+	//// Összehasonlítjuk az LHS összes háromszögét az RHS
+	//// összes háromszögével
+	//for (size_t i = 0; i < lhs.size(); i++) {
+	//	for (size_t j = 0; j < rhs.size(); j += BATCH_SIZE) {
+	//		const model_triangle& l = lhs[i];
+	//		const model_triangle& r = rhs[i];
+
+	//		// Aszinkron azonnal elindul a thread
+	//		// Átadjuk a kezdõindexeket
+	//		// Egy task összehasonlít egy háromszöget másik BATCH_SIZE darab háromszöggel
+	//		std::future<intersect_result> result = std::async(std::launch::async, 
+	//			[&lhs, &rhs](size_t l, size_t r) {
+	//				intersect_result ret;
+
+	//				// Lekérjük az `l`-ik háromszöget és átalakítjuk phys::triangle-é
+	//				phys::triangle tri_l = mt2pt(lhs[l]);
+	//				// 
+	//				for (size_t i = 0; i < BATCH_SIZE; i++) {
+	//					if (r + i == rhs.size())
+	//						break;
+	//					phys::triangle tri_r = mt2pt(lhs[r + i]);
+	//					// Intersection test
+	//					intersect_result ret = phys::intersect_triangles(tri_l, tri_r);
+	//					// Ha valamely háromszögek metszik egymást, early return
+	//					if (ret.hit) {
+	//						return ret;
+	//					}
+	//				}
+	//				// Ha nincs metszés
+	//				ret.hit = false;
+	//				return ret;
+	//			},
+	//		i, j);
+	//		// a future-t eltároljuk
+	//		futures.push_back(std::move(result));
+	//	}
+	//}
+
+	//// 
+	//while(true) {
+	//	for (size_t i = 0; i < futures.size(); i++) {
+
+	//	}
+	//}
+
+	//// 
+	//intersect_result ret;
+	//ret.hit = false;
+	//return ret;
 }
 
 intersect_result phys::intersect_triangle_ray(const ray& r, const triangle& tri)

@@ -144,7 +144,8 @@ private:
 	std::map<std::string, uint32_t> m_map_texture_name;
 	// maps material id to model_id
 	std::map<model_id, size_t> m_mapMaterial;
-
+	// maps model id to mesh collider
+	std::map<model_id, std::vector<model_triangle>> m_colliders;
 
 	framebuffer* m_pDepthBuffer;
 	shader_program* m_pShaderDepth;

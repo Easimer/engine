@@ -7,6 +7,9 @@ set(SRC
 	
 	stdafx.cpp
 	stdafx.h
+
+	../public/src/smd_parser.cpp
+	../public/include/smd_parser.h
 )
 
 vs_pch(stdafx)

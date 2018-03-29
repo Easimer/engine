@@ -63,6 +63,18 @@ void test_math() {
 	ASSERT(FEQ(test9.min(), 10));
 }
 
+model_triangle pt2mt(const phys::triangle& t) {
+	model_triangle ret;
+	for (const auto& v : t.vertices) {
+		model_triangle_vertex vtx;
+		vtx.px = v.x();
+		vtx.py = v.y();
+		vtx.pz = v.z();
+		ret.vertices.push_back(vtx);
+	}
+	return ret;
+}
+
 int main(int argc, char** argv)
 {
 	test_math();
@@ -107,6 +119,13 @@ int main(int argc, char** argv)
 	PRINT_DBG("Triangle-triangle intersection test:");
 	PRINT_DBG("Hit: " << res_tri.hit);
 	ASSERT(res_tri.hit);
+
+	phys::mesh a = { pt2mt(t1) };
+	phys::mesh b = { pt2mt(t2) };
+	auto res_mesh = phys::intersect(a, b);
+	PRINT_DBG("Mesh-mesh intersection test:");
+	PRINT_DBG("Hit: " << res_mesh.hit);
+	ASSERT(res_mesh.hit);
 
 	return 0;
 }

@@ -508,6 +508,8 @@ model_id renderer::upload_model(const model& mdl)
 
 	gpGlobals->pStatistics->get_stat_u(ESTAT_C_RENDERER, "models_loaded") += 1;
 
+	m_colliders.emplace((model_id)iVAO, mdl.collider);
+
 	return iVAO;
 }
 

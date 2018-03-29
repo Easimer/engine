@@ -47,6 +47,7 @@ struct model {
 	std::map<std::string, std::vector<model_keyframe>> animations;
 	std::vector<model_material> materials;
 	std::vector<model_triangle> triangles;
+	std::vector<model_triangle> collider;
 
 	long long int iLastMatID = -1;
 };
