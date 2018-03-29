@@ -77,6 +77,13 @@ namespace phys {
 			m_nValues[2] -= other.z();
 		}
 
+		void normalize() {
+			float len = length();
+			m_nValues[0] /= len;
+			m_nValues[1] /= len;
+			m_nValues[2] /= len;
+		}
+
 	protected:
 		T m_nValues[3];
 	};
@@ -144,5 +151,19 @@ namespace phys {
 	template<typename T>
 	inline T dot(const vector3<T>& lhs, const vector3<T>& rhs) {
 		return lhs.x() * rhs.x() + lhs.y() * rhs.y() + lhs.z() * rhs.z();
+	}
+
+	template<typename T>
+	inline vector3<T> cross(const vector3<T>& lhs, const vector3<T>& rhs) {
+		return vector3<T>(
+			lhs[1] * rhs[2] - rhs[1] * lhs[2],
+			lhs[2] * rhs[0] - rhs[2] * lhs[0],
+			lhs[0] * rhs[1] - rhs[0] * lhs[1]
+		);
+	}
+
+	template<typename T>
+	inline vector3<T> operator-(const vector3<T>& v) {
+		return vector3<T>(v[0], v[1], v[2]);
 	}
 }
