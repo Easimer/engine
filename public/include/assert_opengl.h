@@ -1,6 +1,9 @@
 #pragma once
 
 #if defined(PLAT_DEBUG)
+#ifndef RESTRICT_THREAD_RENDERING
+#define RESTRICT_THREAD_RENDERING
+#endif
 #define ASSERT_OPENGL() \
 	{ \
 		RESTRICT_THREAD_RENDERING; \
