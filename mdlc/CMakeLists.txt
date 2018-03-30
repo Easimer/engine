@@ -32,7 +32,7 @@ add_executable(mdlc
 )
 
 target_link_libraries(mdlc enl)
-install(TARGETS mdlc DESTINATION bin/tools/)
+install(TARGETS mdlc DESTINATION bin/)
 
 IF(WIN32)
 # Create filters
