@@ -17,7 +17,7 @@ mdlc::qc_parser::qc_parser(const char * szFilename)
 	parse();
 }
 
-mdlc::qc_parser::qc_parser(std::string & iszFilename)
+mdlc::qc_parser::qc_parser(const std::string & iszFilename)
 {
 	m_file = std::ifstream(iszFilename);
 	if (m_file.fail())

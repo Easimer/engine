@@ -21,7 +21,7 @@ namespace mdlc {
 	public:
 		qc_parser() {}
 		qc_parser(const char* szFilename);
-		qc_parser(std::string& iszFilename);
+		qc_parser(const std::string& iszFilename);
 
 		void operator=(const qc_parser& other);
 
