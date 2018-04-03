@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <functional>
 
 #include <SDL2/SDL.h>
 #include <gfx/window.h>
@@ -31,48 +32,99 @@ namespace gfx {
 		bool init(const char* szTitle = "engine", size_t width = 1280, size_t height = 720, size_t glVersionMajor = 3, size_t glVersionMinor = 3);
 		bool shutdown();
 
+		// Begin frame
+		// Call this before any draw command
 		void begin_frame();
+		// Draw windows accounted by the window manager
 		void draw_windows();
+		// End frame
+		// Call this after all drawing is done
 		void end_frame();
+		// Handle SDL2 events
+		// Do NOT use if you want to handle events
+		// yourself. This method forwards all
+		// events to the GUI system.
+		//
+		// Returns true if user requested window close,
+		// false otherwise.
 		bool handle_events();
+		void set_event_handler(const std::function<void(const SDL_Event& e)>& f) { m_event_handler = f; }
 
+		// glViewport wrapper
 		// Start and end coordinates relative to the UPPER-LEFT CORNER of the screen
 		void set_viewport(int sx, int sy, int ex, int ey);
+		// Restore viewport to fullscreen
 		void restore_viewport();
 
+		// Get shader program index by name
 		int get_shader_program_index(const std::string& name);
 
+		// Store shader program
+		size_t load_shader(shader_program* pShaderProgram);
+		// Load shader from .qc file
 		size_t load_shader(const std::string& filename);
+		// Load texture from file
 		uint32_t load_texture(const std::string& filename);
+		// Load model from file
 		uint32_t load_model(const std::string& filename);
+		// Load model from model container
 		uint32_t load_model(const gfx::model& mdl);
+		// Load material from file
 		size_t load_material(const std::string& filename);
 
+		// Unload model
 		void unload_model(model_id mdl);
 
+		// Bind model
 		void bind_model(model_id mdl);
+		// Unbind model
 		void unbind_model();
 
+		// Draw currently bound model with the shader
+		// currently in use.
 		void draw_model();
 
 		// value of -1 activates the shader assigned to the material
 		// of the currently bound model
 		long long int use_shader(long long int shader = -1);
 
+		// Add gfx::window to the window manager
+		// (does NOT store the window object)
 		void add_window(gfx::window* w) { windows.push_back(w); }
+		// Removes window from the window manager by pointer
+		void remove_window(gfx::window* w);
 
+		// Get shader with ID
 		shader_program* get_shader(size_t i) { return shaders[i]; }
 
+		// Get time elapsed since last and current frame
 		float& delta() { return flDeltaTime; }
+		// Get current engine time
 		float& curtime() { return flCurrentTime; }
 
+		// Get window width
 		int width() const { return nWidth; }
+		// Get window height
 		int height() const { return nHeight; }
 
+		// Get model vertex count
 		size_t model_vertices(model_id mdl) const { return model_vertexcount_map.at(mdl); }
+		// Does the model have a collider
 		bool model_has_collider(model_id mdl) const { return model_collider_map.count(mdl) && model_collider_map.at(mdl).size() > 0; }
+		// Get the material associated to the model
 		const gfx::material& model_material(model_id mdl) const { return materials[model_material_map.at(mdl)]; }
+		// Get filename of material associated to the model
 		const std::string& model_material_filename(model_id mdl) const { return material_filename_map.at(model_material_map.at(mdl)); }
+
+		// Check if GUI has keyboard focus
+		bool gui_keyboard_focus() const;
+		// Get vector of unhandled events
+		void get_events(std::vector<SDL_Event>& v);
+		// Send event to the GUI
+		// (i.e. fake events or send event back) 
+		void gui_send_event(const SDL_Event& e);
+
+		void capture_mouse(bool b);
 
 	private:
 		SDL_Window* pWindow;
@@ -81,9 +133,10 @@ namespace gfx {
 
 		model_id current_model;
 
+		uint64_t nTimePrev = 0, nTimeNow = 0;
+
 		float flDeltaTime = 0;
 		float flCurrentTime = 0;
-		float flLastTime = 0;
 
 		int nWidth, nHeight;
 
@@ -105,6 +158,8 @@ namespace gfx {
 		std::vector<gfx::material> materials;
 		std::map<std::string, size_t> filename_material_map;
 		std::map<size_t, std::string> material_filename_map;
+
+		std::function<void(const SDL_Event& e)> m_event_handler;
 	};
 }
 

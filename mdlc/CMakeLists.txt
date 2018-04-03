@@ -16,11 +16,7 @@ set(SRC_PUBLIC
 	../public/src/qc_parser.cpp
 	../public/include/qc_parser.h
 
-	../public/src/smd_parser.cpp
-	../public/include/smd_parser.h
-
 	../public/include/emf.h
-	../public/include/model.h
 )
 
 vs_pch(stdafx)
@@ -31,7 +27,7 @@ add_executable(mdlc
 	CMakeLists.txt
 )
 
-target_link_libraries(mdlc enl)
+target_link_libraries(mdlc enl graphics)
 install(TARGETS mdlc DESTINATION bin/)
 
 IF(WIN32)

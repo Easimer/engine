@@ -1,0 +1,2 @@
+These are the flatbuffers schema files used in the project. Use the build.sh script to generate the header files for all schemas.
+The script uses the included flatc.exe. This means that you need either Windows or wine to regenerate the header files.

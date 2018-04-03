@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "event_handler.h"
 #include "input.h"
-#include "gui/imgui_impl_sdl_gl3.h"
+#include <gfx/gfx.h>
 
 void event_handler::push_event(std::vector<event_t>& events)
 {
@@ -11,6 +11,21 @@ void event_handler::push_event(std::vector<event_t>& events)
 	for (size_t i = 0; i < events.size(); i++)
 	{
 		m_event_buf.write(events[i]);
+	}
+	m_event_buf.end_write();
+}
+
+void event_handler::push_event(std::vector<SDL_Event>& events)
+{
+	RESTRICT_THREAD_RENDERING; // SDL2 window events come from the thread handling the window
+
+	m_event_buf.begin_write();
+	for (size_t i = 0; i < events.size(); i++)
+	{
+		event_t e;
+		e.event = events[i];
+		e.nTime = 0;
+		m_event_buf.write(e);
 	}
 	m_event_buf.end_write();
 }
@@ -38,14 +53,14 @@ void event_handler::update()
 			case SDL_KEYDOWN:
 				if (event.key.repeat)
 					break;
-				if (ImGui_ImpSdlGL3_KeyboardFocused())
+				if (gpGfx->gui_keyboard_focus())
 					break;
 				gpGlobals->pInput->press_key(event.key.keysym.sym);
 				break;
 			case SDL_KEYUP:
 				if (event.key.repeat)
 					break;
-				if (ImGui_ImpSdlGL3_KeyboardFocused())
+				if (gpGfx->gui_keyboard_focus())
 					break;
 				gpGlobals->pInput->release_key(event.key.keysym.sym);
 				break;

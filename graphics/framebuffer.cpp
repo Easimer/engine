@@ -1,8 +1,8 @@
 #include "stdafx.h"
-#include "framebuffer.h"
 #include "glad/glad.h"
+#include <gfx/framebuffer.h>
 #include "assert_opengl.h"
-#include "shader_program.h"
+#include <gfx/shader_program.h>
 
 framebuffer::framebuffer()
 {
@@ -142,7 +142,7 @@ bool framebuffer::fail() const
 void framebuffer::bind_texture()
 {
 	if (m_iTextureDepth) {
-		glActiveTexture(GL_TEXTURE0 + SHADERTEX_DEPTH); ASSERT_OPENGL();
+		glActiveTexture(GL_TEXTURE0 + gfx::shader_tex_type::SHADERTEX_DEPTH); ASSERT_OPENGL();
 		glBindTexture(GL_TEXTURE_2D, m_iTextureDepth); ASSERT_OPENGL();
 	}
 }

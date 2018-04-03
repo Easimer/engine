@@ -87,7 +87,7 @@ void mdlc::smd_parser::parse_line()
 	// Triangle
 	model_material material;
 	// Vertex
-	model_triangle_vertex vertex;
+	gfx::triangle_vertex vertex;
 	std::string iBoneID;
 	std::string px, py, pz;
 	std::string u, v;

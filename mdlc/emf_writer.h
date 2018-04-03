@@ -3,16 +3,16 @@
 #include <vector>
 #include <map>
 #include <string>
-#include "model.h"
+#include <gfx/model.h>
 
 class emf_writer {
 public:
 	void set_outfile(const std::string& outfile);
 
-	void set_mesh(const std::vector<model_triangle>& triangles);
-	void set_collmesh(const std::vector<model_triangle>& triangles);
-	void add_animation(const std::string& name, const std::vector<model_keyframe>& animation);
-	void add_bones(const std::vector<model_bone>& bones);
+	void set_mesh(const std::vector<gfx::triangle>& triangles);
+	void set_collmesh(const std::vector<gfx::triangle>& triangles);
+	void add_animation(const std::string& name, const std::vector<gfx::keyframe>& animation);
+	void add_bones(const std::vector<gfx::bone>& bones);
 	void set_framerate(unsigned nFramerate) { m_nFramerate = nFramerate; }
 	void set_material(const std::string& iszMaterial) { m_iszMaterial = iszMaterial; }
 
@@ -25,8 +25,8 @@ private:
 	std::string m_iszMaterial;
 	unsigned m_nFramerate;
 
-	std::vector<model_triangle> m_mesh;
-	std::vector<model_triangle> m_collmesh;
-	std::map<std::string, std::vector<model_keyframe>> m_animations;
-	std::vector<model_bone> m_bones;
+	std::vector<gfx::triangle> m_mesh;
+	std::vector<gfx::triangle> m_collmesh;
+	std::map<std::string, std::vector<gfx::keyframe>> m_animations;
+	std::vector<gfx::bone> m_bones;
 };

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "globals.h"
-#include "renderer.h"
+#include "igfx.h"
 
 #define SET_MODEL(mdlname) m_iModelID = gpGlobals->pRenderer->load_model(mdlname)
 

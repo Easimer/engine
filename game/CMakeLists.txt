@@ -23,6 +23,12 @@ set(SRC_CORE
 
 	input.cpp
 	input.h
+
+	networking.h
+	server.cpp
+	server.h
+	client.cpp
+	client.h
 )
 
 set(SRC_ENTSYS
@@ -48,8 +54,6 @@ set(SRC_ENTSYS_PROP
 )
 
 set(SRC_ENTSYS_LIGHT
-	light.h
-
 	light_base.h
 	
 	light_point.cpp
@@ -60,42 +64,11 @@ set(SRC_ENTSYS_LIGHT
 )
 
 set(SRC_GFX
-	renderer.cpp
-	renderer.h
-
-	shader.cpp
-	shader.h
-
-	shader_program.cpp
-	shader_program.h
-
-	icamera.h
-	camera.cpp
-	camera.h
-
-	../public/src/qc_parser.cpp
-	../public/include/qc_parser.h
-
-	../public/src/smd_parser.cpp
-	../public/include/smd_parser.h
-
-	vector.cpp
-	vector.h
-
-	material.cpp
-	material.h
-	
-	../public/src/emf_loader.cpp
-	../public/include/emf_loader.h
-	
-	framebuffer.cpp
-	framebuffer.h
+	igfx.cpp
+	igfx.h
 )
 
 set(SRC_NOPCH
-	glad.c
-	gui/imgui_impl_sdl_gl3.cpp
-	gui/imgui_impl_sdl_gl3.h
 )
 
 set(SRC_RES_SHADERS
@@ -113,8 +86,6 @@ set(SRC_RES_SHADERS
 )
 
 set(SRC_GUI
-	gui/imgui_impl_sdl_gl3.cpp
-	gui/imgui_impl_sdl_gl3.h
 
 	devgui.cpp
 	devgui.h
@@ -142,7 +113,7 @@ add_executable(game
 
 vs_link_static(game)
 
-SET(GAME_LIBRARIES enl SDL2main SDL2 SDL2_image SDL2_mixer SDL2_ttf imgui phys)
+SET(GAME_LIBRARIES enl SDL2main SDL2 SDL2_image SDL2_mixer SDL2_ttf imgui phys graphics)
 
 IF(UNIX AND NOT APPLE)
 target_link_libraries(game ${GAME_LIBRARIES} dl pthread)

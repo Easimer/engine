@@ -35,6 +35,8 @@ bool gfx::gfx_global::init(const char* szTitle, size_t width, size_t height, siz
 
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 	pGLContext = SDL_GL_CreateContext(pWindow);
 
@@ -51,17 +53,18 @@ bool gfx::gfx_global::init(const char* szTitle, size_t width, size_t height, siz
 	glViewport(0, 0, nWidth, nHeight);
 	glClearColor(0.39215686274f, 0.58431372549f, 0.9294117647f, 1.0f);
 
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND); ASSERT_OPENGL();
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); ASSERT_OPENGL();
 
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	glFrontFace(GL_CCW);
+	glEnable(GL_CULL_FACE); ASSERT_OPENGL();
+	glCullFace(GL_BACK); ASSERT_OPENGL();
+	glFrontFace(GL_CCW); ASSERT_OPENGL();
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
+	glEnable(GL_DEPTH_TEST); ASSERT_OPENGL();
+	glDepthFunc(GL_LEQUAL); ASSERT_OPENGL();
 
-	glEnable(GL_MULTISAMPLE);
+	glEnable(GL_MULTISAMPLE); ASSERT_OPENGL();
+
 	SDL_GL_SetSwapInterval(-1);
 
 	ImGui::CreateContext();
@@ -70,6 +73,8 @@ bool gfx::gfx_global::init(const char* szTitle, size_t width, size_t height, siz
 	ImGui::StyleColorsClassic();
 
 	io.Fonts->AddFontDefault();
+
+	flCurrentTime = 0.0;
 
 	return true;
 }
@@ -93,9 +98,11 @@ void gfx::gfx_global::begin_frame()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	ImGui_ImplSdlGL3_NewFrame(pWindow);
 	
-	flLastTime = flCurrentTime;
-	flCurrentTime = (double)SDL_GetPerformanceCounter();
-	flDeltaTime = (double)((flCurrentTime - flLastTime) * 1000 / SDL_GetPerformanceFrequency()) * 0.001;
+	nTimePrev = nTimeNow;
+	nTimeNow = SDL_GetPerformanceCounter();
+
+	flDeltaTime = ((nTimeNow - nTimePrev) * 1000.0f / (double)SDL_GetPerformanceFrequency()) * 0.001;
+	flCurrentTime += flDeltaTime;
 }
 
 void gfx::gfx_global::draw_windows()
@@ -103,7 +110,8 @@ void gfx::gfx_global::draw_windows()
 	if (nViewportX != -1)
 		glViewport(0, 0, nWidth, nHeight);
 	for (auto pWindow : windows)
-		pWindow->draw_window();
+		if(pWindow)
+			pWindow->draw_window();
 	if (nViewportX != -1) {
 		glViewport(nViewportX, nViewportY, nViewportW, nViewportH);
 	}
@@ -114,11 +122,21 @@ void gfx::gfx_global::end_frame()
 	ImGui::Render();
 	ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());
 	SDL_GL_SwapWindow(pWindow);
+	if (m_event_handler) {
+		SDL_Event e;
+		while (SDL_PollEvent(&e)) {
+			m_event_handler(e);
+		}
+	}
 }
 
 bool gfx::gfx_global::handle_events()
 {
 	SDL_Event event;
+
+	if (m_event_handler)
+		return false;
+	
 	while (SDL_PollEvent(&event))
 	{
 		if (event.type == SDL_WINDOWEVENT) {
@@ -156,18 +174,23 @@ int gfx_global::get_shader_program_index(const std::string & name)
 	return -1;
 }
 
-size_t gfx::gfx_global::load_shader(const std::string & filename)
+size_t gfx::gfx_global::load_shader(shader_program * pShaderProgram)
 {
-	shader_program* pShaderProgram = new shader_program(filename.c_str());
 	if (pShaderProgram) {
 		PRINT_DBG("gfx: loaded shader " << pShaderProgram->get_name());
 		shaders.push_back(pShaderProgram);
 		shader_name_map.emplace(pShaderProgram->get_name(), shaders.size() - 1);
 		return shaders.size() - 1;
 	}
-	PRINT_ERR("gfx: failed to load shader " << filename);
 	ASSERT(0);
 	abort();
+}
+
+size_t gfx::gfx_global::load_shader(const std::string & filename)
+{
+	shader_program* pShaderProgram = new shader_program(filename.c_str());
+	PRINT_ERR("gfx: attempting to load shader " << filename);
+	return load_shader(pShaderProgram);
 }
 
 uint32_t gfx::gfx_global::load_texture(const std::string & filename)
@@ -218,7 +241,7 @@ uint32_t gfx::gfx_global::load_texture(const std::string & filename)
 uint32_t gfx::gfx_global::load_model(const std::string & filename)
 {
 	gfx::model mdl;
-	gfx::smd_parser parser_smd;
+	gfx::smd_loader parser_smd;
 	gfx::emf_loader parser_emf;
 	const std::string emf_ext("emf");
 
@@ -231,8 +254,8 @@ uint32_t gfx::gfx_global::load_model(const std::string & filename)
 		mdl = parser_emf.get_model();
 	}
 	else {
-		PRINT_ERR("[ WARNING ] using studiomdl files as models is OBSOLETED!");
-		parser_smd = gfx::smd_parser(filename.c_str());
+		PRINT_ERR("gfx(load_model): !!! using studiomdl files as models is OBSOLETED");
+		parser_smd = gfx::smd_loader(filename.c_str());
 		mdl = parser_smd.get_model();
 	}
 	auto mid = load_model(mdl);
@@ -402,4 +425,43 @@ long long int gfx::gfx_global::use_shader(long long int shader)
 	}
 	glUseProgram(shader); ASSERT_OPENGL();
 	return shader;
+}
+
+void gfx::gfx_global::remove_window(gfx::window * w)
+{
+	for (auto& pWnd : windows) {
+		if (pWnd == w) {
+			pWnd = nullptr;
+			return;
+		}
+	}
+}
+
+bool gfx::gfx_global::gui_keyboard_focus() const
+{
+	return ImGui_ImpSdlGL3_KeyboardFocused();
+}
+
+void gfx::gfx_global::get_events(std::vector<SDL_Event>& v)
+{
+	SDL_Event event;
+
+	if (m_event_handler)
+		return;
+
+	while (SDL_PollEvent(&event))
+	{
+		v.push_back(event);
+	}
+}
+
+void gfx::gfx_global::gui_send_event(const SDL_Event & e)
+{
+	SDL_Event ec = e;
+	ImGui_ImplSdlGL3_ProcessEvent(&ec);
+}
+
+void gfx::gfx_global::capture_mouse(bool b)
+{
+	SDL_SetRelativeMouseMode(b ? SDL_TRUE : SDL_FALSE);
 }

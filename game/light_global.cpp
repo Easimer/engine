@@ -17,7 +17,7 @@ void c_light_global::precache()
 
 bool c_light_global::is_drawable() {
 #ifdef PLAT_DEBUG
-	return gpGlobals->pDevGUI->m_bDrawGlobalLightGizmo;
+	//return gpGlobals->pDevGUI->m_bDrawGlobalLightGizmo;
 #endif
 	return false;
 }
@@ -29,9 +29,9 @@ void c_light_global::spawn()
 	m_nFilter = ENT_FILTER_LIGHT_GLOBAL;
 }
 
-void c_light_global::get_light(shader_light & l)
+void c_light_global::get_light(gfx::shader_light & l)
 {
 	l.pos = m_vecRot;
 	l.color = m_colColor;
-	l.iType = SLT_GLOBAL;
+	l.iType = gfx::shader_light_type::SLT_GLOBAL;
 }

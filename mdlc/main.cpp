@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include <enl/cmdline.h>
 #include "qc_parser.h"
-#include "smd_parser.h"
+#include <gfx/smd_loader.h>
 #include "emf_writer.h"
 
 #define CHK_QC(param) if(qcp.is_cmd(param))
@@ -26,25 +26,25 @@ int main(int argc, char** argv)
 		}
 		CHK_QC("mesh") {
 			auto iszMeshPath = qcp.get_string("mesh");
-			mdlc::smd_parser smdp_mesh(iszMeshPath);
+			gfx::smd_loader smdp_mesh(iszMeshPath);
 			if (smdp_mesh.fail()) {
 				PRINT_ERR("Failed to parse mesh!");
 				goto fail;
 			}
-			model mdl_mesh = smdp_mesh.get_model();
-			if (mdl_mesh.materials.size() == 0) {
+			gfx::model mdl_mesh = smdp_mesh.get_model();
+			if (mdl_mesh.material.size() == 0) {
 				PRINT_ERR("Mesh uses no material!");
 				return 1;
 			}
 			emfw.set_mesh(mdl_mesh.triangles);
 			emfw.add_bones(mdl_mesh.bones);
-			emfw.set_material(mdl_mesh.materials[0].szName);
+			emfw.set_material(mdl_mesh.material);
 
 			PRINT("Mesh: " << iszMeshPath);
 		}
 		CHK_QC("collision") {
 			auto iszCollPath = qcp.get_string("collision");
-			mdlc::smd_parser smdp_collision(iszCollPath);
+			gfx::smd_loader smdp_collision(iszCollPath);
 			if (smdp_collision.fail()) {
 				PRINT_ERR("Failed to parse collision mesh!");
 				goto fail;
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 				PRINT("Processing animation " << name);
 
 				// TODO:
-				emfw.add_animation(name, std::vector<model_keyframe>());
+				emfw.add_animation(name, std::vector<gfx::keyframe>());
 			}
 		}
 		PRINT("Writing to outfile \"" << emfw.get_outfile() << '\"');

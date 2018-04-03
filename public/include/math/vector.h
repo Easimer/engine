@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <glm/fwd.hpp>
 
 #ifdef min
 #undef min
@@ -19,6 +20,16 @@ namespace math {
 	class vector3 {
 	public:
 		vector3(T v1 = (T)0, T v2 = (T)0, T v3 = (T)0) : m_nValues{ v1, v2, v3 } {}
+
+		vector3(const glm::vec<3, T>& other) {
+			m_nValues[0] = other[0];
+			m_nValues[1] = other[1];
+			m_nValues[2] = other[2];
+		}
+
+		operator glm::vec<3, T>() const {
+			return glm::vec<3, T>(x(), y(), z());
+		}
 
 		// Returns nth component of the vector
 		inline T operator[](size_t iIndex) const {
@@ -202,3 +213,7 @@ namespace math {
 		return true;
 	}
 }
+
+typedef math::vector3<float> vec3;
+typedef math::vector3<float> vector;
+#define vec3_origin vec3()

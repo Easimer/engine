@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector.h"
+#include <math/vector.h>
 
 // camera interface so we won't have to include GLM headers in every
 // other headers using the camera

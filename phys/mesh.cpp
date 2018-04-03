@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include <phys/phys.h>
 #include <phys/mesh.h>
-#include <model.h>
+#include <gfx/model.h>
 #include <future>
 #include <mutex>
 
@@ -305,10 +305,10 @@ intersect_result phys::intersect_triangles(const triangle& lhs, const triangle& 
 	return ret;
 }
 
-phys::triangle mt2pt(const model_triangle& t) {
+phys::triangle mt2pt(const gfx::triangle& t) {
 	phys::triangle ret;
-	for (const auto& v : t.vertices) {
-		ret.vertices.push_back(math::vector3<float>(v.px, v.py, v.pz));
+	for (const auto& v : t) {
+		ret.vertices.push_back(math::vector3<float>(v.pos[0], v.pos[1], v.pos[2]));
 	}
 	ASSERT(ret.vertices.size() >= 3);
 	return ret;

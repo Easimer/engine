@@ -25,11 +25,14 @@ namespace gfx {
 
 	class shader_program {
 	public:
+		shader_program();
 		shader_program(const char* szFilename);
 		~shader_program();
 		bool link();
 		void use();
 		void validate();
+
+		void attach_shader(shader* pShader);
 
 		void print_err();
 
@@ -56,6 +59,8 @@ namespace gfx {
 		void set_local_light(const shader_light& l);
 		void set_global_light(const shader_light& l);
 
+		void set_float(const std::string& name, float v);
+
 	protected:
 		int get_uniform_location(const mdlc::qc_parser& qcp, const std::string& name, int* pLocation);
 
@@ -64,6 +69,7 @@ namespace gfx {
 
 		shader* m_pShaderVert;
 		shader* m_pShaderFrag;
+		shader* m_pShaderGeom;
 
 		int m_iUniformMatTrans;
 		int m_iUniformMatView;

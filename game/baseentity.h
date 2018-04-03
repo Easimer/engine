@@ -1,7 +1,7 @@
 #pragma once
 
 #include "basethinker.h"
-#include "vector.h"
+#include <math/vector.h>
 #include "keyvalues.h"
 
 #define DEC_CLASS(classname, basename) \

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "globals.h"
-#include "vector.h"
+#include <math/vector.h>
 #include "entsys.h"
 #include "baseentity.h"
 #include <cmath>

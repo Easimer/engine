@@ -5,12 +5,15 @@
 
 struct entfmap_t;
 class entsys;
-class renderer;
 class event_handler;
-class icamera;
 class input;
 struct devgui_state;
 struct ccommand_def;
+class igfx;
+
+namespace gfx {
+	class icamera;
+}
 
 namespace phys {
 	class simulation;
@@ -18,12 +21,12 @@ namespace phys {
 
 struct engine_globals {
 	/// Engine Core
-	// Renderer
-	renderer* pRenderer;
+	// libgraphics interface
+	igfx* pRenderer;
 	// Window event handler
 	event_handler* pEventHandler;
 	// Camera
-	icamera* pCamera;
+	gfx::icamera* pCamera;
 	// input handler
 	input* pInput;
 	// Engine Statistics

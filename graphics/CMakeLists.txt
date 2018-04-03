@@ -2,13 +2,16 @@ set(SRC
 	stdafx.h
 	stdafx.cpp
 
+	camera.cpp
+	framebuffer.cpp
 	gfx.cpp
 	material.cpp
 	shader_program.cpp
 	shader.cpp
 	textures.cpp
 	window.cpp
-
+	window_register.cpp
+	
 	emf_loader.cpp
 	smd_loader.cpp
 )
@@ -25,7 +28,10 @@ set(SRC_PUBLIC
 	../public/include/gfx/smd_loader.h
 	../public/include/gfx/emf_loader.h
 
+	../public/include/gfx/camera.h
+	../public/include/gfx/framebuffer.h
 	../public/include/gfx/gfx.h
+	../public/include/gfx/icamera.h
 	../public/include/gfx/light.h
 	../public/include/gfx/material.h
 	../public/include/gfx/model.h

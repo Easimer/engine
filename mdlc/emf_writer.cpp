@@ -12,22 +12,22 @@ void emf_writer::set_outfile(const std::string & outfile)
 	m_iszOutfile = outfile;
 }
 
-void emf_writer::set_mesh(const std::vector<model_triangle>& triangles)
+void emf_writer::set_mesh(const std::vector<gfx::triangle>& triangles)
 {
 	m_mesh = triangles;
 }
 
-void emf_writer::set_collmesh(const std::vector<model_triangle>& triangles)
+void emf_writer::set_collmesh(const std::vector<gfx::triangle>& triangles)
 {
 	m_collmesh = triangles;
 }
 
-void emf_writer::add_animation(const std::string& name, const std::vector<model_keyframe>& animation)
+void emf_writer::add_animation(const std::string& name, const std::vector<gfx::keyframe>& animation)
 {
 	m_animations.emplace(name, animation);
 }
 
-void emf_writer::add_bones(const std::vector<model_bone>& bones)
+void emf_writer::add_bones(const std::vector<gfx::bone>& bones)
 {
 	for (auto& bone : bones) {
 		m_bones.push_back(bone);
@@ -44,10 +44,10 @@ void emf_writer::write() const
 	for (auto& triangle : m_mesh) {
 		std::vector<flatbuffers::Offset<Schemas::Model::Vertex>> vertices;
 		// Serialize vertices
-		for (auto& vertex : triangle.vertices) {
+		for (auto& vertex : triangle) {
 			Schemas::Model::VertexBuilder fbb_vertex(fbb);
-			auto pos= Schemas::Vector3(vertex.px, vertex.py, vertex.pz);
-			auto norm = Schemas::Vector3(vertex.nx, vertex.ny, vertex.nz);
+			auto pos= Schemas::Vector3(vertex.pos[0], vertex.pos[1], vertex.pos[2]);
+			auto norm = Schemas::Vector3(vertex.normal[0], vertex.normal[1], vertex.normal[2]);
 			fbb_vertex.add_pos(&pos);
 			fbb_vertex.add_normal(&norm);
 			fbb_vertex.add_u(vertex.u);
@@ -87,8 +87,8 @@ void emf_writer::write() const
 			std::vector<flatbuffers::Offset<Schemas::Model::BoneState>> bonestates;
 
 			for (auto& state : keyframe.bones) {
-				Schemas::Vector3 pos(state.second.px, state.second.py, state.second.pz);
-				Schemas::Vector3 rot(state.second.rx, state.second.ry, state.second.rz);
+				Schemas::Vector3 pos(state.second.pos[0], state.second.pos[1], state.second.pos[2]);
+				Schemas::Vector3 rot(state.second.rot[0], state.second.rot[1], state.second.rot[2]);
 				Schemas::Model::BoneStateBuilder fbb_bonestate(fbb);
 				fbb_bonestate.add_bone(state.first);
 				fbb_bonestate.add_pos(&pos);

@@ -63,14 +63,14 @@ void test_math() {
 	ASSERT(FEQ(test9.min(), 10));
 }
 
-model_triangle pt2mt(const phys::triangle& t) {
-	model_triangle ret;
+gfx::triangle pt2mt(const phys::triangle& t) {
+	gfx::triangle ret;
 	for (const auto& v : t.vertices) {
-		model_triangle_vertex vtx;
-		vtx.px = v.x();
-		vtx.py = v.y();
-		vtx.pz = v.z();
-		ret.vertices.push_back(vtx);
+		gfx::triangle_vertex vtx;
+		vtx.pos[0] = v.x();
+		vtx.pos[1] = v.y();
+		vtx.pos[2] = v.z();
+		ret.push_back(vtx);
 	}
 	return ret;
 }

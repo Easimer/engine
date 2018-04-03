@@ -1,18 +1,23 @@
 #include "stdafx.h"
 #include <enl/cmdline.h>
 #include "entsys.h"
-#include "renderer.h"
+#include "igfx.h"
 #include "event_handler.h"
 #include <chrono>
-#include "camera.h"
 #include "input.h"
 #include "statistics.h"
 #include "devgui.h"
+
+#include <gfx/camera.h>
 
 #include "prop_physics.h"
 #include <phys/phys.h>
 #include <phys/simulation.h>
 #include <phys/mesh.h>
+
+#include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
+#include <glm/glm.hpp>
 
 #if defined(PLAT_LINUX)
 #include <unistd.h>
@@ -77,12 +82,12 @@ int main(int argc, char** argv)
 	ASSERT(gpGlobals);
 
 	gpGlobals->pEntSys = new entsys();
-	gpGlobals->pRenderer = new renderer();
+	gpGlobals->pRenderer = new igfx();
 	gpGlobals->pEventHandler = new event_handler();
-	gpGlobals->pCamera = new camera();
+	gpGlobals->pCamera = new gfx::camera();
 	gpGlobals->pInput = new input();
 	gpGlobals->pStatistics = new estat_container();
-	gpGlobals->pDevGUI = new devgui_state();
+	//gpGlobals->pDevGUI = new devgui_state();
 	gpGlobals->pPhysSimulation = new phys::simulation();
 	
 	// Start main threads
@@ -106,7 +111,7 @@ int main(int argc, char** argv)
 	if (gpGlobals->entityFactoryDictionary)
 		delete[] gpGlobals->entityFactoryDictionary;
 	delete gpGlobals->pPhysSimulation;
-	delete gpGlobals->pDevGUI;
+	//delete gpGlobals->pDevGUI;
 	delete gpGlobals->pStatistics;
 	delete gpGlobals->pInput;
 	delete gpGlobals->pCamera;
@@ -120,6 +125,21 @@ int main(int argc, char** argv)
 }
 
 #include "prop_common.h"
+#include <gui/imgui.h>
+
+class window_loading : public gfx::window {
+public:
+	const char* get_title() override { return "engine"; }
+	void draw_content() override {
+		ImGui::SetWindowSize(ImVec2(200, 170));
+		ImGui::Text("Loading...");
+		ImGui::Text(m_str_stage.c_str());
+		ImGui::ProgressBar(m_progress);
+	}
+
+	float m_progress = 0;
+	std::string m_str_stage;
+};
 
 void thread_logic()
 {
@@ -127,18 +147,30 @@ void thread_logic()
 
 	std::this_thread::sleep_for(std::chrono::duration<float>(0.5));
 
+	window_loading wnd_loading;
+	gpGfx->add_window(&wnd_loading);
+
 	gpGlobals->pRenderer->begin_load();
+	wnd_loading.m_str_stage = "Compiling shaders";
+	wnd_loading.m_progress = 0;
 	gpGlobals->pRenderer->load_shader("data/shaders/model_dynamic.qc");
+	wnd_loading.m_progress = 0.5;
 	gpGlobals->pRenderer->load_shader("data/shaders/wireframe.qc");
+	wnd_loading.m_progress = 1;
 	//gpGlobals->pRenderer->load_shader("data/shaders/depth_map.qc"); // hardcoded into renderer
 
+	wnd_loading.m_str_stage = "Precaching resources";
+	wnd_loading.m_progress = 0;
 	gpGlobals->pEntSys->precache_entities();
+	wnd_loading.m_progress = 1;
 
-	/*c_base_prop* pDog1 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+	wnd_loading.m_str_stage = "Reticulating splines";
+	wnd_loading.m_progress = 0;
+	c_base_prop* pDog1 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pDog1->set_model("data/models/wolf.emf");
 	pDog1->spawn();
 	pDog1->set_abspos(vec3(0.5, 0, -0.1));
-
+	wnd_loading.m_progress = 0.2;
 	c_base_prop* pDog2 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pDog2->set_model("data/models/traffic_barrel.emf");
 	pDog2->spawn();
@@ -148,7 +180,7 @@ void thread_logic()
 	pArthas->set_model("data/models/arthas.emf");
 	pArthas->spawn();
 	pArthas->set_abspos(vec3(-0.5, 0, -1));
-
+	wnd_loading.m_progress = 0.4;
 	c_base_prop* pCSoldier = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pCSoldier->set_model("data/models/csoldier.emf");
 	pCSoldier->spawn();
@@ -157,34 +189,36 @@ void thread_logic()
 	c_base_prop* pHat = (c_base_prop*)CreateEntityNoSpawn("prop_static");
 	pHat->set_model("data/models/test_terrain.smd");
 	pHat->spawn();
-	//gpGlobals->pEntSys->kill_entity(pHat);*/
+	wnd_loading.m_progress = 0.75;
+	//gpGlobals->pEntSys->kill_entity(pHat);
+	
+	//c_prop_physics* pSphere = (c_prop_physics*)CreateEntityNoSpawn("prop_physics");
+	//if (pSphere) {
+	//	pSphere->set_model("data/models/sphere.smd");
+	//	pSphere->set_abspos(vec3(-10, 0, 0));
+	//	/*phys::object& phys = gpGlobals->pPhysSimulation->get_object(pSphere->physics_handle());
+	//	math::vector3<float> origin(-10, 0, 0);
+	//	phys.position(origin);
+	//	phys.velocity(math::vector3<float>(1, 0, 0));
+	//	
+	//	phys.collider(phys::bounding_sphere(origin, 1));*/
+	//	pSphere->spawn();
+	//}
 
-	c_prop_physics* pSphere = (c_prop_physics*)CreateEntityNoSpawn("prop_physics");
-	if (pSphere) {
-		pSphere->set_model("data/models/sphere.smd");
-		pSphere->set_abspos(vec3(-10, 0, 0));
-		/*phys::object& phys = gpGlobals->pPhysSimulation->get_object(pSphere->physics_handle());
-		math::vector3<float> origin(-10, 0, 0);
-		phys.position(origin);
-		phys.velocity(math::vector3<float>(1, 0, 0));
-		
-		phys.collider(phys::bounding_sphere(origin, 1));*/
-		pSphere->spawn();
-	}
-
-	c_prop_physics* pSphere2 = (c_prop_physics*)CreateEntityNoSpawn("prop_physics");
-	if (pSphere2) {
-		pSphere2->set_model("data/models/sphere.smd");
-		pSphere2->set_abspos(vec3(10, 0, 0));
-		/*phys::object& phys = gpGlobals->pPhysSimulation->get_object(pSphere2->physics_handle());
-		math::vector3<float> origin(10, 0, 0);
-		phys.position(origin);
-		phys.velocity(math::vector3<float>(-1, 0, 0));
-		phys.collider(phys::bounding_sphere(origin, 1));*/
-		pSphere2->spawn();
-		
-	}
-
+	//c_prop_physics* pSphere2 = (c_prop_physics*)CreateEntityNoSpawn("prop_physics");
+	//if (pSphere2) {
+	//	pSphere2->set_model("data/models/sphere.smd");
+	//	pSphere2->set_abspos(vec3(10, 0, 0));
+	//	/*phys::object& phys = gpGlobals->pPhysSimulation->get_object(pSphere2->physics_handle());
+	//	math::vector3<float> origin(10, 0, 0);
+	//	phys.position(origin);
+	//	phys.velocity(math::vector3<float>(-1, 0, 0));
+	//	phys.collider(phys::bounding_sphere(origin, 1));*/
+	//	pSphere2->spawn();
+	//	
+	//}
+	
+	wnd_loading.m_progress = 0.8;
 	base_entity* pLight = CreateEntityNoSpawn("light_point");
 	if (pLight) {
 		pLight->spawn();
@@ -192,43 +226,35 @@ void thread_logic()
 		pLightColor = { 1, 1, 1, 1 };
 		pLight->set_abspos(vec3(0, 10, 0));
 	}
-
+	wnd_loading.m_progress = 0.9;
 	base_entity* pLightGlobal = CreateEntity("light_global");
 	if (pLightGlobal) {
 		pLightGlobal->set_abspos(vec3(-1.5, 0.5, 0));
 		pLightGlobal->set_rotation(vec3(0, glm::radians(90.0f), glm::radians(90.0f)));
 	}
-	
+	wnd_loading.m_progress = 1;
 	PRINT_DBG("===========");
 	PRINT_DBG("End of loading");
 	PRINT_DBG("===========");
 	gpGlobals->pRenderer->end_load();
+	gpGfx->remove_window(&wnd_loading);
 
-	double flLastUpdate = 0;
+	double flNextUpdate = 0;
 
 	while (gpGlobals->bRunning)
 	{
-		bool bEarly = false;
-		double flSinceLastUpdate = gpGlobals->curtime - flLastUpdate;
-		double flNextUpdate = gpGlobals->curtime + gpGlobals->flTickTime;
-		// Only update 64 times a sec
-		if (flSinceLastUpdate >= gpGlobals->flTickTime)
-		{
-			gpGlobals->pEventHandler->update();
-			gpGlobals->pInput->update();
+		gpGlobals->pEventHandler->update();
+		gpGlobals->pInput->update();
 
-			gpGlobals->pPhysSimulation->simulate(flSinceLastUpdate);
+		gpGlobals->pPhysSimulation->simulate(gpGlobals->flDeltaTime);
 
-			gpGlobals->pEntSys->update_entities();
+		gpGlobals->pEntSys->update_entities();
 
-			// catch up
-			flLastUpdate += gpGlobals->flTickTime;
-			
-			// sleep
-			std::this_thread::sleep_for(std::chrono::duration<double>(flLastUpdate + gpGlobals->flTickTime - gpGlobals->curtime));
-		}
-		//if(gpGlobals->pRenderer->waiting_for_draw())
+		while (gpGlobals->curtime >= flNextUpdate) {
+			flNextUpdate += gpGlobals->flTickTime;
 			gpGlobals->pEntSys->draw_entities();
+		}
+		std::this_thread::sleep_for(std::chrono::duration<double>(flNextUpdate - gpGlobals->curtime));			
 	}
 	PRINT_DBG("Logic: joining...");
 }
@@ -236,15 +262,11 @@ void thread_logic()
 void thread_rendering()
 {
 	gpGlobals->iThreadRendering = std::this_thread::get_id();
-	gpGlobals->pRenderer->open_window("engine", 1280, 720, false);
-	gpGlobals->pRenderer->init_gl();
-	gpGlobals->pRenderer->init_gui();
-
-	gpGlobals->pRenderer->load_loop();
+	gpGlobals->pRenderer->init("engine", 1280, 720);
 
 	unsigned long long nNow = SDL_GetPerformanceCounter();
 	unsigned long long nLast = 0;
-
+	 
 	while (gpGlobals->bRunning)
 	{
 		nLast = nNow;
@@ -252,15 +274,17 @@ void thread_rendering()
 		gpGlobals->flDeltaTime = ((nNow - nLast) / (double)SDL_GetPerformanceFrequency());
 		gpGlobals->curtime += gpGlobals->flDeltaTime;
 
-		gpGlobals->pRenderer->render();
-		gpGlobals->pCamera->update();
+		gpGfx->begin_frame();
+
+		gpGlobals->pRenderer->draw();
+
+		gpGfx->draw_windows();
+		gpGfx->end_frame();
+		gpGlobals->pCamera->update(gpGlobals->flDeltaTime);
+		gpGlobals->pRenderer->update();
 	}
 
-	gpGlobals->pRenderer->shutdown_gui();
-	PRINT_DBG("Renderer: shutting down GL");
-	gpGlobals->pRenderer->shutdown_gl();
-	PRINT_DBG("Renderer: shutting down SDL2");
-	gpGlobals->pRenderer->close_window();
+	gpGlobals->pRenderer->shutdown();
 	PRINT_DBG("Renderer: joining...");
 }
 

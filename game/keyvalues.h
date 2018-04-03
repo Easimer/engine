@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 #include "baseentity.h"
-#include "light.h"
+#include <gfx/light.h>
 
 #define classoffset(c, member) (size_t)&(((c*)0)->member)
 
@@ -59,6 +59,6 @@ public: \
 
 DEF_KV_PTR(KV_T_STRING, std::string);
 DEF_KV_PTR(KV_T_FLOAT, float);
-DEF_KV_PTR(KV_T_RGBA, color_rgba);
+DEF_KV_PTR(KV_T_RGBA, gfx::color_rgba);
 DEF_KV_PTR(KV_T_VECTOR3, vec3);
 DEF_KV_PTR(KV_T_INT, int);

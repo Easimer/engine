@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "entsys.h"
-#include "renderer.h"
+#include "igfx.h"
 #include "icamera.h"
 #include "prop_common.h"
 #include "light_base.h"
@@ -148,8 +148,8 @@ void entsys::draw_entities()
 
 			size_t nLights = UTIL_NearestEntities(pEnt->get_abspos(), &pEntLightLocal, 1, ENT_FILTER_LIGHT_LOCAL);
 
-			c.light_local.iType = SLT_DISABLED;
-			c.light_global.iType = SLT_DISABLED;
+			c.light_local.iType = gfx::shader_light_type::SLT_DISABLED;
+			c.light_global.iType = gfx::shader_light_type::SLT_DISABLED;
 
 			if (nLights > 0 && pEntLightLocal) {
 				base_light* pLightLocal = dynamic_cast<base_light*>(pEntLightLocal);

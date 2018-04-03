@@ -16,6 +16,9 @@ namespace gfx {
 
 	class material {
 	public:
+		material() :
+		m_iShader(-1) {}
+
 		material(const mdlc::qc_parser& qcp);
 		material(const material& other);
 

@@ -3,7 +3,7 @@
 #include <phys/phys.h>
 #include <math/vector.h>
 #include <vector>
-#include <model.h>
+#include <gfx/model.h>
 
 namespace phys {
 
@@ -20,7 +20,7 @@ namespace phys {
 		}
 	};
 
-	typedef std::vector<model_triangle> mesh;
+	typedef std::vector<gfx::triangle> mesh;
 
 	intersect_result intersect_triangle_ray(const ray& ray, const triangle& tri);
 	intersect_result intersect_triangles(const triangle& lhs, const triangle& rhs);

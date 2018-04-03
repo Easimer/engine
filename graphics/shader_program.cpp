@@ -10,9 +10,18 @@
 
 using namespace gfx;
 
+gfx::shader_program::shader_program() :
+	m_pShaderVert(nullptr),
+	m_pShaderFrag(nullptr),
+	m_pShaderGeom(nullptr)
+{
+	m_iID = glCreateProgram(); ASSERT_OPENGL();
+}
+
 shader_program::shader_program(const char * szFilename) :
-	m_pShaderVert(NULL),
-	m_pShaderFrag(NULL)
+	m_pShaderVert(nullptr),
+	m_pShaderFrag(nullptr),
+	m_pShaderGeom(nullptr)
 {
 	mdlc::qc_parser parser(szFilename);
 	
@@ -205,7 +214,7 @@ bool shader_program::link()
 	RESTRICT_THREAD_RENDERING;
 	int iSuccess;
 	glLinkProgram(m_iID); ASSERT_OPENGL();
-	glGetProgramiv(m_iID, GL_LINK_STATUS, &iSuccess);
+	glGetProgramiv(m_iID, GL_LINK_STATUS, &iSuccess); ASSERT_OPENGL();
 	if (!iSuccess)
 	{
 		print_err();
@@ -240,6 +249,22 @@ void shader_program::validate()
 		PRINT_ERR("Shader program validation failed: " << szMsg);
 		ASSERT(0);
 	}
+}
+
+void gfx::shader_program::attach_shader(shader * pShader)
+{
+	switch (pShader->get_type()) {
+	case shader_type::SHADER_T_VERTEX:
+		m_pShaderVert = pShader;
+		break;
+	case shader_type::SHADER_T_FRAGMENT:
+		m_pShaderFrag = pShader;
+		break;
+	case shader_type::SHADER_T_GEOMETRY:
+		m_pShaderGeom = pShader;
+		break;
+	}
+	glAttachShader(m_iID, pShader->get_id());
 }
 
 void shader_program::print_err()
@@ -387,6 +412,14 @@ void shader_program::set_global_light(const shader_light & l)
 	glUniform1f(m_aiUniformLightGlobal.flColorG, l.color.g);
 	glUniform1f(m_aiUniformLightGlobal.flColorB, l.color.b);
 	glUniform1f(m_aiUniformLightGlobal.flColorA, l.color.a);
+}
+
+void gfx::shader_program::set_float(const std::string & name, float v)
+{
+	RESTRICT_THREAD_RENDERING;
+	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
+	if (iLoc != -1)
+		glUniform1f(iLoc, (GLfloat)v); ASSERT_OPENGL();
 }
 
 int shader_program::get_uniform_location(const mdlc::qc_parser& qcp, const std::string& name, int* pLocation)

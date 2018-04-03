@@ -11,11 +11,11 @@
 #include <gfx/model.h>
 
 namespace gfx {
-	class smd_parser {
+	class smd_loader {
 	public:
-		smd_parser() {};
-		smd_parser(const char* szFilename);
-		smd_parser(std::string& iszFilename);
+		smd_loader() {};
+		smd_loader(const char* szFilename);
+		smd_loader(std::string& iszFilename);
 
 		gfx::model get_model() const {
 			return m_outmodel;

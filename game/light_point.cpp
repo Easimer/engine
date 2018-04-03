@@ -17,13 +17,13 @@ public:
 		m_nFilter = ENT_FILTER_LIGHT_LOCAL;
 	}
 
-	void get_light(shader_light& l);
+	void get_light(gfx::shader_light& l);
 };
 
 REGISTER_ENTITY(c_light_point, light_point);
 
-void c_light_point::get_light(shader_light& l) {
+void c_light_point::get_light(gfx::shader_light& l) {
 	l.pos = get_abspos();
 	l.color = m_colColor;
-	l.iType = SLT_POINT;
+	l.iType = gfx::shader_light_type::SLT_POINT;
 }

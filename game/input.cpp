@@ -2,7 +2,7 @@
 #include "event_handler.h"
 #include "input.h"
 #include "icamera.h"
-#include "renderer.h"
+#include "igfx.h"
 
 #include <algorithm>
 
@@ -33,7 +33,7 @@ void input::press_key(long int keysym)
 	//check_conflicting_actions(ia);
 
 	if (keysym == SDLK_LSHIFT) {
-		gpGlobals->pCamera->set_speed(1.6);
+		((gfx::camera*)gpGlobals->pCamera)->set_speed(1.6);
 	}
 }
 
@@ -43,7 +43,7 @@ void input::release_key(long int keysym)
 	//	return;
 	//m_action_state[m_keybinds[keysym]] = false;
 	if (keysym == SDLK_LSHIFT) {
-		gpGlobals->pCamera->set_speed(0.8);
+		((gfx::camera*)gpGlobals->pCamera)->set_speed(0.8);
 	}
 }
 
@@ -68,22 +68,22 @@ void input::update()
 			switch (ks.first)
 			{
 				case IA_FORWARD:
-					gpGlobals->pCamera->forward();
+					gpGlobals->pCamera->forward(gpGlobals->flDeltaTime);
 					break;
 				case IA_BACKWARD:
-					gpGlobals->pCamera->backward();
+					gpGlobals->pCamera->backward(gpGlobals->flDeltaTime);
 					break;
 				case IA_TURN_L:
-					gpGlobals->pCamera->turn_left();
+					gpGlobals->pCamera->turn_left(gpGlobals->flDeltaTime);
 					break;
 				case IA_TURN_R:
-					gpGlobals->pCamera->turn_right();
+					gpGlobals->pCamera->turn_right(gpGlobals->flDeltaTime);
 					break;
 				case IA_STRAFE_L:
-					gpGlobals->pCamera->strafe_left();
+					gpGlobals->pCamera->strafe_left(gpGlobals->flDeltaTime);
 					break;
 				case IA_STRAFE_R:
-					gpGlobals->pCamera->strafe_right();
+					gpGlobals->pCamera->strafe_right(gpGlobals->flDeltaTime);
 					break;
 				case IA_JUMP:
 					//gpGlobals->pCamera->jump();
@@ -97,7 +97,7 @@ void input::mouse_motion(const int x, const int y)
 {
 	/// First-Person
 
-	gpGlobals->pCamera->turn(x, y);
+	gpGlobals->pCamera->turn(x, y, gpGlobals->flDeltaTime);
 
 }
 

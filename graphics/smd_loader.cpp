@@ -23,18 +23,18 @@
 
 #define SMDP_CHECK_END()	if(aiTokens[0] == "end") { m_iState = SMDP_STATE_GLOBAL; return; }
 
-gfx::smd_parser::smd_parser(const char * szFilename)
+gfx::smd_loader::smd_loader(const char * szFilename)
 {
 	m_file = std::ifstream(szFilename);
 	if (!m_file) {
-		PRINT_ERR("smd_parser: cannot open " << szFilename);
-		//throw std::runtime_error("smd_parser: cannot open " + std::string(szFilename));
+		PRINT_ERR("smd_loader: cannot open " << szFilename);
+		//throw std::runtime_error("smd_loader: cannot open " + std::string(szFilename));
 		m_bFail = true;
 	}
 	parse();
 }
 
-gfx::smd_parser::smd_parser(std::string & iszFilename)
+gfx::smd_loader::smd_loader(std::string & iszFilename)
 {
 	iszFilename.erase(std::remove_if(iszFilename.begin(), iszFilename.end(), [](const char c) {
 		return mdlc::is_whitespace(c);
@@ -42,14 +42,14 @@ gfx::smd_parser::smd_parser(std::string & iszFilename)
 	m_file = std::ifstream(iszFilename);
 	if (!m_file)
 	{
-		PRINT_ERR("smd_parser: cannot open " << iszFilename);
-		//throw std::runtime_error("smd_parser: cannot open " + iszFilename);
+		PRINT_ERR("smd_loader: cannot open " << iszFilename);
+		//throw std::runtime_error("smd_loader: cannot open " + iszFilename);
 		m_bFail = true;
 	}
 	parse();
 }
 
-void gfx::smd_parser::parse()
+void gfx::smd_loader::parse()
 {
 	m_iLine = 0;
 	m_iState = SMDP_STATE_START;
@@ -65,7 +65,7 @@ void gfx::smd_parser::parse()
 	PRINT_DBG("Model loaded under " << bm.elapsed() << " secs");
 }
 
-void gfx::smd_parser::parse_line()
+void gfx::smd_loader::parse_line()
 {
 	std::string line;
 	std::getline(m_file, line);
@@ -86,7 +86,6 @@ void gfx::smd_parser::parse_line()
 	std::string bone_name;
 	std::string bone_parent_id;
 	// Triangle
-	std::string material;
 	// Vertex
 	gfx::triangle_vertex vertex;
 	std::string iBoneID;
@@ -127,7 +126,7 @@ void gfx::smd_parser::parse_line()
 		else if (aiTokens[0] == "end")
 			m_iState = SMDP_STATE_GLOBAL;
 		else
-			PRINT_DBG("smd_parser expected nodes, skeleton, triangles or end on line " << m_iLine << ", got: " << aiTokens[0]);
+			PRINT_DBG("smd_loader expected nodes, skeleton, triangles or end on line " << m_iLine << ", got: " << aiTokens[0]);
 		break;
 
 	case SMDP_STATE_NODES:
@@ -171,8 +170,8 @@ void gfx::smd_parser::parse_line()
 	case SMDP_STATE_TRIANGLE_MAT:
 		SMDP_CHECK_END();
 
-		if (material.size() == 0) {
-			material = aiTokens[0];
+		if (m_outmodel.material.size() == 0) {
+			m_outmodel.material = aiTokens[0];
 		}
 
 		m_iState = SMDP_STATE_TRIANGLE_VTX1;
@@ -211,7 +210,7 @@ void gfx::smd_parser::parse_line()
 	}
 }
 
-std::vector<std::string> gfx::smd_parser::tokenize(const std::string & line) const
+std::vector<std::string> gfx::smd_loader::tokenize(const std::string & line) const
 {
 	std::vector<std::string> ret;
 	size_t iStart = 0;

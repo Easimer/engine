@@ -20,8 +20,6 @@ set(SRC_NOPCH
 )
 
 set(SRC_PUBLIC
-	../public/src/emf_loader.cpp
-	../public/include/emf_loader.h
 	../public/include/gfx/window.h
 )
 

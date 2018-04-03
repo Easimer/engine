@@ -93,7 +93,8 @@ int main(int argc, char** argv) {
 
 			rot += 3.1415926f / 4.0f * gpGfx->delta();
 			gfx::shader_program* pShader = gpGfx->get_shader(gpGfx->use_shader());
-			
+			pShader->use_material(gpGfx->model_material(giCurrentModel));
+
 			glm::mat4 trans(1.0);
 			trans = glm::rotate(trans, rot, glm::vec3(0, 1, 0));
 			

@@ -8,7 +8,7 @@
 #include <fstream>
 #include <map>
 
-#include <model.h>
+#include <gfx/model.h>
 
 namespace mdlc {
 	class smd_parser {
@@ -17,7 +17,7 @@ namespace mdlc {
 		smd_parser(const char* szFilename);
 		smd_parser(std::string& iszFilename);
 
-		model get_model() const {
+		gfx::model get_model() const {
 			return m_outmodel;
 		}
 

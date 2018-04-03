@@ -10,6 +10,7 @@ namespace gfx {
 
 	class shader {
 	public:
+		shader();
 		shader(const char* szFilename, shader_type iType);
 		~shader();
 		void operator=(const shader& other) = delete;
@@ -18,8 +19,12 @@ namespace gfx {
 		shader_type get_type() { return m_iType; }
 		uint32_t get_id() { return m_iID; }
 
+		void set_code(const char* szCode, shader_type iType);
+
 	private:
 		void print_err();
+
+		bool upload_source(const char* szSource);
 
 	private:
 		shader_type m_iType;

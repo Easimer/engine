@@ -7,9 +7,6 @@ set(SRC
 	
 	stdafx.cpp
 	stdafx.h
-
-	../public/src/smd_parser.cpp
-	../public/include/smd_parser.h
 )
 
 vs_pch(stdafx)
@@ -19,7 +16,7 @@ add_executable(phys_testbed
 	CMakeLists.txt
 )
 
-target_link_libraries(phys_testbed phys)
+target_link_libraries(phys_testbed phys graphics)
 
 IF(WIN32)
 # Create filters

@@ -17,7 +17,7 @@ public:
 
 	bool is_drawable() override;
 
-	void get_light(shader_light& l) override;
+	void get_light(gfx::shader_light& l) override;
 
 private:
 	float m_flAngle;
