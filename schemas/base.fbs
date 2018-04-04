@@ -25,3 +25,7 @@ struct ColorRGBA {
 	b : float;
 	a : float;
 }
+
+table Matrix4x4 {
+	data : [float] (required);
+}

@@ -1,0 +1,54 @@
+include "base.fbs";
+
+// Engine Networking schemas
+
+namespace Schemas.Networking;
+
+table StringIdentifier {
+	id : string;
+}
+
+enum EntityUpdateType: ushort {
+	NONE = 0,
+
+	CREATE = 1,
+	DELETE = 2,
+
+	POSITION = 3,
+	ROTATION = 4,
+	MODEL_FILENAME = 5,
+	CLASSNAME = 6,
+}
+
+union EntityUpdateData {
+	Vector3, Matrix4x4, StringIdentifier
+}
+
+table EntityUpdate {
+	edict_id : ulong (key);
+	type : EntityUpdateType;
+	data : EntityUpdateData;
+}
+
+enum MessageType : long {
+	NONE = 0,
+
+	CONNECT = 1,
+	CONNECT_ACK = 2,
+	CONNECT_NAK = 3,
+
+	ENTITY_UPDATE = 4,
+}
+
+table ConnectData {
+	username : string;
+}
+
+union MessageData {
+	ConnectData, EntityUpdate
+}
+
+table MessageHeader {
+	type : MessageType;
+	data : MessageData;
+}

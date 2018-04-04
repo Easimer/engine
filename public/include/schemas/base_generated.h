@@ -16,6 +16,8 @@ struct ColorRGB;
 
 struct ColorRGBA;
 
+struct Matrix4x4;
+
 MANUALLY_ALIGNED_STRUCT(4) Vector3 FLATBUFFERS_FINAL_CLASS {
  private:
   float x_;
@@ -133,6 +135,56 @@ MANUALLY_ALIGNED_STRUCT(4) ColorRGBA FLATBUFFERS_FINAL_CLASS {
   }
 };
 STRUCT_END(ColorRGBA, 16);
+
+struct Matrix4x4 FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  enum {
+    VT_DATA = 4
+  };
+  const flatbuffers::Vector<float> *data() const {
+    return GetPointer<const flatbuffers::Vector<float> *>(VT_DATA);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_DATA) &&
+           verifier.Verify(data()) &&
+           verifier.EndTable();
+  }
+};
+
+struct Matrix4x4Builder {
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_data(flatbuffers::Offset<flatbuffers::Vector<float>> data) {
+    fbb_.AddOffset(Matrix4x4::VT_DATA, data);
+  }
+  explicit Matrix4x4Builder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  Matrix4x4Builder &operator=(const Matrix4x4Builder &);
+  flatbuffers::Offset<Matrix4x4> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<Matrix4x4>(end);
+    fbb_.Required(o, Matrix4x4::VT_DATA);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<Matrix4x4> CreateMatrix4x4(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::Vector<float>> data = 0) {
+  Matrix4x4Builder builder_(_fbb);
+  builder_.add_data(data);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<Matrix4x4> CreateMatrix4x4Direct(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<float> *data = nullptr) {
+  return Schemas::CreateMatrix4x4(
+      _fbb,
+      data ? _fbb.CreateVector<float>(*data) : 0);
+}
 
 }  // namespace Schemas
 
