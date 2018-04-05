@@ -24,6 +24,9 @@
 #include <dirent.h>
 #endif
 
+#include <net/server.h>
+#include <net/client.h>
+
 void thread_logic();
 void thread_rendering();
 void thread_sound();
@@ -147,6 +150,8 @@ void thread_logic()
 
 	std::this_thread::sleep_for(std::chrono::duration<float>(0.5));
 
+	net::server game_server;
+
 	window_loading wnd_loading;
 	gpGfx->add_window(&wnd_loading);
 
@@ -266,9 +271,13 @@ void thread_rendering()
 
 	unsigned long long nNow = SDL_GetPerformanceCounter();
 	unsigned long long nLast = 0;
-	 
+	
+	net::client game_client("::1", "testuser");
+
 	while (gpGlobals->bRunning)
 	{
+		if (!game_client.connected())
+			game_client.attempt_connect();
 		nLast = nNow;
 		nNow = SDL_GetPerformanceCounter();
 		gpGlobals->flDeltaTime = ((nNow - nLast) / (double)SDL_GetPerformanceFrequency());

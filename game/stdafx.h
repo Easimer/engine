@@ -8,3 +8,4 @@
 #include "entityfactory.h"
 #include "entsys.h"
 #include <phys/simulation.h>
+#include <qc.h>

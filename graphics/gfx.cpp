@@ -171,6 +171,7 @@ int gfx_global::get_shader_program_index(const std::string & name)
 	}
 
 	PRINT_ERR("gfx: material requested unknown shader \"" << name << "\"!");
+	ASSERT(0);
 	return -1;
 }
 
@@ -368,8 +369,8 @@ uint32_t gfx::gfx_global::load_model(const gfx::model & mdl)
 
 size_t gfx::gfx_global::load_material(const std::string & filename)
 {
-	mdlc::qc_parser qcp(filename);
-	
+	mdlc::qc qcp = mdlc::qc(std::ifstream(filename));
+
 	material mat(qcp);
 
 	auto iszShader = mat.get_shader_name();
@@ -464,4 +465,14 @@ void gfx::gfx_global::gui_send_event(const SDL_Event & e)
 void gfx::gfx_global::capture_mouse(bool b)
 {
 	SDL_SetRelativeMouseMode(b ? SDL_TRUE : SDL_FALSE);
+}
+
+void gfx::gfx_global::load_default_shaders() {
+	std::ifstream file("data/shaders/shader_manifest.txt");
+	if (!file)
+		return;
+	for (std::string line; std::getline(file, line);) {
+		if(line.size() > 1 && line[0] != '/' && line[1] != '/') // skip comment lines
+			load_shader(line);
+	}
 }

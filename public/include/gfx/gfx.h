@@ -126,6 +126,8 @@ namespace gfx {
 
 		void capture_mouse(bool b);
 
+		void load_default_shaders();
+
 	private:
 		SDL_Window* pWindow;
 		SDL_GLContext pGLContext;

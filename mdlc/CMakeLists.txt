@@ -13,9 +13,6 @@ set(SRC
 )
 
 set(SRC_PUBLIC
-	../public/src/qc_parser.cpp
-	../public/include/qc_parser.h
-
 	../public/include/emf.h
 )
 

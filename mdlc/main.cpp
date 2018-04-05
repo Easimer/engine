@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include <enl/cmdline.h>
-#include "qc_parser.h"
+#include <qc.h>
 #include <gfx/smd_loader.h>
 #include "emf_writer.h"
 
@@ -18,14 +18,14 @@ int main(int argc, char** argv)
 	const char* pszQC = gpCmdline->GetArgument();
 
 	if (pszQC) {
-		mdlc::qc_parser qcp(pszQC);
+		mdlc::qc qcp = mdlc::qc(std::ifstream(pszQC));
 		emf_writer emfw;
 		CHK_QC("outfile") {
-			auto iszOutPath = qcp.get_string("outfile");
+			auto iszOutPath = qcp.at<std::string>("outfile");
 			emfw.set_outfile(iszOutPath);
 		}
 		CHK_QC("mesh") {
-			auto iszMeshPath = qcp.get_string("mesh");
+			auto iszMeshPath = qcp.at<std::string>("mesh");
 			gfx::smd_loader smdp_mesh(iszMeshPath);
 			if (smdp_mesh.fail()) {
 				PRINT_ERR("Failed to parse mesh!");
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 			PRINT("Mesh: " << iszMeshPath);
 		}
 		CHK_QC("collision") {
-			auto iszCollPath = qcp.get_string("collision");
+			auto iszCollPath = qcp.at<std::string>("collision");
 			gfx::smd_loader smdp_collision(iszCollPath);
 			if (smdp_collision.fail()) {
 				PRINT_ERR("Failed to parse collision mesh!");
@@ -54,9 +54,9 @@ int main(int argc, char** argv)
 			PRINT("Collision mesh: " << iszCollPath);
 		}
 
-		for (auto& cmd : qcp.get_commands()) {
-			if (cmd.find("animation_") == 0) {
-				std::string name = cmd.substr(cmd.find('_') + 1);
+		for (auto& cmd : qcp) {
+			if (cmd.first.find("animation_") == 0) {
+				std::string name = cmd.first.substr(cmd.first.find('_') + 1);
 				PRINT("Processing animation " << name);
 
 				// TODO:

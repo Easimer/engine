@@ -122,18 +122,26 @@ enum MessageType {
   MessageType_CONNECT = 1,
   MessageType_CONNECT_ACK = 2,
   MessageType_CONNECT_NAK = 3,
-  MessageType_ENTITY_UPDATE = 4,
+  MessageType_DISCONNECT = 4,
+  MessageType_DISCOVERY_PROBE = 5,
+  MessageType_DISCOVERY_RESPONSE = 6,
+  MessageType_ENTITY_UPDATE = 7,
+  MessageType_CLIENT_UPDATE = 8,
   MessageType_MIN = MessageType_NONE,
-  MessageType_MAX = MessageType_ENTITY_UPDATE
+  MessageType_MAX = MessageType_CLIENT_UPDATE
 };
 
-inline MessageType (&EnumValuesMessageType())[5] {
+inline MessageType (&EnumValuesMessageType())[9] {
   static MessageType values[] = {
     MessageType_NONE,
     MessageType_CONNECT,
     MessageType_CONNECT_ACK,
     MessageType_CONNECT_NAK,
-    MessageType_ENTITY_UPDATE
+    MessageType_DISCONNECT,
+    MessageType_DISCOVERY_PROBE,
+    MessageType_DISCOVERY_RESPONSE,
+    MessageType_ENTITY_UPDATE,
+    MessageType_CLIENT_UPDATE
   };
   return values;
 }
@@ -144,7 +152,11 @@ inline const char **EnumNamesMessageType() {
     "CONNECT",
     "CONNECT_ACK",
     "CONNECT_NAK",
+    "DISCONNECT",
+    "DISCOVERY_PROBE",
+    "DISCOVERY_RESPONSE",
     "ENTITY_UPDATE",
+    "CLIENT_UPDATE",
     nullptr
   };
   return names;
@@ -153,6 +165,41 @@ inline const char **EnumNamesMessageType() {
 inline const char *EnumNameMessageType(MessageType e) {
   const size_t index = static_cast<int>(e);
   return EnumNamesMessageType()[index];
+}
+
+enum ConnectionNakReason {
+  ConnectionNakReason_RESERVED = 0,
+  ConnectionNakReason_ALREADY_CONNECTED = 1,
+  ConnectionNakReason_NAME_UNAVAILABLE = 2,
+  ConnectionNakReason_FULL = 3,
+  ConnectionNakReason_MIN = ConnectionNakReason_RESERVED,
+  ConnectionNakReason_MAX = ConnectionNakReason_FULL
+};
+
+inline ConnectionNakReason (&EnumValuesConnectionNakReason())[4] {
+  static ConnectionNakReason values[] = {
+    ConnectionNakReason_RESERVED,
+    ConnectionNakReason_ALREADY_CONNECTED,
+    ConnectionNakReason_NAME_UNAVAILABLE,
+    ConnectionNakReason_FULL
+  };
+  return values;
+}
+
+inline const char **EnumNamesConnectionNakReason() {
+  static const char *names[] = {
+    "RESERVED",
+    "ALREADY_CONNECTED",
+    "NAME_UNAVAILABLE",
+    "FULL",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameConnectionNakReason(ConnectionNakReason e) {
+  const size_t index = static_cast<int>(e);
+  return EnumNamesConnectionNakReason()[index];
 }
 
 enum MessageData {
@@ -359,15 +406,25 @@ inline flatbuffers::Offset<EntityUpdate> CreateEntityUpdate(
 
 struct ConnectData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum {
-    VT_USERNAME = 4
+    VT_USERNAME = 4,
+    VT_CONN_ID = 6,
+    VT_NAK_REASON = 8
   };
   const flatbuffers::String *username() const {
     return GetPointer<const flatbuffers::String *>(VT_USERNAME);
+  }
+  uint64_t conn_id() const {
+    return GetField<uint64_t>(VT_CONN_ID, 0);
+  }
+  ConnectionNakReason nak_reason() const {
+    return static_cast<ConnectionNakReason>(GetField<int64_t>(VT_NAK_REASON, 0));
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_USERNAME) &&
            verifier.Verify(username()) &&
+           VerifyField<uint64_t>(verifier, VT_CONN_ID) &&
+           VerifyField<int64_t>(verifier, VT_NAK_REASON) &&
            verifier.EndTable();
   }
 };
@@ -377,6 +434,12 @@ struct ConnectDataBuilder {
   flatbuffers::uoffset_t start_;
   void add_username(flatbuffers::Offset<flatbuffers::String> username) {
     fbb_.AddOffset(ConnectData::VT_USERNAME, username);
+  }
+  void add_conn_id(uint64_t conn_id) {
+    fbb_.AddElement<uint64_t>(ConnectData::VT_CONN_ID, conn_id, 0);
+  }
+  void add_nak_reason(ConnectionNakReason nak_reason) {
+    fbb_.AddElement<int64_t>(ConnectData::VT_NAK_REASON, static_cast<int64_t>(nak_reason), 0);
   }
   explicit ConnectDataBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -392,18 +455,26 @@ struct ConnectDataBuilder {
 
 inline flatbuffers::Offset<ConnectData> CreateConnectData(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> username = 0) {
+    flatbuffers::Offset<flatbuffers::String> username = 0,
+    uint64_t conn_id = 0,
+    ConnectionNakReason nak_reason = ConnectionNakReason_RESERVED) {
   ConnectDataBuilder builder_(_fbb);
+  builder_.add_nak_reason(nak_reason);
+  builder_.add_conn_id(conn_id);
   builder_.add_username(username);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<ConnectData> CreateConnectDataDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    const char *username = nullptr) {
+    const char *username = nullptr,
+    uint64_t conn_id = 0,
+    ConnectionNakReason nak_reason = ConnectionNakReason_RESERVED) {
   return Schemas::Networking::CreateConnectData(
       _fbb,
-      username ? _fbb.CreateString(username) : 0);
+      username ? _fbb.CreateString(username) : 0,
+      conn_id,
+      nak_reason);
 }
 
 struct MessageHeader FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -541,6 +612,36 @@ inline bool VerifyMessageDataVector(flatbuffers::Verifier &verifier, const flatb
     }
   }
   return true;
+}
+
+inline const Schemas::Networking::MessageHeader *GetMessageHeader(const void *buf) {
+  return flatbuffers::GetRoot<Schemas::Networking::MessageHeader>(buf);
+}
+
+inline const Schemas::Networking::MessageHeader *GetSizePrefixedMessageHeader(const void *buf) {
+  return flatbuffers::GetSizePrefixedRoot<Schemas::Networking::MessageHeader>(buf);
+}
+
+inline bool VerifyMessageHeaderBuffer(
+    flatbuffers::Verifier &verifier) {
+  return verifier.VerifyBuffer<Schemas::Networking::MessageHeader>(nullptr);
+}
+
+inline bool VerifySizePrefixedMessageHeaderBuffer(
+    flatbuffers::Verifier &verifier) {
+  return verifier.VerifySizePrefixedBuffer<Schemas::Networking::MessageHeader>(nullptr);
+}
+
+inline void FinishMessageHeaderBuffer(
+    flatbuffers::FlatBufferBuilder &fbb,
+    flatbuffers::Offset<Schemas::Networking::MessageHeader> root) {
+  fbb.Finish(root);
+}
+
+inline void FinishSizePrefixedMessageHeaderBuffer(
+    flatbuffers::FlatBufferBuilder &fbb,
+    flatbuffers::Offset<Schemas::Networking::MessageHeader> root) {
+  fbb.FinishSizePrefixed(root);
 }
 
 }  // namespace Networking

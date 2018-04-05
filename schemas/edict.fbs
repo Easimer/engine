@@ -33,15 +33,34 @@ table EntityUpdate {
 enum MessageType : long {
 	NONE = 0,
 
-	CONNECT = 1,
-	CONNECT_ACK = 2,
-	CONNECT_NAK = 3,
+	// Client connection
+	CONNECT,		// Connect request
+	CONNECT_ACK,	// Connect Acknowledgement
+	CONNECT_NAK,	// Connect Negative Acknowledgement
+	DISCONNECT,		// Disconnect request
 
-	ENTITY_UPDATE = 4,
+	// Local network discovery
+	DISCOVERY_PROBE,	// Server discovery probe
+	DISCOVERY_RESPONSE, // Server discovery response
+
+	ENTITY_UPDATE, // Update entity
+	CLIENT_UPDATE, // Client update
+}
+
+enum ConnectionNakReason : long {
+	RESERVED = 0,
+	ALREADY_CONNECTED = 1,
+	NAME_UNAVAILABLE = 2,
+	FULL = 3,
 }
 
 table ConnectData {
+	// CONNECT
 	username : string;
+	// CONNECT_ACK
+	conn_id : ulong;
+	// CONNECT_NAK
+	nak_reason : ConnectionNakReason;
 }
 
 union MessageData {
@@ -52,3 +71,5 @@ table MessageHeader {
 	type : MessageType;
 	data : MessageData;
 }
+
+root_type MessageHeader;

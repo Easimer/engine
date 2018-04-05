@@ -3,7 +3,7 @@
 #include <math/vector.h>
 #include <gfx/shader.h>
 #include <gfx/material.h>
-#include <qc_parser.h>
+#include <qc.h>
 #include <gfx/light.h>
 
 namespace gfx {
@@ -62,7 +62,7 @@ namespace gfx {
 		void set_float(const std::string& name, float v);
 
 	protected:
-		int get_uniform_location(const mdlc::qc_parser& qcp, const std::string& name, int* pLocation);
+		int get_uniform_location(const mdlc::qc& qcp, const std::string& name, int* pLocation);
 
 	private:
 		uint32_t m_iID;

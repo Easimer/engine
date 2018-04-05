@@ -1,11 +1,10 @@
 #include "stdafx.h"
 #include <gfx/material.h>
-#include <qc_parser.h>
 #include <gfx/gfx.h>
 
 using namespace gfx;
 
-material::material(const mdlc::qc_parser& qcp)
+material::material(const mdlc::qc& qcp)
 {
 	if (!qcp.is_cmd("shader"))
 	{
@@ -15,7 +14,7 @@ material::material(const mdlc::qc_parser& qcp)
 
 	m_qcp = qcp;
 
-	m_iszShader = qcp.get_string("shader");
+	m_iszShader = qcp.at<std::string>("shader");
 	m_iShader = -1;
 }
 

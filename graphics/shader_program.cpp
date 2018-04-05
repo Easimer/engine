@@ -2,7 +2,8 @@
 #include <gfx/shader_program.h>
 #include <gfx/shader.h>
 #include <gfx/material.h>
-#include <qc_parser.h>
+#include <fstream>
+#include <qc.h>
 #include <math/vector.h>
 
 #include "glad/glad.h"
@@ -23,7 +24,7 @@ shader_program::shader_program(const char * szFilename) :
 	m_pShaderFrag(nullptr),
 	m_pShaderGeom(nullptr)
 {
-	mdlc::qc_parser parser(szFilename);
+	mdlc::qc parser = mdlc::qc(std::ifstream(szFilename));
 	
 	
 	if (parser.is_cmd("vertex_shader") && parser.is_cmd("fragment_shader"))
@@ -38,7 +39,7 @@ shader_program::shader_program(const char * szFilename) :
 
 	if (parser.is_cmd("name"))
 	{
-		strncpy(m_szName, parser.get_string("name").c_str(), 64);
+		strncpy(m_szName, parser.at<std::string>("name").c_str(), 64);
 	}
 	else
 	{
@@ -47,13 +48,13 @@ shader_program::shader_program(const char * szFilename) :
 	}
 	if (parser.is_cmd("description"))
 	{
-		strncpy(m_szDescription, parser.get_string("description").c_str(), 128);
+		strncpy(m_szDescription, parser.at<std::string>("description").c_str(), 128);
 	}
 
 	m_iID = glCreateProgram(); ASSERT_OPENGL();
 
-	auto vert = parser.get_string("vertex_shader");
-	auto frag = parser.get_string("fragment_shader");
+	auto vert = parser.at<std::string>("vertex_shader");
+	auto frag = parser.at<std::string>("fragment_shader");
 
 	m_pShaderVert = new shader(vert.c_str(), SHADER_T_VERTEX);
 	ASSERT(m_pShaderVert);
@@ -89,26 +90,26 @@ shader_program::shader_program(const char * szFilename) :
 	glUniform1i(m_iUniformTex5, 4); ASSERT_OPENGL();
 
 	if (parser.is_cmd("diffuse_key"))
-		m_mapTexKey.emplace(SHADERTEX_DIFFUSE, parser.get_string("diffuse_key"));
+		m_mapTexKey.emplace(SHADERTEX_DIFFUSE, parser.at<std::string>("diffuse_key"));
 	if (parser.is_cmd("normal_key"))
-		m_mapTexKey.emplace(SHADERTEX_NORMAL, parser.get_string("normal_key"));
+		m_mapTexKey.emplace(SHADERTEX_NORMAL, parser.at<std::string>("normal_key"));
 	if (parser.is_cmd("specular_key"))
-		m_mapTexKey.emplace(SHADERTEX_SPECULAR, parser.get_string("specular_key"));
+		m_mapTexKey.emplace(SHADERTEX_SPECULAR, parser.at<std::string>("specular_key"));
 	if (parser.is_cmd("opacity_key"))
-		m_mapTexKey.emplace(SHADERTEX_OPACITY, parser.get_string("opacity_key"));
+		m_mapTexKey.emplace(SHADERTEX_OPACITY, parser.at<std::string>("opacity_key"));
 
 	if (parser.is_cmd("diffuse_default"))
-		m_mapTexDefault.emplace(SHADERTEX_DIFFUSE, parser.get_string("diffuse_default"));
+		m_mapTexDefault.emplace(SHADERTEX_DIFFUSE, parser.at<std::string>("diffuse_default"));
 	if (parser.is_cmd("normal_default"))
-		m_mapTexDefault.emplace(SHADERTEX_NORMAL, parser.get_string("normal_default"));
+		m_mapTexDefault.emplace(SHADERTEX_NORMAL, parser.at<std::string>("normal_default"));
 	if (parser.is_cmd("specular_default"))
-		m_mapTexDefault.emplace(SHADERTEX_SPECULAR, parser.get_string("specular_default"));
+		m_mapTexDefault.emplace(SHADERTEX_SPECULAR, parser.at<std::string>("specular_default"));
 	if (parser.is_cmd("opacity_default"))
-		m_mapTexDefault.emplace(SHADERTEX_OPACITY, parser.get_string("opacity_default"));
+		m_mapTexDefault.emplace(SHADERTEX_OPACITY, parser.at<std::string>("opacity_default"));
 
 	set_bool("bDebugDrawNormalsOnly", false);
 
-	m_bLit = parser.is_cmd("lit") && parser.get_int("lit") == 1;
+	m_bLit = parser.is_cmd("lit") && parser.at<int>("lit") == 1;
 	if (m_bLit) {
 		std::vector<std::string> all_parameters = {
 			"light_no_global",
@@ -138,29 +139,29 @@ shader_program::shader_program(const char * szFilename) :
 		}
 		else {
 			// Local color position
-			auto iszPosLX = parser.get_string("lightl_pos_x");
-			auto iszPosLY = parser.get_string("lightl_pos_y");
-			auto iszPosLZ = parser.get_string("lightl_pos_z");
+			auto iszPosLX = parser.at<std::string>("lightl_pos_x");
+			auto iszPosLY = parser.at<std::string>("lightl_pos_y");
+			auto iszPosLZ = parser.at<std::string>("lightl_pos_z");
 
 			// Global light rotation
-			auto iszRotGX = parser.get_string("lightg_rot_x");
-			auto iszRotGY = parser.get_string("lightg_rot_y");
-			auto iszRotGZ = parser.get_string("lightg_rot_z");
+			auto iszRotGX = parser.at<std::string>("lightg_rot_x");
+			auto iszRotGY = parser.at<std::string>("lightg_rot_y");
+			auto iszRotGZ = parser.at<std::string>("lightg_rot_z");
 
 			// Local light color
-			auto iszColorLR = parser.get_string("lightl_color_r");
-			auto iszColorLG = parser.get_string("lightl_color_g");
-			auto iszColorLB = parser.get_string("lightl_color_b");
-			auto iszColorLA = parser.get_string("lightl_color_a");
+			auto iszColorLR = parser.at<std::string>("lightl_color_r");
+			auto iszColorLG = parser.at<std::string>("lightl_color_g");
+			auto iszColorLB = parser.at<std::string>("lightl_color_b");
+			auto iszColorLA = parser.at<std::string>("lightl_color_a");
 
 			// Global light color
-			auto iszColorGR = parser.get_string("lightg_color_r");
-			auto iszColorGG = parser.get_string("lightg_color_g");
-			auto iszColorGB = parser.get_string("lightg_color_b");
-			auto iszColorGA = parser.get_string("lightg_color_a");
+			auto iszColorGR = parser.at<std::string>("lightg_color_r");
+			auto iszColorGG = parser.at<std::string>("lightg_color_g");
+			auto iszColorGB = parser.at<std::string>("lightg_color_b");
+			auto iszColorGA = parser.at<std::string>("lightg_color_a");
 
-			auto iszDisabledL = parser.get_string("lightl_disabled");
-			auto iszDisabledG = parser.get_string("lightg_disabled");
+			auto iszDisabledL = parser.at<std::string>("lightl_disabled");
+			auto iszDisabledG = parser.at<std::string>("lightg_disabled");
 
 #define GET_LIGHT_UNILOC(type, tar, id) m_aiUniformLight##type .tar = glGetUniformLocation(m_iID, isz##id.c_str()); ASSERT_OPENGL(); if(m_aiUniformLight##type .tar == -1) PRINT_ERR("Failed getting uniform: " << isz##id);
 
@@ -299,13 +300,13 @@ void shader_program::set_mat_proj(void * pMat)
 bool shader_program::load_material(material & mat)
 {
 	RESTRICT_THREAD_RENDERING;
-	const mdlc::qc_parser& qcp = mat.get_parser();
+	const mdlc::qc& qcp = mat.get_parser();
 
 	for (size_t iTex = 0; iTex < SHADERTEX_MAX; iTex++) {
 		auto iszKey = m_mapTexKey[(shader_tex_type)iTex];
 		uint32_t iTexObj = 0;
 		if (qcp.is_cmd(iszKey.c_str())) {
-			iTexObj = gpGfx->load_texture(qcp.get_string(iszKey.c_str()));
+			iTexObj = gpGfx->load_texture(qcp.at<std::string>(iszKey.c_str()));
 			ASSERT(iTexObj);
 			if (!iTexObj)
 				return false;
@@ -422,12 +423,12 @@ void gfx::shader_program::set_float(const std::string & name, float v)
 		glUniform1f(iLoc, (GLfloat)v); ASSERT_OPENGL();
 }
 
-int shader_program::get_uniform_location(const mdlc::qc_parser& qcp, const std::string& name, int* pLocation)
+int shader_program::get_uniform_location(const mdlc::qc& qcp, const std::string& name, int* pLocation)
 {
 	const char* pszCmd = name.c_str();
 	if (qcp.is_cmd(pszCmd))
 	{
-		std::string iszUniform = qcp.get_string(pszCmd).c_str();
+		std::string iszUniform = qcp.at<std::string>(pszCmd).c_str();
 		const char* szUniform = iszUniform.c_str();
 		int iLoc = glGetUniformLocation(m_iID, szUniform); ASSERT_OPENGL();
 		if (pLocation) {

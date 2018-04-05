@@ -22,9 +22,6 @@ set(SRC_NOPCH
 )
 
 set(SRC_PUBLIC
-	../public/src/qc_parser.cpp
-
-	../public/include/qc_parser.h
 	../public/include/gfx/smd_loader.h
 	../public/include/gfx/emf_loader.h
 

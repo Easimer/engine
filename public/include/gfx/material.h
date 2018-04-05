@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <qc_parser.h>
+#include <qc.h>
 
 namespace gfx {
 
@@ -19,10 +19,10 @@ namespace gfx {
 		material() :
 		m_iShader(-1) {}
 
-		material(const mdlc::qc_parser& qcp);
+		material(const mdlc::qc& qcp);
 		material(const material& other);
 
-		const mdlc::qc_parser& get_parser() const { return m_qcp; }
+		const mdlc::qc& get_parser() const { return m_qcp; }
 
 		int get_shader();
 
@@ -33,7 +33,7 @@ namespace gfx {
 		uint32_t get_texture(mat_tex_index iType) const { return m_aiTextures[iType]; }
 
 	private:
-		mdlc::qc_parser m_qcp;
+		mdlc::qc m_qcp;
 		std::string m_iszShader;
 
 		int m_iShader;
