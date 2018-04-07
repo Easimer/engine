@@ -57,6 +57,10 @@ void net::client::send_to_server(const void * pBuf, size_t nSiz) {
 	ASSERT(nSiz == sent);
 }
 
+void net::client::add_handlers() {
+	
+}
+
 void net::client::attempt_connect() {
 	// Build connect packet
 	flatbuffers::FlatBufferBuilder fbb;

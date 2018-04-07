@@ -3,6 +3,9 @@
 #include "networking.h"
 
 namespace net {
+
+	using client_handler = std::function<bool(const Schemas::Networking::MessageHeader& hdr, size_t siz)>;
+
 	class client {
 	public:
 		client(const std::string& addr, const std::string& username);
@@ -18,6 +21,8 @@ namespace net {
 		net::socket_t get_socket() {
 			return m_socket;
 		}
+
+		void add_handlers();
 
 		void attempt_connect();
 		void connect();
@@ -39,5 +44,6 @@ namespace net {
 		int m_server_addr_siz;
 
 		std::string m_username;
+		std::unordered_map<Schemas::Networking::MessageType, client_handler> m_handlers;
 	};
 }

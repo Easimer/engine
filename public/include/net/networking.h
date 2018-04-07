@@ -68,6 +68,6 @@ namespace net {
 			if (lhs.sin6_addr.u.Byte[i] != rhs.sin6_addr.u.Byte[i])
 				return false;
 		}
-		return true;
+		return ports;
 	}
 }

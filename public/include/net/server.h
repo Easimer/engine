@@ -42,11 +42,6 @@ namespace net {
 
 		void send_to_client(const sockaddr_in6& client, const void* pBuf, size_t nSiz);
 
-		// MessageType::CONNECT
-		bool handle_connection(const sockaddr_in6& client, const Schemas::Networking::MessageHeader& hdr, size_t siz);
-		// MessageType::DISCOVERY_PROBE
-		bool handle_discovery_probe(const sockaddr_in6& client, const Schemas::Networking::MessageHeader& hdr, size_t siz);
-
 		net::socket_t get_socket() {
 			return m_socket;
 		}

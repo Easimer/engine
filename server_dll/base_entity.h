@@ -1,6 +1,6 @@
 #pragma once
 
-#include "basethinker.h"
+#include "base_thinker.h"
 #include <math/vector.h>
 #include "keyvalues.h"
 
