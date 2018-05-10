@@ -39,6 +39,7 @@ namespace net {
 		bool m_connected = false;
 
 		edict_t m_world_state[net::max_edicts];
+		net::frame m_current_frame = 0;
 
 		sockaddr_in6 m_server_addr;
 		int m_server_addr_siz;

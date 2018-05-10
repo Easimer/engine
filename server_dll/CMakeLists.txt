@@ -25,6 +25,8 @@ set(SRC_ENTSYS
 )
 
 set(SRC_ENTSYS_PROP
+	prop_common.h
+	prop_dynamic.cpp
 )
 
 set(SRC_ENTSYS_LIGHT
@@ -86,3 +88,7 @@ source_group("Source Files\\Graphics" FILES ${SRC_GFX})
 source_group("Source Files\\GUI" FILES ${SRC_GUI})
 source_group("Shader Source Files" FILES ${SRC_RES_SHADERS})
 ENDIF()
+
+# Copy DLL to launcher folder for testing
+add_custom_command(TARGET server_dll POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:server_dll> ${CMAKE_BINARY_DIR}/launcher/bin/)

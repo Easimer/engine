@@ -69,20 +69,6 @@ void base_entity::set_rotation(const vec3 & v)
 	m_vecRot = v;
 }
 
-glm::mat4 base_entity::get_rotation_matrix() const
-{
-	if (m_pParent)
-	{
-		glm::mat4 matParentRot = m_pParent->get_rotation_matrix();
-		glm::mat4 matMyRot = glm::eulerAngleXYZ(m_vecRot[0], m_vecRot[1], m_vecRot[2]);
-		return matParentRot * matMyRot;
-	}
-	else
-	{
-		return glm::eulerAngleXYZ(m_vecRot[0], m_vecRot[1], m_vecRot[2]);
-	}
-}
-
 base_entity * CreateEntity(const char * mapname)
 {
 	for (size_t i = 0; i < gpGlobals->iEntityFactoryDictionaryIndex; i++)

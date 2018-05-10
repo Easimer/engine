@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "iserver.h"
+#include "iclient.h"
 #include <type_traits>
 #include <chrono>
 #include <thread>
@@ -65,18 +66,34 @@ int main(int argc, char** argv) {
 	auto server_init = link_dll<iserver*(*)()>("bin/server_dll.dll", "server_dll_init");
 	auto server_shutdown = link_dll<void(*)(iserver*)>("bin/server_dll.dll", "server_dll_shutdown");
 
+	auto client_init = link_dll<iclient*(*)()>("bin/client_dll.dll", "client_dll_init");
+	auto client_shutdown = link_dll<void(*)(iclient*)>("bin/client_dll.dll", "client_dll_shutdown");
+
 	ASSERT(server_init);
 	ASSERT(server_shutdown);
+	ASSERT(client_init);
+	ASSERT(client_shutdown);
+
+	// Start server
 
 	auto srv = server_init();
 	ASSERT(srv);
-
 	srv->init();
 
-	while (!srv->is_shutdown()) {
+	// Start client
+
+	auto cli = client_init();
+	ASSERT(cli);
+	cli->init("::1", "LOCALUSER");
+
+	while (!srv->is_shutdown() && !cli->is_shutdown()) {
 		std::this_thread::sleep_for(std::chrono::duration<float>(1.f));
 	}
 
+	cli->shutdown();
+	srv->shutdown();
+
+	client_shutdown(cli);
 	server_shutdown(srv);
 
 	CMDLINE_SHUTDOWN();

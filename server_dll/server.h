@@ -2,7 +2,7 @@
 #include "iserver.h"
 #include <net/server.h>
 
-const float server_tickrate = 1.f / 30.f;
+constexpr const int server_tickrate = 30; // Hz
 
 class server : public iserver {
 public:

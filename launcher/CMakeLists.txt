@@ -13,6 +13,7 @@ set(SRC_CORE
 
 set(SRC_PUBLIC
 	../public/include/iserver.h
+	../public/include/iclient.h
 )
 
 add_executable(launcher
@@ -35,3 +36,5 @@ IF(WIN32)
 source_group("Source Files" FILES ${SRC_GAME})
 source_group("Public Header Files" FILES ${SRC_PUBLIC})
 ENDIF()
+
+add_dependencies(launcher server_dll client_dll)

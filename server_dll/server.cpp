@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "server.h"
 #include "entity_system.h"
+#include "prop_common.h"
 
 extern "C" {
 	ENL_EXPORT iserver* server_dll_init() {
@@ -13,28 +14,40 @@ extern "C" {
 }
 
 void server::init() {
+	std::flush(std::cout);
 	PRINT("server::init");
 	
 	gpGlobals->curtime = 0;
 
-	auto time_start = std::chrono::high_resolution_clock::now();
-
 	m_thread_logic = std::thread([&]() {
-		float next_tick = 0;
-		while (!m_shutdown) {
-			if (next_tick < gpGlobals->curtime) {
-				gpGlobals->pEntSys->update_entities();
-			}
-			auto time_now = std::chrono::high_resolution_clock::now();
-			gpGlobals->curtime = std::chrono::duration_cast<std::chrono::seconds>(time_now - time_start).count();
-			next_tick = gpGlobals->curtime + server_tickrate;
+		std::flush(std::cout);
+		PRINT_DBG("Starting logic thread");
+		size_t ticks = 0;
+		using timestep = std::chrono::duration<std::chrono::high_resolution_clock::rep, std::ratio<1, server_tickrate>>;
+		auto next_tick = std::chrono::high_resolution_clock::now() + timestep(1);
 
-			std::this_thread::sleep_for(std::chrono::duration<float>(next_tick));
+		gpGlobals->pEntSys = new entity_system();
+
+		// Create test entity
+
+		c_base_prop* pEnt = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+		pEnt->set_model("data/models/wolf.emf");
+		pEnt->spawn();
+
+		while (!m_shutdown) {
+			gpGlobals->pEntSys->update_entities();
+			gpGlobals->curtime += (1.f / server_tickrate);
+			std::this_thread::sleep_until(next_tick);
+			next_tick += timestep(1);
 		}
+
+		if(gpGlobals->pEntSys) delete gpGlobals->pEntSys;
+		gpGlobals->pEntSys = nullptr;
 	});
 }
 
 void server::shutdown() {
-	m_shutdown = true;
-	m_thread_logic.join();
+	if(m_thread_logic.joinable())
+		m_thread_logic.join();
+	if (gpGlobals->pEntSys) delete gpGlobals->pEntSys;
 }

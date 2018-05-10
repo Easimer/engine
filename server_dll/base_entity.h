@@ -70,8 +70,10 @@ public:
 
 	virtual void set_rotation(const vec3& v);
 
+	// REMOVED: not the server's job to calc this
 	// Returns the absolute rotation matrix of the entity
-	virtual glm::mat4 get_rotation_matrix() const;
+	//virtual glm::mat4 get_rotation_matrix() const;
+
 	// Returns the relative rotation of the entity.
 	virtual vec3 get_relrot() const {
 		return m_vecRot;
