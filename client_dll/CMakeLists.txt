@@ -11,6 +11,12 @@ set(SRC_CORE
 	client.cpp
 	client.h
 
+	mainmenu.cpp
+	mainmenu.h
+
+	game.cpp
+	game.h
+
 	globals.h
 )
 
