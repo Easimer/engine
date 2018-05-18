@@ -103,7 +103,7 @@ void net::client::connect() {
 			int slen = sizeof(from);
 
 			if ((recv_len = recvfrom(socket, buf, 4096, 0, (sockaddr*)&from, &slen)) != net::socket_error) {
-				PRINT_DBG("net::client::thread: received " << recv_len << " bytes");
+				//PRINT_DBG("net::client::thread: received " << recv_len << " bytes");
 				auto verifier = flatbuffers::Verifier((const uint8_t*)buf, recv_len);
 				if (Schemas::Networking::VerifyMessageHeaderBuffer(verifier)) {
 					auto msghdr = Schemas::Networking::GetMessageHeader(buf);
@@ -118,7 +118,8 @@ void net::client::connect() {
 						m_connected = true;
 						break;
 					case Schemas::Networking::MessageType_CONNECT_NAK:
-						handle_connect_nak((Schemas::Networking::ConnectData*)(*msghdr).data());
+						if(m_connected) // check for duplicate conreq response
+							handle_connect_nak((Schemas::Networking::ConnectData*)(*msghdr).data());
 						break;
 					case Schemas::Networking::MessageType_ENTITY_UPDATE:
 						handle_entity_update((Schemas::Networking::EntityUpdate*)(*msghdr).data());

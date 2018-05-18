@@ -40,11 +40,11 @@ void game::disconnect() {
 }
 
 bool game::tick() {
-	std::vector<SDL_Event> events;
-	gpGfx->get_events(events);
+	//std::vector<SDL_Event> events;
+	//gpGfx->get_events(events);
 	
-	for (auto& ev : events)
-		gpGfx->gui_send_event(ev);
+	//for (auto& ev : events)
+	//	gpGfx->gui_send_event(ev);
 
 	if (!m_pNetClient)
 		return true;

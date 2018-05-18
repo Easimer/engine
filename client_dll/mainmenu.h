@@ -24,6 +24,9 @@ public:
 	mainmenu();
 	exitcode tick();
 
+	const char* selected_server_address() const { return m_szAddressBuf; }
+	const char* selected_username() const { return m_szUsername; }
+
 protected:
 	size_t discover_servers();
 
@@ -32,4 +35,7 @@ private:
 	sockaddr_in6* m_pSelected;
 	bool m_bShowServerBrowser = false;
 	std::unique_ptr<net::server_discovery> m_pSDClient;
+
+	char m_szUsername[128];
+	char m_szAddressBuf[128];
 };

@@ -27,7 +27,7 @@ void client_main(client* cli, const char* pszHostname, const char* pszUsername) 
 
 	gpGfx->load_default_shaders();
 	gpGfx->load_shader("data/shaders/model_dynamic.qc");
-	gpGfx->load_shader("data/shaders/wireframe.qc");
+	//gpGfx->load_shader("data/shaders/wireframe.qc");
 
 	while (!cli->m_bShutdown) {
 		mainmenu::exitcode c;
@@ -40,6 +40,19 @@ void client_main(client* cli, const char* pszHostname, const char* pszUsername) 
 				g.paused(false);
 				break;
 			case mainmenu::exitcode::EMMENU_JOIN_REMOTE_GAME:
+				if (cli->m_pClient) {
+					cli->m_pClient.reset();
+				}
+				cli->m_pClient = std::make_unique<net::client>(mm.selected_server_address(), mm.selected_username());
+				cli->m_pClient->connect();
+				for(int i = 0; i < 3 && !cli->m_pClient->connected(); i++) {
+					std::this_thread::sleep_for(std::chrono::seconds(1));
+					cli->m_pClient->attempt_connect();
+				}
+				if (cli->m_pClient->connected())
+					g.paused(false);
+				else
+					PRINT_ERR("Not connected, so not starting game");
 				break;
 			case mainmenu::exitcode::EMMENU_QUIT_GAME:
 				cli->m_bShutdown = true;

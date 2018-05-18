@@ -52,6 +52,7 @@ net::server::server() {
 	inet_pton(AF_INET6, "FF02::B1E5:5ED:BEEF", &group.ipv6mr_multiaddr);
 	if (setsockopt(s, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&group, sizeof(group)) < 0) {
 		PRINT_ERR("Failed to join Server Discovery group! This server won't answer to LAN server discovery requests!");
+		ASSERT(0);
 #if defined(PLAT_WINDOWS)
 		PRINT_ERR("\tThe reason is: " << WSAGetLastError());
 #endif
@@ -74,7 +75,7 @@ net::server::server() {
 			if ((recv_len = recvfrom(socket, buf, 4096, 0, (sockaddr*)&from, &slen)) != net::socket_error) {
 				char addrbuf[64];
 				inet_ntop(AF_INET6, &from.sin6_addr, addrbuf, 64);
-				PRINT_DBG("net::server::thread: received " << recv_len << " bytes from " << addrbuf);
+				//PRINT_DBG("net::server::thread: received " << recv_len << " bytes from " << addrbuf);
 				auto verifier = flatbuffers::Verifier((const uint8_t*)buf, recv_len);
 				if (Schemas::Networking::VerifyMessageHeaderBuffer(verifier)) {
 					auto msghdr = Schemas::Networking::GetMessageHeader(buf);

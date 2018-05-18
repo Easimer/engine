@@ -13,6 +13,7 @@ public:
 
 	bool m_bShutdown;
 	bool m_bRequestServer;
+	std::unique_ptr<net::client> m_pClient;
 private:
 	std::thread m_client_thread;
 };

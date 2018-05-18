@@ -13,11 +13,16 @@ inline bool operator==(const sockaddr_in6& lhs, const sockaddr_in6& rhs) {
 }
 
 mainmenu::mainmenu() : m_pSelected(nullptr) {
+	m_szAddressBuf[0] = 0;
+	m_szUsername[0] = 0;
 }
 
 mainmenu::exitcode mainmenu::tick() {
 	mainmenu::exitcode ret = EMMENU_OK;
 	char buf[128];
+
+	gpGfx->handle_events();
+
 	if (ImGui::Begin("")) {
 
 		if (ImGui::Button("Join Game")) {
@@ -42,26 +47,31 @@ mainmenu::exitcode mainmenu::tick() {
 			ImGui::ListBoxHeader("Servers");
 			for (auto& srv : m_servers) {
 				inet_ntop(AF_INET6, &srv.sin6_addr, buf, 128);
-				strncat(buf, std::to_string(srv.sin6_port).c_str(), 128);
+				//strncat(buf, std::to_string(srv.sin6_port).c_str(), 128);
 				if (ImGui::Selectable(buf, (&srv) == m_pSelected)) {
+					if(m_pSelected != &srv)
+						strncpy(m_szAddressBuf, buf, 128);
 					m_pSelected = &srv;
+					
 				}
 			}
 			ImGui::ListBoxFooter();
-
+			ImGui::NewLine();
+			ImGui::InputText("Address", m_szAddressBuf, 128);
+			ImGui::NewLine();
+			ImGui::InputText("Player name", m_szUsername, 128);
 			ImGui::NewLine();
 			if (ImGui::Button("Refresh")) {
 				discover_servers();
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Connect")) {
-
+				ret = EMMENU_JOIN_REMOTE_GAME;
 			}
 		}
 		ImGui::End();
 	}
 
-	gpGfx->handle_events();
 	return ret;
 }
 
