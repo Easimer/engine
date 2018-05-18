@@ -77,6 +77,7 @@ void server::init() {
 }
 
 void server::shutdown() {
+	m_shutdown = true;
 	if(m_thread_logic.joinable())
 		m_thread_logic.join();
 	if (gpGlobals->pEntSys) delete gpGlobals->pEntSys;

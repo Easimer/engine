@@ -74,27 +74,31 @@ int main(int argc, char** argv) {
 	ASSERT(client_init);
 	ASSERT(client_shutdown);
 
-	// Start server
-
-	auto srv = server_init();
-	ASSERT(srv);
-	srv->init();
-
 	// Start client
 
 	auto cli = client_init();
 	ASSERT(cli);
 	cli->init("::1", "LOCALUSER");
 
-	while (!srv->is_shutdown() && !cli->is_shutdown()) {
+	iserver* srv = nullptr;
+
+	while (true) {
+		if (cli && cli->is_shutdown()) break;
+		if (srv && srv->is_shutdown()) break;
 		std::this_thread::sleep_for(std::chrono::duration<float>(1.f));
+		if (cli->request_server() && !srv) {
+			srv = server_init();
+			ASSERT(srv);
+			srv->init();
+		}
 	}
 
-	cli->shutdown();
-	srv->shutdown();
-
-	client_shutdown(cli);
-	server_shutdown(srv);
+	if (cli) {
+		std::cout << "Stopping client: "; cli->shutdown(); client_shutdown(cli); std::cout << "OK" << std::endl;
+	}
+	if (srv) {
+		std::cout << "Stopping server: "; srv->shutdown(); server_shutdown(srv); std::cout << "OK" << std::endl;
+	}
 
 	CMDLINE_SHUTDOWN();
 	return 0;

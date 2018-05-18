@@ -53,7 +53,7 @@ add_library(client_dll SHARED
 
 vs_link_static(client_dll)
 
-SET(GAME_LIBRARIES enl phys networking graphics)
+SET(GAME_LIBRARIES enl phys networking graphics imgui)
 
 IF(UNIX AND NOT APPLE)
 target_link_libraries(client_dll ${GAME_LIBRARIES} dl pthread)

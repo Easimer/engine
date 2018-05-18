@@ -36,6 +36,8 @@ namespace net {
 
 		void disconnect();
 
+		const edict_t* const get_edicts() const { return m_edicts; }
+
 	private:
 		net::socket_t m_socket;
 		bool m_connected = false;

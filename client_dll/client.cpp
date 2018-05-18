@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "iclient.h"
 #include "client.h"
+#include <gfx/gfx.h>
+#include "mainmenu.h"
+#include "game.h"
 
 extern "C" {
 	ENL_EXPORT iclient* client_dll_init() {
@@ -12,28 +15,70 @@ extern "C" {
 	}
 }
 
+void client_main(client* cli, const char* pszHostname, const char* pszUsername) {
+	if (!gpGfx->init("game")) {
+		PRINT_ERR("client::init: couldn't initialize graphics subsystem!!!!");
+		cli->m_bShutdown = true;
+		return;
+	}
+
+	mainmenu mm;
+	game g;
+
+	gpGfx->load_default_shaders();
+	gpGfx->load_shader("data/shaders/model_dynamic.qc");
+	gpGfx->load_shader("data/shaders/wireframe.qc");
+
+	while (!cli->m_bShutdown) {
+		mainmenu::exitcode c;
+		gpGfx->begin_frame();
+		if (g.paused() && (c = mm.tick()) != mainmenu::exitcode::EMMENU_OK) {
+			switch (c) {
+			case mainmenu::exitcode::EMMENU_START_LOCAL_GAME:
+				cli->m_bRequestServer = true;
+				g.connect("::1", "LOCALUSER");
+				g.paused(false);
+				break;
+			case mainmenu::exitcode::EMMENU_JOIN_REMOTE_GAME:
+				break;
+			case mainmenu::exitcode::EMMENU_QUIT_GAME:
+				cli->m_bShutdown = true;
+				break;
+			}
+		} else {
+			if (!g.tick())
+				g.paused(true);
+		}
+		gpGfx->end_frame();
+	}
+}
+
 void client::init(const char* pszHostname, const char* pszUsername)
 {
-	std::flush(std::cout);
-	PRINT("client::init");
-	m_pClient = std::make_unique<net::client>(pszHostname, pszUsername);
+	/*std::flush(std::cout);
+	print("client::init");
+	m_pclient = std::make_unique<net::client>(pszhostname, pszusername);
 	for (int i = 0; i < 5; i++) {
-		if (m_pClient->connected())
+		if (m_pclient->connected())
 			break;
 		std::this_thread::sleep_for(std::chrono::duration<float>(1.5f));
-		m_pClient->attempt_connect();
+		m_pclient->attempt_connect();
 	}
-	if (!m_pClient->connected()) {
-		PRINT_ERR("Failed to connect to listen server!");
-	}
+	if (!m_pclient->connected()) {
+		print_err("failed to connect to listen server!");
+	}*/
+	m_bShutdown = false;
+	m_bRequestServer = false;
+	m_client_thread = std::thread(client_main, this, pszHostname, pszUsername);
 }
 
 void client::shutdown()
 {
-	m_pClient->disconnect();
+	if(m_client_thread.joinable())
+		m_client_thread.join();
 }
 
 bool client::is_shutdown()
 {
-	return false;
+	return m_bShutdown;
 }

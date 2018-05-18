@@ -27,12 +27,17 @@ void c_prop_dynamic::spawn() {
 	SetThink(&c_prop_dynamic::think);
 	SetNextThink(gpGlobals->curtime + 1);
 	m_nFilter = ENT_FILTER_PROP;
+
+	auto pos = get_abspos();
+	pos[1] = -5;
+	pos[2] = -10;
+	set_abspos(pos);
 }
 
 void c_prop_dynamic::think() {
-	SetNextThink(gpGlobals->curtime + 1);
+	SetNextThink(gpGlobals->curtime + 0.001);
 
 	auto pos = get_abspos();
-	pos[2] += 1;
+	pos[1] += 0.1;
 	set_abspos(pos);
 }
