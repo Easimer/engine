@@ -187,9 +187,9 @@ void net::server::send_to_client(const sockaddr_in6 & client, const void * pBuf,
 #endif
 	}
 	if (nSent != nSiz) {
-		PRINT_DBG("nSent=" << nSent << ", nSiz=" << nSiz);
+		//PRINT_DBG("nSent=" << nSent << ", nSiz=" << nSiz);
 	} else {
-		PRINT_DBG("net::server::send_to_client: sent " << nSent << " bytes");
+		//PRINT_DBG("net::server::send_to_client: sent " << nSent << " bytes");
 	}
 	ASSERT(nSent == nSiz);
 }
@@ -232,8 +232,8 @@ void net::server::push_updates() {
 			n++;
 		}
 	}
-	if(n)
-		PRINT_DBG("net::server::push_updates: n=" << n);
+	//if(n)
+	//	PRINT_DBG("net::server::push_updates: n=" << n);
 }
 
 void net::server::push_full_update(const net::client_desc& cd) {
