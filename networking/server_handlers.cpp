@@ -83,7 +83,8 @@ void net::server::add_handles() {
 		}
 		Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
 
-		send_to_client(client, fbb.GetBufferPointer(), fbb.GetSize());
+		for(int i = 0; i < 3; i++)
+			send_to_client(client, fbb.GetBufferPointer(), fbb.GetSize());
 
 		if(cd)
 			push_full_update(*cd);
