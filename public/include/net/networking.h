@@ -13,7 +13,6 @@
 #include <sys/ioctl.h>
 #elif defined(PLAT_WINDOWS)
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #pragma comment (lib, "Ws2_32.lib")
@@ -27,7 +26,7 @@ namespace net {
 	const unsigned short port = 38576;
 	const size_t max_players = 256;
 #if defined(PLAT_WINDOWS)
-	using socket_t = unsigned;
+	using socket_t = size_t;
 	const socket_t invalid_socket = INVALID_SOCKET;
 	const socket_t socket_error = SOCKET_ERROR;
 #elif defined(PLAT_LINUX)
@@ -46,6 +45,7 @@ namespace net {
 		math::vector3<float> position;
 		math::vector3<float> velocity;
 		float rotation[16];
+		math::vector3<float> rotation2;
 		char modelname[128];
 	};
 
@@ -69,5 +69,13 @@ namespace net {
 				return false;
 		}
 		return ports;
+	}
+
+	inline void close_socket(socket_t s) {
+#if defined(PLAT_WINDOWS)
+		closesocket(s);
+#elif defined(PLAT_LINUX)
+		close(s);
+#endif
 	}
 }

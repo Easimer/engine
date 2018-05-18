@@ -39,11 +39,10 @@ net::server::server() {
 	if (bind(s, (sockaddr*)&server, slen) == net::socket_error) {
 #if defined(PLAT_WINDOWS)
 		PRINT_ERR("net::server::ctor: can't bind socket: " << WSAGetLastError());
-		closesocket(s);
 #elif defined(PLAT_LINUX)
 		PRINT_ERR("net::server::ctor: can't bind socket: " << strerror());
-		close(s)
 #endif
+		close_socket(s);
 		return;
 	}
 
@@ -88,7 +87,7 @@ net::server::server() {
 
 net::server::~server() {
 	if (m_listening) {
-		closesocket(m_socket);
+		close_socket(m_socket);
 	}
 }
 
@@ -107,7 +106,62 @@ void net::server::update_state(const ent_id id, const edict_t & e) {
 	}
 }
 
-void net::server::broadcast_update() {
+void net::server::unicast_update(const entity_update & upd, const net::client_desc & cd) {
+	if (!cd.slot_active)
+		return;
+
+	flatbuffers::FlatBufferBuilder fbb;
+	flatbuffers::Offset<flatbuffers::String> off_model;
+	if (upd.model) {
+		off_model = fbb.CreateString(upd.model);
+	}
+	Schemas::Vector3 pos(upd.pos[0], upd.pos[1], upd.pos[2]);
+	Schemas::Vector3 rot(upd.rot[0], upd.rot[1], upd.rot[2]);
+	Schemas::Networking::EntityUpdateBuilder eub(fbb);
+	if (!off_model.IsNull())
+		eub.add_model(off_model);
+	eub.add_edict_id(upd.edict);
+	eub.add_pos(&pos);
+	eub.add_rot(&rot);
+	auto off_upd = eub.Finish();
+
+	Schemas::Networking::MessageHeaderBuilder mhb(fbb);
+	mhb.add_type(Schemas::Networking::MessageType::MessageType_ENTITY_UPDATE);
+	mhb.add_data_type(Schemas::Networking::MessageData::MessageData_EntityUpdate);
+	mhb.add_data(off_upd.Union());
+
+	Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
+
+	send_to_client(cd.addr, fbb.GetBufferPointer(), fbb.GetSize());
+}
+
+void net::server::broadcast_update(const entity_update& upd) {
+	flatbuffers::FlatBufferBuilder fbb;
+	flatbuffers::Offset<flatbuffers::String> off_model;
+	if (upd.model) {
+		off_model = fbb.CreateString(upd.model);
+	}
+	Schemas::Vector3 pos(upd.pos[0], upd.pos[1], upd.pos[2]);
+	Schemas::Vector3 rot(upd.rot[0], upd.rot[1], upd.rot[2]);
+	Schemas::Networking::EntityUpdateBuilder eub(fbb);
+	if (!off_model.IsNull())
+		eub.add_model(off_model);
+	eub.add_edict_id(upd.edict);
+	eub.add_pos(&pos);
+	eub.add_rot(&rot);
+	auto off_upd = eub.Finish();
+
+	Schemas::Networking::MessageHeaderBuilder mhb(fbb);
+	mhb.add_type(Schemas::Networking::MessageType::MessageType_ENTITY_UPDATE);
+	mhb.add_data_type(Schemas::Networking::MessageData::MessageData_EntityUpdate);
+	mhb.add_data(off_upd.Union());
+
+	Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
+
+	for (const auto& client : m_clients) {
+		if (client.slot_active)
+			send_to_client(client.addr, fbb.GetBufferPointer(), fbb.GetSize());
+	}
 }
 
 void net::server::send_to_client(const sockaddr_in6 & client, const void * pBuf, size_t nSiz) {
@@ -117,8 +171,13 @@ void net::server::send_to_client(const sockaddr_in6 & client, const void * pBuf,
 		auto iErr = WSAGetLastError();
 		char buf[256];
 		FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, iErr, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), buf, 256, NULL);
-		PRINT_ERR("net::server::sendtoclient: " << buf);
+		PRINT_ERR("net::server::sendtoclient: (" << iErr << ") " << buf);
 #endif
+	}
+	if (nSent != nSiz) {
+		PRINT_DBG("nSent=" << nSent << ", nSiz=" << nSiz);
+	} else {
+		PRINT_DBG("net::server::send_to_client: sent " << nSent << " bytes");
 	}
 	ASSERT(nSent == nSiz);
 }
@@ -143,4 +202,41 @@ net::client_desc * net::server::get_client_desc(const std::string_view& username
 			return &c;
 	}
 	return nullptr;
+}
+
+void net::server::push_updates() {
+	size_t n = 0;
+	for (size_t i = 0; i < net::max_edicts; i++) {
+		edict_t& e = m_edicts[i];
+		if (e.active && e.updated) {
+			entity_update upd;
+			upd.edict = i;
+			upd.pos[0] = e.position[0]; upd.pos[1] = e.position[1]; upd.pos[2] = e.position[2];
+			upd.rot[0] = e.rotation2[0]; upd.rot[1] = e.rotation2[1]; upd.rot[2] = e.rotation2[2];
+			upd.model = e.modelname;
+
+			broadcast_update(upd);
+			e.updated = false;
+			n++;
+		}
+	}
+	if(n)
+		PRINT_DBG("net::server::push_updates: n=" << n);
+}
+
+void net::server::push_full_update(const net::client_desc& cd) {
+	for (size_t i = 0; i < net::max_edicts; i++) {
+		edict_t& e = m_edicts[i];
+		if (e.active) {
+			entity_update upd;
+			upd.edict = i;
+			upd.pos[0] = e.position[0]; upd.pos[1] = e.position[1]; upd.pos[2] = e.position[2];
+			upd.rot[0] = e.rotation2[0]; upd.rot[1] = e.rotation2[1]; upd.rot[2] = e.rotation2[2];
+			upd.model = e.modelname;
+
+			unicast_update(upd, cd);
+			e.updated = false;
+		}
+	}
+	PRINT_DBG("net::server::push_full_update: updated " << cd.username);
 }

@@ -19,104 +19,6 @@ struct ConnectData;
 
 struct MessageHeader;
 
-enum EntityUpdateType {
-  EntityUpdateType_NONE = 0,
-  EntityUpdateType_CREATE = 1,
-  EntityUpdateType_DELETE = 2,
-  EntityUpdateType_POSITION = 3,
-  EntityUpdateType_ROTATION = 4,
-  EntityUpdateType_MODEL_FILENAME = 5,
-  EntityUpdateType_CLASSNAME = 6,
-  EntityUpdateType_MIN = EntityUpdateType_NONE,
-  EntityUpdateType_MAX = EntityUpdateType_CLASSNAME
-};
-
-inline EntityUpdateType (&EnumValuesEntityUpdateType())[7] {
-  static EntityUpdateType values[] = {
-    EntityUpdateType_NONE,
-    EntityUpdateType_CREATE,
-    EntityUpdateType_DELETE,
-    EntityUpdateType_POSITION,
-    EntityUpdateType_ROTATION,
-    EntityUpdateType_MODEL_FILENAME,
-    EntityUpdateType_CLASSNAME
-  };
-  return values;
-}
-
-inline const char **EnumNamesEntityUpdateType() {
-  static const char *names[] = {
-    "NONE",
-    "CREATE",
-    "DELETE",
-    "POSITION",
-    "ROTATION",
-    "MODEL_FILENAME",
-    "CLASSNAME",
-    nullptr
-  };
-  return names;
-}
-
-inline const char *EnumNameEntityUpdateType(EntityUpdateType e) {
-  const size_t index = static_cast<int>(e);
-  return EnumNamesEntityUpdateType()[index];
-}
-
-enum EntityUpdateData {
-  EntityUpdateData_NONE = 0,
-  EntityUpdateData_Vector3 = 1,
-  EntityUpdateData_Matrix4x4 = 2,
-  EntityUpdateData_StringIdentifier = 3,
-  EntityUpdateData_MIN = EntityUpdateData_NONE,
-  EntityUpdateData_MAX = EntityUpdateData_StringIdentifier
-};
-
-inline EntityUpdateData (&EnumValuesEntityUpdateData())[4] {
-  static EntityUpdateData values[] = {
-    EntityUpdateData_NONE,
-    EntityUpdateData_Vector3,
-    EntityUpdateData_Matrix4x4,
-    EntityUpdateData_StringIdentifier
-  };
-  return values;
-}
-
-inline const char **EnumNamesEntityUpdateData() {
-  static const char *names[] = {
-    "NONE",
-    "Vector3",
-    "Matrix4x4",
-    "StringIdentifier",
-    nullptr
-  };
-  return names;
-}
-
-inline const char *EnumNameEntityUpdateData(EntityUpdateData e) {
-  const size_t index = static_cast<int>(e);
-  return EnumNamesEntityUpdateData()[index];
-}
-
-template<typename T> struct EntityUpdateDataTraits {
-  static const EntityUpdateData enum_value = EntityUpdateData_NONE;
-};
-
-template<> struct EntityUpdateDataTraits<Schemas::Vector3> {
-  static const EntityUpdateData enum_value = EntityUpdateData_Vector3;
-};
-
-template<> struct EntityUpdateDataTraits<Schemas::Matrix4x4> {
-  static const EntityUpdateData enum_value = EntityUpdateData_Matrix4x4;
-};
-
-template<> struct EntityUpdateDataTraits<StringIdentifier> {
-  static const EntityUpdateData enum_value = EntityUpdateData_StringIdentifier;
-};
-
-bool VerifyEntityUpdateData(flatbuffers::Verifier &verifier, const void *obj, EntityUpdateData type);
-bool VerifyEntityUpdateDataVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types);
-
 enum MessageType {
   MessageType_NONE = 0,
   MessageType_CONNECT = 1,
@@ -301,9 +203,10 @@ inline flatbuffers::Offset<StringIdentifier> CreateStringIdentifierDirect(
 struct EntityUpdate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum {
     VT_EDICT_ID = 4,
-    VT_TYPE = 6,
-    VT_DATA_TYPE = 8,
-    VT_DATA = 10
+    VT_POS = 6,
+    VT_ROT = 8,
+    VT_MODEL = 10,
+    VT_PARENT = 12
   };
   uint64_t edict_id() const {
     return GetField<uint64_t>(VT_EDICT_ID, 0);
@@ -321,47 +224,29 @@ struct EntityUpdate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
       return 0;
     }
   }
-  EntityUpdateType type() const {
-    return static_cast<EntityUpdateType>(GetField<uint16_t>(VT_TYPE, 0));
+  const Schemas::Vector3 *pos() const {
+    return GetStruct<const Schemas::Vector3 *>(VT_POS);
   }
-  EntityUpdateData data_type() const {
-    return static_cast<EntityUpdateData>(GetField<uint8_t>(VT_DATA_TYPE, 0));
+  const Schemas::Vector3 *rot() const {
+    return GetStruct<const Schemas::Vector3 *>(VT_ROT);
   }
-  const void *data() const {
-    return GetPointer<const void *>(VT_DATA);
+  const flatbuffers::String *model() const {
+    return GetPointer<const flatbuffers::String *>(VT_MODEL);
   }
-  template<typename T> const T *data_as() const;
-  const Schemas::Vector3 *data_as_Vector3() const {
-    return data_type() == EntityUpdateData_Vector3 ? static_cast<const Schemas::Vector3 *>(data()) : nullptr;
-  }
-  const Schemas::Matrix4x4 *data_as_Matrix4x4() const {
-    return data_type() == EntityUpdateData_Matrix4x4 ? static_cast<const Schemas::Matrix4x4 *>(data()) : nullptr;
-  }
-  const StringIdentifier *data_as_StringIdentifier() const {
-    return data_type() == EntityUpdateData_StringIdentifier ? static_cast<const StringIdentifier *>(data()) : nullptr;
+  uint64_t parent() const {
+    return GetField<uint64_t>(VT_PARENT, 0);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint64_t>(verifier, VT_EDICT_ID) &&
-           VerifyField<uint16_t>(verifier, VT_TYPE) &&
-           VerifyField<uint8_t>(verifier, VT_DATA_TYPE) &&
-           VerifyOffset(verifier, VT_DATA) &&
-           VerifyEntityUpdateData(verifier, data(), data_type()) &&
+           VerifyField<Schemas::Vector3>(verifier, VT_POS) &&
+           VerifyField<Schemas::Vector3>(verifier, VT_ROT) &&
+           VerifyOffset(verifier, VT_MODEL) &&
+           verifier.Verify(model()) &&
+           VerifyField<uint64_t>(verifier, VT_PARENT) &&
            verifier.EndTable();
   }
 };
-
-template<> inline const Schemas::Vector3 *EntityUpdate::data_as<Schemas::Vector3>() const {
-  return data_as_Vector3();
-}
-
-template<> inline const Schemas::Matrix4x4 *EntityUpdate::data_as<Schemas::Matrix4x4>() const {
-  return data_as_Matrix4x4();
-}
-
-template<> inline const StringIdentifier *EntityUpdate::data_as<StringIdentifier>() const {
-  return data_as_StringIdentifier();
-}
 
 struct EntityUpdateBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
@@ -369,14 +254,17 @@ struct EntityUpdateBuilder {
   void add_edict_id(uint64_t edict_id) {
     fbb_.AddElement<uint64_t>(EntityUpdate::VT_EDICT_ID, edict_id, 0);
   }
-  void add_type(EntityUpdateType type) {
-    fbb_.AddElement<uint16_t>(EntityUpdate::VT_TYPE, static_cast<uint16_t>(type), 0);
+  void add_pos(const Schemas::Vector3 *pos) {
+    fbb_.AddStruct(EntityUpdate::VT_POS, pos);
   }
-  void add_data_type(EntityUpdateData data_type) {
-    fbb_.AddElement<uint8_t>(EntityUpdate::VT_DATA_TYPE, static_cast<uint8_t>(data_type), 0);
+  void add_rot(const Schemas::Vector3 *rot) {
+    fbb_.AddStruct(EntityUpdate::VT_ROT, rot);
   }
-  void add_data(flatbuffers::Offset<void> data) {
-    fbb_.AddOffset(EntityUpdate::VT_DATA, data);
+  void add_model(flatbuffers::Offset<flatbuffers::String> model) {
+    fbb_.AddOffset(EntityUpdate::VT_MODEL, model);
+  }
+  void add_parent(uint64_t parent) {
+    fbb_.AddElement<uint64_t>(EntityUpdate::VT_PARENT, parent, 0);
   }
   explicit EntityUpdateBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -393,15 +281,33 @@ struct EntityUpdateBuilder {
 inline flatbuffers::Offset<EntityUpdate> CreateEntityUpdate(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint64_t edict_id = 0,
-    EntityUpdateType type = EntityUpdateType_NONE,
-    EntityUpdateData data_type = EntityUpdateData_NONE,
-    flatbuffers::Offset<void> data = 0) {
+    const Schemas::Vector3 *pos = 0,
+    const Schemas::Vector3 *rot = 0,
+    flatbuffers::Offset<flatbuffers::String> model = 0,
+    uint64_t parent = 0) {
   EntityUpdateBuilder builder_(_fbb);
+  builder_.add_parent(parent);
   builder_.add_edict_id(edict_id);
-  builder_.add_data(data);
-  builder_.add_type(type);
-  builder_.add_data_type(data_type);
+  builder_.add_model(model);
+  builder_.add_rot(rot);
+  builder_.add_pos(pos);
   return builder_.Finish();
+}
+
+inline flatbuffers::Offset<EntityUpdate> CreateEntityUpdateDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t edict_id = 0,
+    const Schemas::Vector3 *pos = 0,
+    const Schemas::Vector3 *rot = 0,
+    const char *model = nullptr,
+    uint64_t parent = 0) {
+  return Schemas::Networking::CreateEntityUpdate(
+      _fbb,
+      edict_id,
+      pos,
+      rot,
+      model ? _fbb.CreateString(model) : 0,
+      parent);
 }
 
 struct ConnectData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -551,38 +457,6 @@ inline flatbuffers::Offset<MessageHeader> CreateMessageHeader(
   builder_.add_data(data);
   builder_.add_data_type(data_type);
   return builder_.Finish();
-}
-
-inline bool VerifyEntityUpdateData(flatbuffers::Verifier &verifier, const void *obj, EntityUpdateData type) {
-  switch (type) {
-    case EntityUpdateData_NONE: {
-      return true;
-    }
-    case EntityUpdateData_Vector3: {
-      return true;
-    }
-    case EntityUpdateData_Matrix4x4: {
-      auto ptr = reinterpret_cast<const Schemas::Matrix4x4 *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    case EntityUpdateData_StringIdentifier: {
-      auto ptr = reinterpret_cast<const StringIdentifier *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    default: return false;
-  }
-}
-
-inline bool VerifyEntityUpdateDataVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types) {
-  if (!values || !types) return !values && !types;
-  if (values->size() != types->size()) return false;
-  for (flatbuffers::uoffset_t i = 0; i < values->size(); ++i) {
-    if (!VerifyEntityUpdateData(
-        verifier,  values->Get(i), types->GetEnum<EntityUpdateData>(i))) {
-      return false;
-    }
-  }
-  return true;
 }
 
 inline bool VerifyMessageData(flatbuffers::Verifier &verifier, const void *obj, MessageData type) {

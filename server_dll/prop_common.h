@@ -6,20 +6,25 @@
 
 class c_base_prop : public base_entity {
 public:
-	virtual void precache()
-	{
+	virtual ~c_base_prop() {}
+	virtual void precache() {
 		if (m_szModel[0] == '\0') // no model set (i.e. we're precaching all entities)
 			return;
 	}
 
-	virtual void set_model(const char* szFilename)
-	{
+	virtual void model(const char* szModel) {
 		if (m_bSpawned)
 			return;
-		strncpy(m_szModel, szFilename, 128);
+		strncpy(m_szModel, szModel, 128);
 	}
 
-	bool is_drawable() { return true; }
+	virtual const char* model() const {
+		return m_szModel;
+	}
+
+	virtual bool is_drawable() override {
+		return true;
+	}
 
 	virtual float get_scale() const override {
 		return m_flScale;
@@ -33,6 +38,10 @@ public:
 	/// Static props have the transformation matrix precached.
 	virtual bool is_static() const {
 		return false;
+	}
+
+	virtual bool networked() const {
+		return true;
 	}
 
 protected:

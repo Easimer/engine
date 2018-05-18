@@ -5,8 +5,10 @@
 class c_prop_dynamic : public c_base_prop {
 public:
 	DEC_CLASS(prop_dynamic, c_base_prop);
-	void precache();
-	void spawn();
+	virtual void precache() override;
+	virtual void spawn() override;
+
+	virtual void think() override;
 
 	BEGIN_KEYVALUES(c_prop_dynamic)
 	END_KEYVALUES()
@@ -14,16 +16,23 @@ public:
 
 REGISTER_ENTITY(c_prop_dynamic, prop_dynamic);
 
-void c_prop_dynamic::precache()
-{
+void c_prop_dynamic::precache() {
 	BaseClass::precache();
 }
 
-void c_prop_dynamic::spawn()
-{
+void c_prop_dynamic::spawn() {
 	BaseClass::spawn();
 	precache();
 	set_abspos(vec3_origin);
-	SetNextThink(DONT_THINK);
+	SetThink(&c_prop_dynamic::think);
+	SetNextThink(gpGlobals->curtime + 1);
 	m_nFilter = ENT_FILTER_PROP;
+}
+
+void c_prop_dynamic::think() {
+	SetNextThink(gpGlobals->curtime + 1);
+
+	auto pos = get_abspos();
+	pos[2] += 1;
+	set_abspos(pos);
 }

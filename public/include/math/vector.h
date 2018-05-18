@@ -215,10 +215,10 @@ namespace math {
 
 	template<typename T>
 	inline bool operator!=(const vector3<T>& lhs, const vector3<T>& rhs) {
-		if (std::abs(lhs.x() - rhs.x()) <= EPSILON) return false;
-		if (std::abs(lhs.y() - rhs.y()) <= EPSILON) return false;
-		if (std::abs(lhs.z() - rhs.z()) <= EPSILON) return false;
-		return true;
+		if (std::abs(lhs.x() - rhs.x()) > EPSILON) return true;
+		if (std::abs(lhs.y() - rhs.y()) > EPSILON) return true;
+		if (std::abs(lhs.z() - rhs.z()) > EPSILON) return true;
+		return false;
 	}
 }
 

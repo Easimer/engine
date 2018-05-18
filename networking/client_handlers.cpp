@@ -13,3 +13,29 @@ void net::client::handle_connect_nak(const Schemas::Networking::ConnectData* pCo
 	}
 	m_connected = false;
 }
+
+void net::client::handle_entity_update(const Schemas::Networking::EntityUpdate* pEntUpd) {
+	//PRINT_DBG("net::client::handle_entity_update: edict=" << pEntUpd->edict_id() << " pos: (" << pEntUpd->pos()->x() << ',' << pEntUpd->pos()->y() << ',' << pEntUpd->pos()->z() << ')');
+	auto& e = m_edicts[pEntUpd->edict_id()];
+	e.active = true;
+	e.updated = false;
+	auto pos = pEntUpd->pos();
+	if (pos) {
+		e.position[0] = pos->x();
+		e.position[1] = pos->y();
+		e.position[2] = pos->z();
+	}
+	auto rot = pEntUpd->rot();
+	if (rot) {
+		e.rotation2[0] = rot->x();
+		e.rotation2[1] = rot->y();
+		e.rotation2[2] = rot->z();
+	}
+	auto model = pEntUpd->model();
+	if (model) {
+		strncpy(e.modelname, model->c_str(), 128);
+	}
+}
+
+void net::client::handle_discovery_response(const sockaddr_in6 saddr, const unsigned short port) {
+}

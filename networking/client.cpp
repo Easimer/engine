@@ -6,10 +6,10 @@ net::client::client(const std::string& addr, const std::string& username) : m_us
 	socket_t s;
 	
 	int slen;
-	WSADATA wsa;
 
 	slen = sizeof(m_server_addr);
 #if defined(PLAT_WINDOWS)
+	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
 		PRINT_ERR("net::server::ctor: can't init WS: " << WSAGetLastError());
 		return;
@@ -18,9 +18,9 @@ net::client::client(const std::string& addr, const std::string& username) : m_us
 
 	if ((s = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) == invalid_socket) {
 #if defined(PLAT_WINDOWS)
-		PRINT_ERR("net::server::ctor: can't open socket: " << WSAGetLastError());
+		PRINT_ERR("net::client::ctor: can't open socket: " << WSAGetLastError());
 #elif defined(PLAT_LINUX)
-		PRINT_ERR("net::server::ctor: can't open socket: " << strerror());
+		PRINT_ERR("net::client::ctor: can't open socket: " << strerror());
 #endif
 		return;
 	}
@@ -51,7 +51,7 @@ void net::client::send_to_server(const void * pBuf, size_t nSiz) {
 		auto iErr = WSAGetLastError();
 		char buf[256];
 		FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, iErr, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), buf, 256, NULL);
-		PRINT_ERR("net::server::sendtoclient: " << buf);
+		PRINT_ERR("net::client::sendtoclient: " << buf);
 #endif
 	}
 	ASSERT(nSiz == sent);
@@ -108,7 +108,8 @@ void net::client::connect() {
 				if (Schemas::Networking::VerifyMessageHeaderBuffer(verifier)) {
 					auto msghdr = Schemas::Networking::GetMessageHeader(buf);
 					ASSERT(msghdr->Verify(verifier));
-					switch ((*msghdr).type()) {
+					Schemas::Networking::MessageType msgtype = (*msghdr).type();
+					switch (msgtype) {
 					case Schemas::Networking::MessageType_NONE:
 						PRINT_ERR("net::client::thread: keepalive from server");
 						break;
@@ -119,8 +120,11 @@ void net::client::connect() {
 					case Schemas::Networking::MessageType_CONNECT_NAK:
 						handle_connect_nak((Schemas::Networking::ConnectData*)(*msghdr).data());
 						break;
+					case Schemas::Networking::MessageType_ENTITY_UPDATE:
+						handle_entity_update((Schemas::Networking::EntityUpdate*)(*msghdr).data());
+						break;
 					default:
-						PRINT_ERR("net::client::thread: unknown message type " << (*msghdr).type());
+						PRINT_ERR("net::client::thread: unknown message type " << Schemas::Networking::EnumNameMessageType(msgtype));
 						break;
 					}
 				} else {
@@ -145,7 +149,65 @@ void net::client::disconnect() {
 	Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
 
 	send_to_server(fbb.GetBufferPointer(), fbb.GetSize());
+	net::close_socket(m_socket);
+}
+
+void net::client::discovery_probe() {
+	net::socket_t bc_sock;
+	char one = '1';
+	struct sockaddr_in6 addr_rx, addr_tx;
+	constexpr size_t addr_len = sizeof(sockaddr_in6);
+	size_t nSent;
+
+	if ((bc_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) == invalid_socket) {
 #if defined(PLAT_WINDOWS)
-	closesocket(m_socket);
+		PRINT_ERR("net::client::discovery_probe: can't open socket: " << WSAGetLastError());
+#elif defined(PLAT_LINUX)
+		PRINT_ERR("net::client::discovery_probe: can't open socket: " << strerror());
 #endif
+		return;
+	}
+
+	if (setsockopt(bc_sock, SOL_SOCKET, SO_BROADCAST, &one, sizeof(one)) < 0) {
+		PRINT_ERR("net::client::discovery_probe: couldn't set broadcast option on socket!");
+		net::close_socket(bc_sock);
+	}
+
+	memset(&addr_rx, 0, addr_len);
+	addr_rx.sin6_family = AF_INET6;
+	addr_rx.sin6_port = htons(net::port);
+	inet_pton(AF_INET6, "ff02::2", &addr_rx.sin6_addr.s6_addr);
+
+	// Build probe packet
+
+	flatbuffers::FlatBufferBuilder fbb;
+	Schemas::Networking::MessageHeaderBuilder mhb(fbb);
+	mhb.add_type(Schemas::Networking::MessageType::MessageType_DISCOVERY_PROBE);
+	Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
+
+	for (int i = 0; i < 3; i++) {
+		nSent = sendto(bc_sock, (const char*)fbb.GetBufferPointer(), fbb.GetSize(), 0, (sockaddr*)&addr_rx, addr_len);
+		ASSERT(nSent == fbb.GetSize());
+	}
+
+	char buf[4096];
+	int recv_len;
+	int slen = sizeof(addr_tx);
+
+	if ((recv_len = recvfrom(bc_sock, buf, 4096, 0, (sockaddr*)&addr_tx, &slen)) != net::socket_error) {
+		PRINT_DBG("net::client::thread: received " << recv_len << " bytes");
+		auto verifier = flatbuffers::Verifier((const uint8_t*)buf, recv_len);
+		if (Schemas::Networking::VerifyMessageHeaderBuffer(verifier)) {
+			auto msghdr = Schemas::Networking::GetMessageHeader(buf);
+			ASSERT(msghdr->Verify(verifier));
+			Schemas::Networking::MessageType msgtype = (*msghdr).type();
+			if (msgtype == Schemas::Networking::MessageType_DISCOVERY_RESPONSE) {
+				m_discovered_servers.push_back(addr_tx);
+			}
+		} else {
+			PRINT_ERR("net::client::thread: verify failed!");
+		}
+	}
+
+	net::close_socket(bc_sock);
 }

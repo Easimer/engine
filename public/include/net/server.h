@@ -19,6 +19,14 @@ namespace net {
 		std::chrono::time_point<std::chrono::high_resolution_clock> last_packet;
 	};
 
+	struct entity_update {
+		entity_update() : model(nullptr) {}
+		size_t edict;
+		float pos[3];
+		float rot[3];
+		const char* model;
+	};
+
 	using server_handler = std::function<bool(const sockaddr_in6& client, const Schemas::Networking::MessageHeader& hdr, size_t siz)>;
 
 	class server {
@@ -34,7 +42,9 @@ namespace net {
 
 		void on_connect();
 		void update_state(const ent_id id, const edict_t& e);
-		void broadcast_update();
+
+		void unicast_update(const entity_update& upd, const net::client_desc& cd);
+		void broadcast_update(const entity_update& upd);
 
 		void add_handler(Schemas::Networking::MessageType t, server_handler& h) {
 			m_handlers[t] = h;
@@ -50,6 +60,17 @@ namespace net {
 
 		net::client_desc* get_client_desc(const sockaddr_in6& addr);
 		net::client_desc* get_client_desc(const std::string_view& username);
+
+		inline net::edict_t& edict(const ent_id id) {
+			return m_edicts[id];
+		}
+
+		inline void edict(const ent_id id, const edict_t& e) {
+			m_edicts[id] = e;
+		}
+
+		void push_updates();
+		void push_full_update(const net::client_desc&);
 
 	private:
 		net::socket_t m_socket;

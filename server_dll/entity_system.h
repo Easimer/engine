@@ -15,6 +15,8 @@ public:
 
 	void update_entities();
 
+	const std::vector<base_entity*>& ptr() const { return m_entities; }
+
 private:
 	std::vector<base_entity*> m_entities;
 };

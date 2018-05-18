@@ -23,7 +23,7 @@
 class base_entity : public base_thinker
 {
 public:
-	~base_entity() {}
+	virtual ~base_entity() {}
 	/// Precache resources here
 	virtual void precache() = 0;
 
@@ -110,8 +110,8 @@ public:
 
 	int get_filter() const { return m_nFilter; }
 
-	inline bool networked() const { return m_bNetworked; }
-	inline void networked(bool b) { m_bNetworked = b; }
+	virtual inline bool networked() const { return m_bNetworked; }
+	virtual inline void networked(bool b) { m_bNetworked = b; }
 
 	inline size_t edict() const { return m_iEdict; }
 	inline void edict(size_t i) { m_iEdict = i; }

@@ -57,6 +57,7 @@ void net::server::add_handles() {
 		Schemas::Networking::ConnectDataBuilder cdb(fbb);
 		cdb.add_nak_reason(nak_reason); // NAK reason (if any)
 
+		const net::client_desc* cd = nullptr;
 
 		if (first_free_slot != -1) {
 			net::client_desc& c = m_clients[first_free_slot];
@@ -67,6 +68,7 @@ void net::server::add_handles() {
 			c.slot_active = true;
 			memcpy(&c.addr, &client, sizeof(client));
 			PRINT_DBG("Inserted PLAYER INTO DESCS");
+			cd = &c;
 		}
 
 		auto cdb_off = cdb.Finish();
@@ -83,6 +85,9 @@ void net::server::add_handles() {
 
 		send_to_client(client, fbb.GetBufferPointer(), fbb.GetSize());
 
+		if(cd)
+			push_full_update(*cd);
+
 		return true;
 	});
 	
@@ -97,5 +102,23 @@ void net::server::add_handles() {
 		} else {
 			return false;
 		}
+	});
+
+	// CLIENT_UPDATE
+	m_handlers.emplace(Schemas::Networking::MessageType::MessageType_CLIENT_UPDATE,
+		[&](const sockaddr_in6& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
+		return false;
+	});
+
+	// DISCOVERY_PROBE
+	m_handlers.emplace(Schemas::Networking::MessageType::MessageType_DISCOVERY_PROBE,
+		[&](const sockaddr_in6& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
+		flatbuffers::FlatBufferBuilder fbb;
+		Schemas::Networking::MessageHeaderBuilder mhb(fbb);
+		mhb.add_type(Schemas::Networking::MessageType_DISCOVERY_RESPONSE);
+		Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
+		for(int i = 0; i < 3; i++)
+			send_to_client(client, fbb.GetBufferPointer(), fbb.GetSize());
+		return true;
 	});
 }

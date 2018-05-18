@@ -7,7 +7,9 @@ entity_handle entity_system::add_entity(base_entity * ent) {
 		return pos - m_entities.cbegin();
 	}
 	m_entities.push_back(ent);
-	return m_entities.size() - 1;
+	size_t e = m_entities.size() - 1;
+	ent->edict(e);
+	return e;
 }
 
 base_entity * entity_system::get_entity(entity_handle h) {
@@ -39,8 +41,11 @@ void entity_system::remove_entity(entity_handle h) {
 
 void entity_system::update_entities() {
 	for (auto pEnt : m_entities) {
-		if (pEnt->get_next_think() >= gpGlobals->curtime) {
-			pEnt->think_func();
+		if (pEnt->get_next_think() <= gpGlobals->curtime) {
+			auto tfun = pEnt->think_func();
+			if (tfun) {
+				(pEnt->*tfun)();
+			}
 		}
 	}
 }

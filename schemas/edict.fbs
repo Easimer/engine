@@ -8,26 +8,12 @@ table StringIdentifier {
 	id : string;
 }
 
-enum EntityUpdateType: ushort {
-	NONE = 0,
-
-	CREATE = 1,
-	DELETE = 2,
-
-	POSITION = 3,
-	ROTATION = 4,
-	MODEL_FILENAME = 5,
-	CLASSNAME = 6,
-}
-
-union EntityUpdateData {
-	Vector3, Matrix4x4, StringIdentifier
-}
-
 table EntityUpdate {
 	edict_id : ulong (key);
-	type : EntityUpdateType;
-	data : EntityUpdateData;
+	pos : Vector3;
+	rot : Vector3;
+	model : string;
+	parent : ulong;
 }
 
 enum MessageType : long {

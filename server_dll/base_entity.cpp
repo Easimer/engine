@@ -82,7 +82,7 @@ base_entity * CreateEntity(const char * mapname)
 		}
 	}
 	PRINT_ERR("Attempted to create unknown entity named" << mapname);
-	return NULL;
+	return nullptr;
 }
 
 base_entity * CreateEntityNoSpawn(const char * mapname)
@@ -97,5 +97,5 @@ base_entity * CreateEntityNoSpawn(const char * mapname)
 		}
 	}
 	PRINT_ERR("Attempted to create unknown entity named" << mapname);
-	return NULL;
+	return nullptr;
 }
