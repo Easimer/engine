@@ -46,6 +46,17 @@ net::server::server() {
 		return;
 	}
 
+	// Join discovery multicast group
+	struct ipv6_mreq group;
+	group.ipv6mr_interface = 0;
+	inet_pton(AF_INET6, "FF02::B1E5:5ED:BEEF", &group.ipv6mr_multiaddr);
+	if (setsockopt(s, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&group, sizeof(group)) < 0) {
+		PRINT_ERR("Failed to join Server Discovery group! This server won't answer to LAN server discovery requests!");
+#if defined(PLAT_WINDOWS)
+		PRINT_ERR("\tThe reason is: " << WSAGetLastError());
+#endif
+	}
+
 	m_socket = s;
 	m_listening = true;
 

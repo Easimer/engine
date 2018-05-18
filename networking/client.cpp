@@ -152,14 +152,12 @@ void net::client::disconnect() {
 	net::close_socket(m_socket);
 }
 
-void net::client::discovery_probe() {
-	net::socket_t bc_sock;
+net::server_discovery::server_discovery() {
 	char one = '1';
-	struct sockaddr_in6 addr_rx, addr_tx;
 	constexpr size_t addr_len = sizeof(sockaddr_in6);
 	size_t nSent;
 
-	if ((bc_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) == invalid_socket) {
+	if ((m_socket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) == invalid_socket) {
 #if defined(PLAT_WINDOWS)
 		PRINT_ERR("net::client::discovery_probe: can't open socket: " << WSAGetLastError());
 #elif defined(PLAT_LINUX)
@@ -168,34 +166,43 @@ void net::client::discovery_probe() {
 		return;
 	}
 
-	if (setsockopt(bc_sock, SOL_SOCKET, SO_BROADCAST, &one, sizeof(one)) < 0) {
-		PRINT_ERR("net::client::discovery_probe: couldn't set broadcast option on socket!");
-		net::close_socket(bc_sock);
-	}
+	//if (setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, &one, sizeof(one)) < 0) {
+	//	PRINT_ERR("net::client::discovery_probe: couldn't set broadcast option on socket!");
+	//	net::close_socket(m_socket);
+	//}
 
 	memset(&addr_rx, 0, addr_len);
 	addr_rx.sin6_family = AF_INET6;
 	addr_rx.sin6_port = htons(net::port);
-	inet_pton(AF_INET6, "ff02::2", &addr_rx.sin6_addr.s6_addr);
+	inet_pton(AF_INET6, "FF02::B1E5:5ED:BEEF", &addr_rx.sin6_addr.s6_addr);
+}
 
-	// Build probe packet
+net::server_discovery::~server_discovery() {
+	net::close_socket(m_socket);
+}
 
+void net::server_discovery::probe() {
+	size_t nSent;
+	constexpr int addr_len = sizeof(sockaddr_in6);
 	flatbuffers::FlatBufferBuilder fbb;
 	Schemas::Networking::MessageHeaderBuilder mhb(fbb);
 	mhb.add_type(Schemas::Networking::MessageType::MessageType_DISCOVERY_PROBE);
 	Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
 
 	for (int i = 0; i < 3; i++) {
-		nSent = sendto(bc_sock, (const char*)fbb.GetBufferPointer(), fbb.GetSize(), 0, (sockaddr*)&addr_rx, addr_len);
+		nSent = sendto(m_socket, (const char*)fbb.GetBufferPointer(), fbb.GetSize(), 0, (sockaddr*)&addr_rx, addr_len);
 		ASSERT(nSent == fbb.GetSize());
+		PRINT_DBG("net::server_discovery::probe: sent " << nSent << " bytes");
 	}
+}
 
+void net::server_discovery::fetch() {
+	sockaddr_in6 addr_tx;
 	char buf[4096];
 	int recv_len;
 	int slen = sizeof(addr_tx);
 
-	if ((recv_len = recvfrom(bc_sock, buf, 4096, 0, (sockaddr*)&addr_tx, &slen)) != net::socket_error) {
-		PRINT_DBG("net::client::thread: received " << recv_len << " bytes");
+	if ((recv_len = recvfrom(m_socket, buf, 4096, 0, (sockaddr*)&addr_tx, &slen)) != net::socket_error) {
 		auto verifier = flatbuffers::Verifier((const uint8_t*)buf, recv_len);
 		if (Schemas::Networking::VerifyMessageHeaderBuffer(verifier)) {
 			auto msghdr = Schemas::Networking::GetMessageHeader(buf);
@@ -204,10 +211,19 @@ void net::client::discovery_probe() {
 			if (msgtype == Schemas::Networking::MessageType_DISCOVERY_RESPONSE) {
 				m_discovered_servers.push_back(addr_tx);
 			}
-		} else {
-			PRINT_ERR("net::client::thread: verify failed!");
 		}
 	}
+}
 
-	net::close_socket(bc_sock);
+void net::server_discovery::timeout(int sec, int usec) {
+	struct timeval timeout;
+	timeout.tv_sec = sec;
+	timeout.tv_usec = usec;
+
+	if (setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) < 0) {
+		PRINT_ERR("net::server_discovery::timeout: failed to set recv timeout!");
+	}
+	if (setsockopt(m_socket, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout, sizeof(timeout)) < 0) {
+		PRINT_ERR("net::server_discovery::timeout: failed to set send timeout!");
+	}
 }

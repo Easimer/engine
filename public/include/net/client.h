@@ -29,9 +29,6 @@ namespace net {
 
 		bool connected() const { return m_connected; }
 
-		void discovery_probe();
-		const std::vector<sockaddr_in6>& get_discovered_servers() const { return m_discovered_servers; }
-
 		void handle_connect_ack(const Schemas::Networking::ConnectData* pConnDat);
 		void handle_connect_nak(const Schemas::Networking::ConnectData* pConnDat);
 		void handle_entity_update(const Schemas::Networking::EntityUpdate* pEntUpd);
@@ -51,7 +48,19 @@ namespace net {
 
 		std::string m_username;
 		std::unordered_map<Schemas::Networking::MessageType, client_handler> m_handlers;
+	};
 
+	class server_discovery {
+	public:
+		server_discovery();
+		~server_discovery();
+		void probe();
+		void fetch();
+		const std::vector<sockaddr_in6> get() const { return m_discovered_servers; }
+		void timeout(int sec = 0, int usec = 0);
+	private:
+		socket_t m_socket;
+		sockaddr_in6 addr_rx;
 		std::vector<sockaddr_in6> m_discovered_servers;
 	};
 }
