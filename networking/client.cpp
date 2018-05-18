@@ -157,6 +157,11 @@ net::server_discovery::server_discovery() {
 	constexpr size_t addr_len = sizeof(sockaddr_in6);
 	size_t nSent;
 
+#if defined(PLAT_WINDOWS)
+	WSADATA wsa;
+	WSAStartup(MAKEWORD(2, 2), &wsa);
+#endif
+
 	if ((m_socket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) == invalid_socket) {
 #if defined(PLAT_WINDOWS)
 		PRINT_ERR("net::client::discovery_probe: can't open socket: " << WSAGetLastError());
@@ -179,6 +184,7 @@ net::server_discovery::server_discovery() {
 
 net::server_discovery::~server_discovery() {
 	net::close_socket(m_socket);
+	WSACleanup();
 }
 
 void net::server_discovery::probe() {

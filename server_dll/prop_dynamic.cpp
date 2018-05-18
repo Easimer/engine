@@ -12,6 +12,8 @@ public:
 
 	BEGIN_KEYVALUES(c_prop_dynamic)
 	END_KEYVALUES()
+private:
+	bool m_bDir = false;
 };
 
 REGISTER_ENTITY(c_prop_dynamic, prop_dynamic);
@@ -38,6 +40,13 @@ void c_prop_dynamic::think() {
 	SetNextThink(gpGlobals->curtime + 0.001);
 
 	auto pos = get_abspos();
-	pos[1] += 0.1;
+	if(m_bDir)
+		pos[1] += 0.1;
+	else
+		pos[1] -= 0.1;
+	if (pos[1] > 5)
+		m_bDir = false;
+	if (pos[1] < -5)
+		m_bDir = true;
 	set_abspos(pos);
 }
