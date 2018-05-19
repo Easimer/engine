@@ -17,11 +17,11 @@ public:
 	void disconnect();
 	bool tick();
 
-	net::client* get_socket() const { return m_pNetClient.get(); }
+	std::shared_ptr<net::client> get_socket() const { return m_pNetClient; }
 
 private:
 	bool m_bPaused;
-	std::unique_ptr<net::client> m_pNetClient;
+	std::shared_ptr<net::client> m_pNetClient;
 	gfx::camera m_camera;
 	// Stores model ID associated with edict index
 	std::array<gfx::model_id, net::max_edicts> m_model_cache;

@@ -3,13 +3,15 @@
 #include <vector>
 #include <map>
 #include <type_traits>
+#include <memory>
 
 #include <gfx/window.h>
 
 namespace gfx {
 	class iwindow_factory {
 	public:
-		virtual gfx::window* create() = 0;
+		virtual ~iwindow_factory() {}
+		virtual std::shared_ptr<gfx::window> create() = 0;
 	};
 
 	template<typename T>
@@ -18,8 +20,8 @@ namespace gfx {
 		window_factory(const std::string& name) {
 			gpWindowRegister->emplace(name, this);
 		}
-		virtual T* create() override {
-			return new T;
+		virtual std::shared_ptr<gfx::window> create() override {
+			return std::static_pointer_cast<gfx::window>(std::make_shared<T>());
 		}
 
 		static_assert(std::is_base_of<gfx::window, T>::value);
@@ -33,9 +35,10 @@ namespace gfx {
 
 		~window_register() {
 			delete m_factories;
-			for (auto& w : m_created_windows) {
-				delete w;
-			}
+			// destruction of m_created_windows will reset() all contained shared_ptrs automatically
+			//for (auto& w : m_created_windows) {
+			//	w.reset();
+			//}
 		}
 
 		void emplace(const std::string& key, gfx::iwindow_factory* value) {
@@ -44,7 +47,7 @@ namespace gfx {
 			m_factories->emplace(key, value);
 		}
 
-		gfx::window* create(const std::string& name) {
+		std::shared_ptr<gfx::window> create(const std::string& name) {
 			if (!m_factories)
 				m_factories = new std::map<std::string, gfx::iwindow_factory*>;
 			if (m_factories->count(name)) {
@@ -56,7 +59,7 @@ namespace gfx {
 		}
 	private:
 		std::map<std::string, gfx::iwindow_factory*>* m_factories = nullptr;
-		std::vector<gfx::window*> m_created_windows;
+		std::vector<std::shared_ptr<gfx::window>> m_created_windows;
 	};
 
 	extern gfx::window_register* gpWindowRegister;

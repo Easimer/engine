@@ -54,8 +54,45 @@ typename std::enable_if<std::is_pointer<T>::value, T>::type link_dll(const std::
 #endif
 }
 
+/// Set the current working directory to the game root directory
+/// (we're launching from /bin/)
+bool set_workdir() {
+#if defined(PLAT_WINDOWS)
+	DWORD ftyp = GetFileAttributesA("data");
+	if (ftyp & FILE_ATTRIBUTE_DIRECTORY && ftyp != INVALID_FILE_ATTRIBUTES) {
+		PRINT_DBG("Already running from game rootdir!");
+		return true;
+	}
+
+	SetCurrentDirectory("..");
+	ftyp = GetFileAttributesA("data");
+	if (!(ftyp & FILE_ATTRIBUTE_DIRECTORY) || ftyp == INVALID_FILE_ATTRIBUTES) {
+		PRINT_ERR("Switched to parent dir, but data/ doesn't exist!");
+		return false;
+	}
+	return true;
+#elif defined(PLAT_LINUX)
+	if (chdir("..") == 0) {
+		DIR* pDir = opendir("data");
+		if (pDir) {
+			closedir(pDir);
+			return true;
+		} else {
+			PRINT_ERR("Switched to parent dir, but data/ doesn't exist!");
+		}
+	} else {
+		PRINT_ERR("Couldn't switch to parent dir!");
+	}
+	return false;
+#endif
+}
+
 int main(int argc, char** argv) {
 	CMDLINE_INIT();
+
+	if (!set_workdir()) {
+		PRINT_ERR("Couldn't switch to rootdir!!!");
+	}
 
 	char buf[MAX_PATH];
 	GetCurrentDirectoryA(MAX_PATH, buf);

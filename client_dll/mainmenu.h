@@ -34,7 +34,7 @@ private:
 	std::vector<sockaddr_in> m_servers;
 	sockaddr_in* m_pSelected;
 	bool m_bShowServerBrowser = false;
-	std::unique_ptr<net::server_discovery> m_pSDClient;
+	std::shared_ptr<net::server_discovery> m_pSDClient;
 
 	char m_szUsername[128];
 	char m_szAddressBuf[128];

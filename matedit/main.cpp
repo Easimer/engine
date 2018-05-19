@@ -64,8 +64,8 @@ int main(int argc, char** argv) {
 	window_preview w_preview;
 	window_properties w_props;
 
-	gpGfx->add_window(&w_preview);
-	gpGfx->add_window(&w_props);
+	gpGfx->add_window(std::make_shared<window_preview>());
+	gpGfx->add_window(std::make_shared<window_properties>());
 
 	while (true) {
 		gpGfx->begin_frame();

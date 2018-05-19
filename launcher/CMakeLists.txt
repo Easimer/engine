@@ -29,7 +29,7 @@ target_link_libraries(launcher enl dl pthread)
 ELSE()
 target_link_libraries(launcher enl)
 ENDIF()
-install(TARGETS launcher DESTINATION bin/../)
+install(TARGETS launcher DESTINATION bin/)
 
 IF(WIN32)
 # Create filters

@@ -36,6 +36,7 @@ set(SRC_PUBLIC
 	../public/include/gfx/shader.h
 	../public/include/gfx/textures.h
 	../public/include/gfx/window.h
+	../public/include/gfx/window_register.h
 )
 
 vs_pch(stdafx)

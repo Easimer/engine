@@ -428,7 +428,7 @@ long long int gfx::gfx_global::use_shader(long long int shader)
 	return shader;
 }
 
-void gfx::gfx_global::remove_window(gfx::window * w)
+void gfx::gfx_global::remove_window(std::shared_ptr<gfx::window> w)
 {
 	for (auto& pWnd : windows) {
 		if (pWnd == w) {

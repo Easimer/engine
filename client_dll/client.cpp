@@ -2,6 +2,7 @@
 #include "iclient.h"
 #include "client.h"
 #include <gfx/gfx.h>
+#include <gfx/window_register.h>
 #include "mainmenu.h"
 #include "game.h"
 
@@ -21,7 +22,7 @@ extern "C" {
 
 class window_debug_entities : public gfx::window {
 public:
-	window_debug_entities(const net::client* cli) : m_pClient(cli) {}
+	window_debug_entities(const std::shared_ptr<net::client> cli) : m_pClient(cli) {}
 	virtual const char* get_title() { return "Entity inspector"; }
 protected:
 	virtual void draw_content() {
@@ -34,8 +35,9 @@ protected:
 		}
 	}
 private:
-	const net::client* m_pClient;
+	const std::shared_ptr<net::client> m_pClient;
 };
+
 
 void client_main(client* cli, const char* pszHostname, const char* pszUsername) {
 	if (!gpGfx->init("game")) {
@@ -47,11 +49,11 @@ void client_main(client* cli, const char* pszHostname, const char* pszUsername) 
 	mainmenu mm;
 	game g;
 
-	std::unique_ptr<window_debug_entities> wnd_de;
-
 	gpGfx->load_default_shaders();
 	gpGfx->load_shader("data/shaders/model_dynamic.qc");
 	//gpGfx->load_shader("data/shaders/wireframe.qc");
+
+	std::shared_ptr<window_debug_entities> pEntDbg;
 
 	while (!cli->m_bShutdown) {
 		mainmenu::exitcode c;
@@ -64,8 +66,10 @@ void client_main(client* cli, const char* pszHostname, const char* pszUsername) 
 					cli->m_bRequestServer = true;
 					g.connect("127.0.0.1", "LOCALUSER");
 					g.paused(false);
-					wnd_de = std::make_unique<window_debug_entities>(g.get_socket());
-					gpGfx->add_window(wnd_de.get());
+					if (!pEntDbg) {
+						pEntDbg = std::make_shared<window_debug_entities>(g.get_socket());
+						gpGfx->add_window(pEntDbg);
+					}
 					break;
 				case mainmenu::exitcode::EMMENU_JOIN_REMOTE_GAME:
 					g.connect(mm.selected_server_address(), mm.selected_username());
@@ -76,15 +80,15 @@ void client_main(client* cli, const char* pszHostname, const char* pszUsername) 
 					
 					if (g.get_socket()->connected()) {
 						g.paused(false);
-						wnd_de = std::make_unique<window_debug_entities>(g.get_socket());
-						gpGfx->add_window(wnd_de.get());
+						if (!pEntDbg) {
+							pEntDbg = std::make_shared<window_debug_entities>(g.get_socket());
+							gpGfx->add_window(pEntDbg);
+						}
 					} else
 						PRINT_ERR("Not connected, so not starting game");
 					break;
 				case mainmenu::exitcode::EMMENU_QUIT_GAME:
 					cli->m_bShutdown = true;
-					if (wnd_de)
-						wnd_de.reset();
 					break;
 				}
 			}

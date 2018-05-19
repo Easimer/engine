@@ -64,11 +64,11 @@ int main(int argc, char** argv) {
 
 	gpGfx->load_shader("data/shaders/model_dynamic.qc");
 
-	window_model w_model;
-	window_properties w_props;
+	std::shared_ptr<window_model> w_model = std::make_shared<window_model>();
+	std::shared_ptr<window_properties> w_props = std::make_shared<window_properties>();
 
-	gpGfx->add_window(&w_model);
-	gpGfx->add_window(&w_props);
+	gpGfx->add_window(w_model);
+	gpGfx->add_window(w_props);
 
 	glm::mat4 proj = glm::perspective(glm::radians(90.f), (float)gpGfx->width() / (float)gpGfx->height(), 0.0f, 1000.0f);
 	//glm::mat4 proj = glm::ortho(0.0f, (float)gpGfx->width(), (float)gpGfx->height(), 0.0f, 0.0f, 1000.0f);

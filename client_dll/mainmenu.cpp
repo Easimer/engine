@@ -29,7 +29,7 @@ mainmenu::exitcode mainmenu::tick() {
 			//ret = EMMENU_JOIN_REMOTE_GAME;
 			m_bShowServerBrowser = true;
 			if (!m_pSDClient) {
-				m_pSDClient = std::make_unique<net::server_discovery>();
+				m_pSDClient = std::make_shared<net::server_discovery>();
 			}
 			discover_servers();
 		}

@@ -152,30 +152,30 @@ void thread_logic()
 
 	net::server game_server;
 
-	window_loading wnd_loading;
-	gpGfx->add_window(&wnd_loading);
+	auto wnd_loading = std::make_shared<window_loading>();
+	gpGfx->add_window(wnd_loading);
 
 	gpGlobals->pRenderer->begin_load();
-	wnd_loading.m_str_stage = "Compiling shaders";
-	wnd_loading.m_progress = 0;
+	wnd_loading->m_str_stage = "Compiling shaders";
+	wnd_loading->m_progress = 0;
 	gpGlobals->pRenderer->load_shader("data/shaders/model_dynamic.qc");
-	wnd_loading.m_progress = 0.5;
+	wnd_loading->m_progress = 0.5;
 	gpGlobals->pRenderer->load_shader("data/shaders/wireframe.qc");
-	wnd_loading.m_progress = 1;
+	wnd_loading->m_progress = 1;
 	//gpGlobals->pRenderer->load_shader("data/shaders/depth_map.qc"); // hardcoded into renderer
 
-	wnd_loading.m_str_stage = "Precaching resources";
-	wnd_loading.m_progress = 0;
+	wnd_loading->m_str_stage = "Precaching resources";
+	wnd_loading->m_progress = 0;
 	gpGlobals->pEntSys->precache_entities();
-	wnd_loading.m_progress = 1;
+	wnd_loading->m_progress = 1;
 
-	wnd_loading.m_str_stage = "Reticulating splines";
-	wnd_loading.m_progress = 0;
+	wnd_loading->m_str_stage = "Reticulating splines";
+	wnd_loading->m_progress = 0;
 	c_base_prop* pDog1 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pDog1->set_model("data/models/wolf.emf");
 	pDog1->spawn();
 	pDog1->set_abspos(vec3(0.5, 0, -0.1));
-	wnd_loading.m_progress = 0.2;
+	wnd_loading->m_progress = 0.2;
 	c_base_prop* pDog2 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pDog2->set_model("data/models/traffic_barrel.emf");
 	pDog2->spawn();
@@ -185,7 +185,7 @@ void thread_logic()
 	pArthas->set_model("data/models/arthas.emf");
 	pArthas->spawn();
 	pArthas->set_abspos(vec3(-0.5, 0, -1));
-	wnd_loading.m_progress = 0.4;
+	wnd_loading->m_progress = 0.4;
 	c_base_prop* pCSoldier = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 	pCSoldier->set_model("data/models/csoldier.emf");
 	pCSoldier->spawn();
@@ -194,7 +194,7 @@ void thread_logic()
 	c_base_prop* pHat = (c_base_prop*)CreateEntityNoSpawn("prop_static");
 	pHat->set_model("data/models/test_terrain.smd");
 	pHat->spawn();
-	wnd_loading.m_progress = 0.75;
+	wnd_loading->m_progress = 0.75;
 	//gpGlobals->pEntSys->kill_entity(pHat);
 	
 	//c_prop_physics* pSphere = (c_prop_physics*)CreateEntityNoSpawn("prop_physics");
@@ -223,7 +223,7 @@ void thread_logic()
 	//	
 	//}
 	
-	wnd_loading.m_progress = 0.8;
+	wnd_loading->m_progress = 0.8;
 	base_entity* pLight = CreateEntityNoSpawn("light_point");
 	if (pLight) {
 		pLight->spawn();
@@ -231,18 +231,18 @@ void thread_logic()
 		pLightColor = { 1, 1, 1, 1 };
 		pLight->set_abspos(vec3(0, 10, 0));
 	}
-	wnd_loading.m_progress = 0.9;
+	wnd_loading->m_progress = 0.9;
 	base_entity* pLightGlobal = CreateEntity("light_global");
 	if (pLightGlobal) {
 		pLightGlobal->set_abspos(vec3(-1.5, 0.5, 0));
 		pLightGlobal->set_rotation(vec3(0, glm::radians(90.0f), glm::radians(90.0f)));
 	}
-	wnd_loading.m_progress = 1;
+	wnd_loading->m_progress = 1;
 	PRINT_DBG("===========");
 	PRINT_DBG("End of loading");
 	PRINT_DBG("===========");
 	gpGlobals->pRenderer->end_load();
-	gpGfx->remove_window(&wnd_loading);
+	gpGfx->remove_window(wnd_loading);
 
 	double flNextUpdate = 0;
 

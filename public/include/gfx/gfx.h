@@ -90,9 +90,9 @@ namespace gfx {
 
 		// Add gfx::window to the window manager
 		// (does NOT store the window object)
-		void add_window(gfx::window* w) { windows.push_back(w); }
+		void add_window(std::shared_ptr<gfx::window> w) { windows.push_back(w); }
 		// Removes window from the window manager by pointer
-		void remove_window(gfx::window* w);
+		void remove_window(std::shared_ptr<gfx::window> w);
 
 		// Get shader with ID
 		shader_program* get_shader(size_t i) { return shaders[i]; }
@@ -147,7 +147,7 @@ namespace gfx {
 		std::vector<shader_program*> shaders;
 		std::map<std::string, size_t> shader_name_map;
 
-		std::vector<gfx::window*> windows;
+		std::vector<std::shared_ptr<gfx::window>> windows;
 
 		std::map<model_id, size_t> model_material_map;
 		std::map<model_id, size_t> model_vertexcount_map;

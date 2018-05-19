@@ -17,7 +17,7 @@ game::game() : m_bPaused(true), m_model_cache({ 0 }) {
 void game::connect(const char * pszHostname, const char * pszUsername) {
 	if (m_pNetClient)
 		return;
-	m_pNetClient = std::make_unique<net::client>(pszHostname, pszUsername);
+	m_pNetClient = std::make_shared<net::client>(pszHostname, pszUsername);
 	ASSERT(m_pNetClient);
 
 	m_pNetClient->connect();
