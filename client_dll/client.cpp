@@ -15,6 +15,28 @@ extern "C" {
 	}
 }
 
+#include <gfx/window.h>
+#include <gfx/window_register.h>
+#include <gui/imgui.h>
+
+class window_debug_entities : public gfx::window {
+public:
+	window_debug_entities(const net::client* cli) : m_pClient(cli) {}
+	virtual const char* get_title() { return "Entity inspector"; }
+protected:
+	virtual void draw_content() {
+		auto edicts = m_pClient->get_edicts();
+		for (size_t i = 0; i < net::max_edicts; i++) {
+			if (edicts[i].active) {
+				ImGui::InputInt("ID", (int*)&i, 1, 100, ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputFloat3("Position", (float*)edicts[i].position.ptr(), -1, ImGuiInputTextFlags_ReadOnly);
+			}
+		}
+	}
+private:
+	const net::client* m_pClient;
+};
+
 void client_main(client* cli, const char* pszHostname, const char* pszUsername) {
 	if (!gpGfx->init("game")) {
 		PRINT_ERR("client::init: couldn't initialize graphics subsystem!!!!");
@@ -25,6 +47,8 @@ void client_main(client* cli, const char* pszHostname, const char* pszUsername) 
 	mainmenu mm;
 	game g;
 
+	std::unique_ptr<window_debug_entities> wnd_de;
+
 	gpGfx->load_default_shaders();
 	gpGfx->load_shader("data/shaders/model_dynamic.qc");
 	//gpGfx->load_shader("data/shaders/wireframe.qc");
@@ -32,12 +56,15 @@ void client_main(client* cli, const char* pszHostname, const char* pszUsername) 
 	while (!cli->m_bShutdown) {
 		mainmenu::exitcode c;
 		gpGfx->begin_frame();
+		gpGfx->draw_windows();
 		if (g.paused() && (c = mm.tick()) != mainmenu::exitcode::EMMENU_OK) {
 			switch (c) {
 			case mainmenu::exitcode::EMMENU_START_LOCAL_GAME:
 				cli->m_bRequestServer = true;
 				g.connect("::1", "LOCALUSER");
 				g.paused(false);
+				wnd_de = std::make_unique<window_debug_entities>(g.get_socket());
+				gpGfx->add_window(wnd_de.get());
 				break;
 			case mainmenu::exitcode::EMMENU_JOIN_REMOTE_GAME:
 				if (cli->m_pClient) {
@@ -49,13 +76,18 @@ void client_main(client* cli, const char* pszHostname, const char* pszUsername) 
 					std::this_thread::sleep_for(std::chrono::seconds(1));
 					cli->m_pClient->attempt_connect();
 				}
-				if (cli->m_pClient->connected())
+				if (cli->m_pClient->connected()) {
 					g.paused(false);
+					wnd_de = std::make_unique<window_debug_entities>(cli->m_pClient.get());
+					gpGfx->add_window(wnd_de.get());
+				}
 				else
 					PRINT_ERR("Not connected, so not starting game");
 				break;
 			case mainmenu::exitcode::EMMENU_QUIT_GAME:
 				cli->m_bShutdown = true;
+				if(wnd_de)
+					wnd_de.reset();
 				break;
 			}
 		} else {

@@ -17,6 +17,8 @@ public:
 	void disconnect();
 	bool tick();
 
+	const net::client* get_socket() const { return m_pNetClient.get(); }
+
 private:
 	bool m_bPaused;
 	std::unique_ptr<net::client> m_pNetClient;
