@@ -34,6 +34,7 @@ net::client::client(const std::string& addr, const std::string& username) : m_us
 	m_server_addr_siz = sizeof(m_server_addr);
 
 	m_connected = false;
+	timeout(1);
 	connect();
 }
 
@@ -96,6 +97,7 @@ void net::client::connect() {
 	std::thread t([&]() {
 		auto socket = get_socket();
 		PRINT_DBG("net::client: receiver thread is running");
+		attempt_connect();
 		while (true) {
 			char buf[4096];
 			int recv_len;
@@ -118,7 +120,7 @@ void net::client::connect() {
 						m_connected = true;
 						break;
 					case Schemas::Networking::MessageType_CONNECT_NAK:
-						if(m_connected) // check for duplicate conreq response
+						if(!m_connected) // check for duplicate conreq response
 							handle_connect_nak((Schemas::Networking::ConnectData*)(*msghdr).data());
 						break;
 					case Schemas::Networking::MessageType_ENTITY_UPDATE:
@@ -135,8 +137,6 @@ void net::client::connect() {
 		}
 	});
 	t.detach();
-
-	attempt_connect();
 }
 
 void net::client::disconnect() {
@@ -151,6 +151,19 @@ void net::client::disconnect() {
 
 	send_to_server(fbb.GetBufferPointer(), fbb.GetSize());
 	net::close_socket(m_socket);
+}
+
+void net::client::timeout(int sec, int usec) {
+	struct timeval timeout;
+	timeout.tv_sec = sec;
+	timeout.tv_usec = usec;
+
+	if (setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) < 0) {
+		PRINT_ERR("net::client::timeout: failed to set recv timeout!");
+	}
+	if (setsockopt(m_socket, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout, sizeof(timeout)) < 0) {
+		PRINT_ERR("net::client::timeout: failed to set send timeout!");
+	}
 }
 
 net::server_discovery::server_discovery() {

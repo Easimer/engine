@@ -57,42 +57,41 @@ void client_main(client* cli, const char* pszHostname, const char* pszUsername) 
 		mainmenu::exitcode c;
 		gpGfx->begin_frame();
 		gpGfx->draw_windows();
-		if (g.paused() && (c = mm.tick()) != mainmenu::exitcode::EMMENU_OK) {
-			switch (c) {
-			case mainmenu::exitcode::EMMENU_START_LOCAL_GAME:
-				cli->m_bRequestServer = true;
-				g.connect("::1", "LOCALUSER");
-				g.paused(false);
-				wnd_de = std::make_unique<window_debug_entities>(g.get_socket());
-				gpGfx->add_window(wnd_de.get());
-				break;
-			case mainmenu::exitcode::EMMENU_JOIN_REMOTE_GAME:
-				if (cli->m_pClient) {
-					cli->m_pClient.reset();
-				}
-				cli->m_pClient = std::make_unique<net::client>(mm.selected_server_address(), mm.selected_username());
-				cli->m_pClient->connect();
-				for(int i = 0; i < 3 && !cli->m_pClient->connected(); i++) {
-					std::this_thread::sleep_for(std::chrono::seconds(1));
-					cli->m_pClient->attempt_connect();
-				}
-				if (cli->m_pClient->connected()) {
+		if (g.paused()) {
+			if ((c = mm.tick()) != mainmenu::exitcode::EMMENU_OK) {
+				switch (c) {
+				case mainmenu::exitcode::EMMENU_START_LOCAL_GAME:
+					cli->m_bRequestServer = true;
+					g.connect("::1", "LOCALUSER");
 					g.paused(false);
-					wnd_de = std::make_unique<window_debug_entities>(cli->m_pClient.get());
+					wnd_de = std::make_unique<window_debug_entities>(g.get_socket());
 					gpGfx->add_window(wnd_de.get());
+					break;
+				case mainmenu::exitcode::EMMENU_JOIN_REMOTE_GAME:
+					g.connect(mm.selected_server_address(), mm.selected_username());
+					for (int i = 0; i < 3 && !g.get_socket()->connected(); i++) {
+						std::this_thread::sleep_for(std::chrono::seconds(1));
+						g.get_socket()->attempt_connect();
+					}
+					
+					if (g.get_socket()->connected()) {
+						g.paused(false);
+						wnd_de = std::make_unique<window_debug_entities>(g.get_socket());
+						gpGfx->add_window(wnd_de.get());
+					} else
+						PRINT_ERR("Not connected, so not starting game");
+					break;
+				case mainmenu::exitcode::EMMENU_QUIT_GAME:
+					cli->m_bShutdown = true;
+					if (wnd_de)
+						wnd_de.reset();
+					break;
 				}
-				else
-					PRINT_ERR("Not connected, so not starting game");
-				break;
-			case mainmenu::exitcode::EMMENU_QUIT_GAME:
-				cli->m_bShutdown = true;
-				if(wnd_de)
-					wnd_de.reset();
-				break;
 			}
 		} else {
-			if (!g.tick())
-				g.paused(true);
+			/*if (!g.tick())
+				g.paused(true);*/
+			g.tick();
 		}
 		gpGfx->end_frame();
 	}

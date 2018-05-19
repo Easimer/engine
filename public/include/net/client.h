@@ -38,6 +38,8 @@ namespace net {
 
 		const edict_t* const get_edicts() const { return m_edicts; }
 
+		void timeout(int secs = 0, int usecs = 0);
+
 	private:
 		net::socket_t m_socket;
 		bool m_connected = false;
