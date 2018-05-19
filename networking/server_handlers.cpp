@@ -4,14 +4,14 @@
 void net::server::add_handles() {
 	// NONE
 	m_handlers.emplace(Schemas::Networking::MessageType::MessageType_NONE,
-		[&](const sockaddr_in6& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
+		[&](const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
 		send_to_client(client, &hdr, siz);
 		return true;
 	});
 
 	// CONNECT
 	m_handlers.emplace(Schemas::Networking::MessageType::MessageType_CONNECT,
-		[&](const sockaddr_in6& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
+		[&](const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
 		// Check if user is already connected
 		bool ack = true;
 		int first_free_slot = -1;
@@ -94,7 +94,7 @@ void net::server::add_handles() {
 	
 	// DISCONNECT
 	m_handlers.emplace(Schemas::Networking::MessageType::MessageType_DISCONNECT,
-		[&](const sockaddr_in6& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
+		[&](const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
 		auto pClientDesc = get_client_desc(client);
 		if (pClientDesc) {
 			pClientDesc->slot_active = false;
@@ -107,13 +107,13 @@ void net::server::add_handles() {
 
 	// CLIENT_UPDATE
 	m_handlers.emplace(Schemas::Networking::MessageType::MessageType_CLIENT_UPDATE,
-		[&](const sockaddr_in6& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
+		[&](const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
 		return false;
 	});
 
 	// DISCOVERY_PROBE
 	m_handlers.emplace(Schemas::Networking::MessageType::MessageType_DISCOVERY_PROBE,
-		[&](const sockaddr_in6& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
+		[&](const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
 		flatbuffers::FlatBufferBuilder fbb;
 		Schemas::Networking::MessageHeaderBuilder mhb(fbb);
 		mhb.add_type(Schemas::Networking::MessageType_DISCOVERY_RESPONSE);

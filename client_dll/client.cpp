@@ -62,7 +62,7 @@ void client_main(client* cli, const char* pszHostname, const char* pszUsername) 
 				switch (c) {
 				case mainmenu::exitcode::EMMENU_START_LOCAL_GAME:
 					cli->m_bRequestServer = true;
-					g.connect("::1", "LOCALUSER");
+					g.connect("127.0.0.1", "LOCALUSER");
 					g.paused(false);
 					wnd_de = std::make_unique<window_debug_entities>(g.get_socket());
 					gpGfx->add_window(wnd_de.get());

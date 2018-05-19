@@ -63,15 +63,6 @@ namespace net {
 		unsigned buttons;
 	};
 
-	inline bool operator==(const sockaddr_in6& lhs, const sockaddr_in6& rhs) {
-		bool ports = lhs.sin6_port == rhs.sin6_port;
-		for (size_t i = 0; i < 16; i++) {
-			if (lhs.sin6_addr.u.Byte[i] != rhs.sin6_addr.u.Byte[i])
-				return false;
-		}
-		return ports;
-	}
-
 	inline void close_socket(socket_t s) {
 #if defined(PLAT_WINDOWS)
 		closesocket(s);
@@ -79,4 +70,8 @@ namespace net {
 		close(s);
 #endif
 	}
+}
+
+inline bool operator==(const sockaddr_in& lhs, const sockaddr_in& rhs) {
+	return (lhs.sin_port == rhs.sin_port) && (memcmp(&lhs.sin_addr, &rhs.sin_addr, sizeof(lhs.sin_addr)) == 0);
 }

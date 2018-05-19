@@ -36,6 +36,3 @@ void net::client::handle_entity_update(const Schemas::Networking::EntityUpdate* 
 		strncpy(e.modelname, model->c_str(), 128);
 	}
 }
-
-void net::client::handle_discovery_response(const sockaddr_in6 saddr, const unsigned short port) {
-}

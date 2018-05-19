@@ -12,7 +12,7 @@ namespace net {
 		bool slot_active = false;
 
 		// Player's address and port
-		sockaddr_in6 addr;
+		sockaddr_in addr;
 		// Player's name
 		std::string username;
 		// Time of last received packet from client
@@ -27,7 +27,7 @@ namespace net {
 		const char* model;
 	};
 
-	using server_handler = std::function<bool(const sockaddr_in6& client, const Schemas::Networking::MessageHeader& hdr, size_t siz)>;
+	using server_handler = std::function<bool(const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz)>;
 
 	class server {
 	public:
@@ -50,7 +50,7 @@ namespace net {
 			m_handlers[t] = h;
 		}
 
-		void send_to_client(const sockaddr_in6& client, const void* pBuf, size_t nSiz);
+		void send_to_client(const sockaddr_in& client, const void* pBuf, size_t nSiz);
 
 		net::socket_t get_socket() {
 			return m_socket;
@@ -58,7 +58,7 @@ namespace net {
 
 		void add_handles();
 
-		net::client_desc* get_client_desc(const sockaddr_in6& addr);
+		net::client_desc* get_client_desc(const sockaddr_in& addr);
 		net::client_desc* get_client_desc(const std::string_view& username);
 
 		inline net::edict_t& edict(const ent_id id) {

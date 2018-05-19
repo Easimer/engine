@@ -16,7 +16,7 @@ net::client::client(const std::string& addr, const std::string& username) : m_us
 	}
 #endif
 
-	if ((s = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) == invalid_socket) {
+	if ((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == invalid_socket) {
 #if defined(PLAT_WINDOWS)
 		PRINT_ERR("net::client::ctor: can't open socket: " << WSAGetLastError());
 #elif defined(PLAT_LINUX)
@@ -28,9 +28,9 @@ net::client::client(const std::string& addr, const std::string& username) : m_us
 	m_socket = s;
 
 	memset(&m_server_addr, 0, sizeof(m_server_addr));
-	m_server_addr.sin6_family = AF_INET6;
-	inet_pton(AF_INET6, addr.c_str(), &m_server_addr.sin6_addr.s6_addr);
-	m_server_addr.sin6_port = htons(net::port);
+	m_server_addr.sin_family = AF_INET;
+	inet_pton(AF_INET, addr.c_str(), &m_server_addr.sin_addr);
+	m_server_addr.sin_port = htons(net::port);
 	m_server_addr_siz = sizeof(m_server_addr);
 
 	m_connected = false;
@@ -176,7 +176,7 @@ net::server_discovery::server_discovery() {
 	WSAStartup(MAKEWORD(2, 2), &wsa);
 #endif
 
-	if ((m_socket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) == invalid_socket) {
+	if ((m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == invalid_socket) {
 #if defined(PLAT_WINDOWS)
 		PRINT_ERR("net::client::discovery_probe: can't open socket: " << WSAGetLastError());
 #elif defined(PLAT_LINUX)
@@ -185,16 +185,16 @@ net::server_discovery::server_discovery() {
 		return;
 	}
 
-	//if (setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, &one, sizeof(one)) < 0) {
-	//	PRINT_ERR("net::client::discovery_probe: couldn't set broadcast option on socket!");
-	//	net::close_socket(m_socket);
-	//}
+	if (setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, &one, sizeof(one)) < 0) {
+		PRINT_ERR("net::client::discovery_probe: couldn't set broadcast option on socket!");
+		net::close_socket(m_socket);
+	}
 
 	memset(&addr_rx, 0, addr_len);
-	addr_rx.sin6_family = AF_INET6;
-	addr_rx.sin6_port = htons(net::port);
+	addr_rx.sin_family = AF_INET;
+	addr_rx.sin_port = htons(net::port);
 	//inet_pton(AF_INET6, "FF02::B1E5:5ED:BEEF", &addr_rx.sin6_addr.s6_addr);
-	inet_pton(AF_INET6, "FF02::1", &addr_rx.sin6_addr.s6_addr);
+	inet_pton(AF_INET, "255.255.255.255", &addr_rx.sin_addr);
 }
 
 net::server_discovery::~server_discovery() {
@@ -218,7 +218,7 @@ void net::server_discovery::probe() {
 }
 
 void net::server_discovery::fetch() {
-	sockaddr_in6 addr_tx;
+	sockaddr_in addr_tx;
 	char buf[4096];
 	int recv_len;
 	int slen = sizeof(addr_tx);

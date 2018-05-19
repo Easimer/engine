@@ -32,7 +32,6 @@ namespace net {
 		void handle_connect_ack(const Schemas::Networking::ConnectData* pConnDat);
 		void handle_connect_nak(const Schemas::Networking::ConnectData* pConnDat);
 		void handle_entity_update(const Schemas::Networking::EntityUpdate* pEntUpd);
-		void handle_discovery_response(const sockaddr_in6 saddr, const unsigned short port);
 
 		void disconnect();
 
@@ -47,7 +46,7 @@ namespace net {
 		edict_t m_edicts[net::max_edicts];
 		net::frame m_current_frame = 0;
 
-		sockaddr_in6 m_server_addr;
+		sockaddr_in m_server_addr;
 		int m_server_addr_siz;
 
 		std::string m_username;
@@ -60,11 +59,11 @@ namespace net {
 		~server_discovery();
 		void probe();
 		void fetch();
-		const std::vector<sockaddr_in6> get() const { return m_discovered_servers; }
+		const std::vector<sockaddr_in> get() const { return m_discovered_servers; }
 		void timeout(int sec = 0, int usec = 0);
 	private:
 		socket_t m_socket;
-		sockaddr_in6 addr_rx;
-		std::vector<sockaddr_in6> m_discovered_servers;
+		sockaddr_in addr_rx;
+		std::vector<sockaddr_in> m_discovered_servers;
 	};
 }

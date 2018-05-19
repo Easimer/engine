@@ -4,7 +4,7 @@
 
 net::server::server() {
 	socket_t s;
-	struct sockaddr_in6 server;
+	struct sockaddr_in server;
 	int slen;
 	WSADATA wsa;
 
@@ -16,7 +16,7 @@ net::server::server() {
 	}
 #endif
 
-	if ((s = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) == invalid_socket) {
+	if ((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == invalid_socket) {
 #if defined(PLAT_WINDOWS)
 		PRINT_ERR("net::server::ctor: can't open socket: " << WSAGetLastError());
 #elif defined(PLAT_LINUX)
@@ -24,17 +24,11 @@ net::server::server() {
 #endif
 		return;
 	}
-#if !defined(PLAT_WINDOWS_XP) // TODO: define this macro
-	int zero = 0;
-	setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&zero, sizeof(zero));
-#endif
 
 	memset(&server, 0, sizeof(server));
-	server.sin6_family = AF_INET6;
-	server.sin6_addr = in6addr_any;
-	//inet_pton(AF_INET6, "::", (void*)&server.sin6_addr.s6_addr);
-	server.sin6_port = htons(net::port);
-	server.sin6_scope_id = 0;
+	server.sin_family = AF_INET;
+	server.sin_addr.s_addr = INADDR_ANY;
+	server.sin_port = htons(net::port);
 
 	if (bind(s, (sockaddr*)&server, slen) == net::socket_error) {
 #if defined(PLAT_WINDOWS)
@@ -44,19 +38,6 @@ net::server::server() {
 #endif
 		close_socket(s);
 		return;
-	}
-
-	// Join discovery multicast group
-	struct ipv6_mreq group = { 0 };
-	group.ipv6mr_interface = 0;
-	//inet_pton(AF_INET6, "FF02::B1E5:5ED:BEEF", &group.ipv6mr_multiaddr);
-	inet_pton(AF_INET6, "FF02::1", &group.ipv6mr_multiaddr);
-	if (setsockopt(s, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&group, sizeof(group)) < 0) {
-		PRINT_ERR("Failed to join Server Discovery group! This server won't answer to LAN server discovery requests!");
-		ASSERT(0);
-#if defined(PLAT_WINDOWS)
-		PRINT_ERR("\tThe reason is: " << WSAGetLastError());
-#endif
 	}
 
 	m_socket = s;
@@ -70,12 +51,12 @@ net::server::server() {
 		while (true) {
 			char buf[4096];
 			int recv_len;
-			sockaddr_in6 from;
+			sockaddr_in from;
 			int slen = sizeof(from);
 
 			if ((recv_len = recvfrom(socket, buf, 4096, 0, (sockaddr*)&from, &slen)) != net::socket_error) {
 				char addrbuf[64];
-				inet_ntop(AF_INET6, &from.sin6_addr, addrbuf, 64);
+				inet_ntop(AF_INET, &from.sin_addr, addrbuf, 64);
 				//PRINT_DBG("net::server::thread: received " << recv_len << " bytes from " << addrbuf);
 				auto verifier = flatbuffers::Verifier((const uint8_t*)buf, recv_len);
 				if (Schemas::Networking::VerifyMessageHeaderBuffer(verifier)) {
@@ -100,11 +81,6 @@ net::server::server() {
 
 net::server::~server() {
 	if (m_listening) {
-		// Leave multicast group
-		struct ipv6_mreq group = { 0 };
-		group.ipv6mr_interface = 0;
-		inet_pton(AF_INET6, "FF02::B1E5:5ED:BEEF", &group.ipv6mr_multiaddr);
-		setsockopt(m_socket, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&group, sizeof(group));
 		close_socket(m_socket);
 	}
 }
@@ -182,7 +158,7 @@ void net::server::broadcast_update(const entity_update& upd) {
 	}
 }
 
-void net::server::send_to_client(const sockaddr_in6 & client, const void * pBuf, size_t nSiz) {
+void net::server::send_to_client(const sockaddr_in & client, const void * pBuf, size_t nSiz) {
 	size_t nSent = 0;
 	if ((nSent = sendto(m_socket, (char*)pBuf, nSiz, 0, (sockaddr*)&client, sizeof(client))) == net::socket_error) {
 #if defined(PLAT_WINDOWS)
@@ -200,7 +176,7 @@ void net::server::send_to_client(const sockaddr_in6 & client, const void * pBuf,
 	ASSERT(nSent == nSiz);
 }
 
-net::client_desc * net::server::get_client_desc(const sockaddr_in6& addr) {
+net::client_desc * net::server::get_client_desc(const sockaddr_in& addr) {
 	for (size_t i = 0; i < get_max_players(); i++) {
 		net::client_desc& c = m_clients[i];
 		if (!c.slot_active)

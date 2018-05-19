@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 
 	auto cli = client_init();
 	ASSERT(cli);
-	cli->init("::1", "LOCALUSER");
+	cli->init("127.0.0.1", "LOCALUSER");
 
 	iserver* srv = nullptr;
 

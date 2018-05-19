@@ -31,8 +31,8 @@ protected:
 	size_t discover_servers();
 
 private:
-	std::vector<sockaddr_in6> m_servers;
-	sockaddr_in6* m_pSelected;
+	std::vector<sockaddr_in> m_servers;
+	sockaddr_in* m_pSelected;
 	bool m_bShowServerBrowser = false;
 	std::unique_ptr<net::server_discovery> m_pSDClient;
 

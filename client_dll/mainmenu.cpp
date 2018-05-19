@@ -46,7 +46,7 @@ mainmenu::exitcode mainmenu::tick() {
 		if (ImGui::Begin("Server Browser")) {
 			ImGui::ListBoxHeader("Servers");
 			for (auto& srv : m_servers) {
-				inet_ntop(AF_INET6, &srv.sin6_addr, buf, 128);
+				inet_ntop(AF_INET, &srv.sin_addr, buf, 128);
 				//strncat(buf, std::to_string(srv.sin6_port).c_str(), 128);
 				if (ImGui::Selectable(buf, (&srv) == m_pSelected)) {
 					if(m_pSelected != &srv)
