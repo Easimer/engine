@@ -193,7 +193,8 @@ net::server_discovery::server_discovery() {
 	memset(&addr_rx, 0, addr_len);
 	addr_rx.sin6_family = AF_INET6;
 	addr_rx.sin6_port = htons(net::port);
-	inet_pton(AF_INET6, "FF02::B1E5:5ED:BEEF", &addr_rx.sin6_addr.s6_addr);
+	//inet_pton(AF_INET6, "FF02::B1E5:5ED:BEEF", &addr_rx.sin6_addr.s6_addr);
+	inet_pton(AF_INET6, "FF02::1", &addr_rx.sin6_addr.s6_addr);
 }
 
 net::server_discovery::~server_discovery() {
