@@ -28,13 +28,26 @@ void net::client::handle_entity_update(const Schemas::Networking::EntityUpdate* 
 		float x = pos->x();
 		float y = pos->y();
 		float z = pos->z();
+
+		// Calculate error
+		float ex = (x - e.iposition[0]);
+		float ey = (y - e.iposition[1]);
+		float ez = (z - e.iposition[2]);
+		float err = vec3(ex, ey, ez).length();
+		PRINT_DBG("Error: " << err);
+
 		if (dts != 0) {
 			float flDeltaX = (x - e.position[0]);
 			float flDeltaY = (y - e.position[1]);
 			float flDeltaZ = (z - e.position[2]);
-			e.velocity[0] = flDeltaX / dts;
-			e.velocity[1] = flDeltaY / dts;
-			e.velocity[2] = flDeltaZ / dts;
+			vec3 vel(flDeltaX / dts, flDeltaY / dts, flDeltaZ / dts);
+			e.iacceleration = (vel - e.velocity) / dts;
+			e.velocity = vel;
+			
+			//if (err < 0.2)
+			//	e.ivelocity = e.velocity + vec3(ex / dts, ey / dts, ez / dts); // reset interpolated velocity
+			//else
+				e.ivelocity = e.velocity;
 		} else {
 			e.velocity[0] = 0;
 			e.velocity[1] = 0;

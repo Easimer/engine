@@ -115,10 +115,54 @@ void net::server::add_handles() {
 	m_handlers.emplace(Schemas::Networking::MessageType::MessageType_DISCOVERY_PROBE,
 		[&](const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
 		flatbuffers::FlatBufferBuilder fbb;
+		auto srv_name = fbb.CreateString(m_server_name);
+		auto srv_level = fbb.CreateString(m_level_name);
+		Schemas::Networking::ServerDataBuilder sdb(fbb);
+		sdb.add_name(srv_name);
+		sdb.add_level(srv_level);
+		sdb.add_players(player_count());
+		sdb.add_max_players(max_players);
+		auto srv_dat = sdb.Finish();
 		Schemas::Networking::MessageHeaderBuilder mhb(fbb);
 		mhb.add_type(Schemas::Networking::MessageType_DISCOVERY_RESPONSE);
+		mhb.add_data_type(Schemas::Networking::MessageData_ServerData);
+		mhb.add_data(srv_dat.Union());
 		Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
-		for(int i = 0; i < 3; i++)
+		for (int i = 0; i < 3; i++)
+			send_to_client(client, fbb.GetBufferPointer(), fbb.GetSize());
+		return true;
+	});
+
+	// ECHO_REQUEST
+	m_handlers.emplace(Schemas::Networking::MessageType::MessageType_ECHO_REQUEST,
+		[&](const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
+		flatbuffers::FlatBufferBuilder fbb;
+		Schemas::Networking::MessageHeaderBuilder mhb(fbb);
+		mhb.add_type(Schemas::Networking::MessageType_ECHO_REPLY);
+		Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
+		for (int i = 0; i < 3; i++)
+			send_to_client(client, fbb.GetBufferPointer(), fbb.GetSize());
+		return true;
+	});
+
+	// QUERY_REQUEST
+	m_handlers.emplace(Schemas::Networking::MessageType::MessageType_QUERY_REQUEST,
+		[&](const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
+		flatbuffers::FlatBufferBuilder fbb;
+		auto srv_name = fbb.CreateString(m_server_name);
+		auto srv_level = fbb.CreateString(m_level_name);
+		Schemas::Networking::ServerDataBuilder sdb(fbb);
+		sdb.add_name(srv_name);
+		sdb.add_level(srv_level);
+		sdb.add_players(player_count());
+		sdb.add_max_players(max_players);
+		auto srv_dat = sdb.Finish();
+		Schemas::Networking::MessageHeaderBuilder mhb(fbb);
+		mhb.add_type(Schemas::Networking::MessageType_QUERY_REPLY);
+		mhb.add_data_type(Schemas::Networking::MessageData_ServerData);
+		mhb.add_data(srv_dat.Union());
+		Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
+		for (int i = 0; i < 3; i++)
 			send_to_client(client, fbb.GetBufferPointer(), fbb.GetSize());
 		return true;
 	});

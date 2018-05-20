@@ -14,6 +14,8 @@ public:
 	END_KEYVALUES()
 private:
 	bool m_bDir = false;
+
+	float m_flAngle = 0;
 };
 
 REGISTER_ENTITY(c_prop_dynamic, prop_dynamic);
@@ -31,22 +33,18 @@ void c_prop_dynamic::spawn() {
 	m_nFilter = ENT_FILTER_PROP;
 
 	auto pos = get_abspos();
-	pos[1] = -5;
+	pos[0] = 0;
+	pos[1] = 0;
 	pos[2] = -3.5;
 	set_abspos(pos);
 }
 
 void c_prop_dynamic::think() {
-	SetNextThink(gpGlobals->curtime + 0.5);
+	SetNextThink(gpGlobals->curtime + 0.008);
 
 	auto pos = get_abspos();
-	if(m_bDir)
-		pos[1] += 0.5;
-	else
-		pos[1] -= 0.5;
-	if (pos[1] >= 5)
-		m_bDir = false;
-	if (pos[1] <= -5)
-		m_bDir = true;
+	pos[0] = 2 * cos(m_flAngle);
+	pos[1] = 2 * sin(m_flAngle);
+	m_flAngle += (0.0523598776f);
 	set_abspos(pos);
 }

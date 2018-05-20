@@ -19,6 +19,8 @@ void server::init() {
 	
 	gpGlobals->curtime = 0;
 	m_server.set_time_ptr(&gpGlobals->curtime);
+	m_server.set_name("Default Server Name");
+	m_server.set_level_name("<no level loaded>");
 
 	m_thread_logic = std::thread([&]() {
 		std::flush(std::cout);

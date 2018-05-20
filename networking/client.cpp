@@ -126,10 +126,14 @@ void net::client::connect() {
 					case Schemas::Networking::MessageType_ENTITY_UPDATE:
 						handle_entity_update((Schemas::Networking::EntityUpdate*)(*msghdr).data());
 						break;
+					case Schemas::Networking::MessageType_ECHO_REPLY:
+						break;
 					default:
 						PRINT_ERR("net::client::thread: unknown message type " << Schemas::Networking::EnumNameMessageType(msgtype));
 						break;
 					}
+
+					m_last_update = std::chrono::steady_clock::now();
 				} else {
 					PRINT_ERR("net::client::thread: verify failed!");
 				}
@@ -164,6 +168,21 @@ void net::client::timeout(int sec, int usec) {
 	if (setsockopt(m_socket, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout, sizeof(timeout)) < 0) {
 		PRINT_ERR("net::client::timeout: failed to set send timeout!");
 	}
+}
+
+bool net::client::timed_out() {
+	auto now = std::chrono::steady_clock::now();
+	if (std::chrono::duration<double>(now - m_last_update) >= timeout_threshold) {
+		// Send ECHO_REQUEST
+		flatbuffers::FlatBufferBuilder fbb;
+		Schemas::Networking::MessageHeaderBuilder mhb(fbb);
+		mhb.add_type(Schemas::Networking::MessageType::MessageType_ECHO_REQUEST);
+		Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
+		send_to_server(fbb.GetBufferPointer(), fbb.GetSize());
+
+		return true;
+	}
+	return false;
 }
 
 net::server_discovery::server_discovery() {
@@ -230,7 +249,16 @@ void net::server_discovery::fetch() {
 			ASSERT(msghdr->Verify(verifier));
 			Schemas::Networking::MessageType msgtype = (*msghdr).type();
 			if (msgtype == Schemas::Networking::MessageType_DISCOVERY_RESPONSE) {
-				m_discovered_servers.push_back(addr_tx);
+				net::server_entry e;
+				e.addr = addr_tx;
+				if (msghdr->data_type() == Schemas::Networking::MessageData_ServerData && msghdr->data_as_ServerData()) {
+					const Schemas::Networking::ServerData* srv_dat = msghdr->data_as_ServerData();
+					e.name = srv_dat->name()->str();
+					e.level = srv_dat->level()->str();
+					e.players = srv_dat->players();
+					e.max_players = srv_dat->max_players();
+				}
+				m_discovered_servers.push_back(e);
 			}
 		}
 	}

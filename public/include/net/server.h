@@ -74,6 +74,11 @@ namespace net {
 
 		void set_time_ptr(const float* pCurTime) { m_pCurTime = pCurTime; }
 
+		size_t player_count() const;
+
+		void set_name(const std::string& str) { m_server_name = str; }
+		void set_level_name(const std::string& str) { m_level_name = str; }
+
 	private:
 		net::socket_t m_socket;
 		bool m_listening = false;
@@ -91,5 +96,8 @@ namespace net {
 		std::unordered_map<Schemas::Networking::MessageType, server_handler> m_handlers;
 
 		const float* m_pCurTime;
+
+		std::string m_server_name;
+		std::string m_level_name;
 	};
 }

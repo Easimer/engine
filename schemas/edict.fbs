@@ -32,6 +32,12 @@ enum MessageType : long {
 
 	ENTITY_UPDATE, // Update entity
 	CLIENT_UPDATE, // Client update
+
+	ECHO_REQUEST,
+	ECHO_REPLY,
+
+	QUERY_REQUEST,
+	QUERY_REPLY,
 }
 
 enum ConnectionNakReason : long {
@@ -50,8 +56,18 @@ table ConnectData {
 	nak_reason : ConnectionNakReason;
 }
 
+table ServerData {
+	// Custom, human-readable name of the server
+	name : string;
+	// Player count
+	players : ulong;
+	max_players : ulong;
+	// Level
+	level : string;
+}
+
 union MessageData {
-	ConnectData, EntityUpdate
+	ConnectData, EntityUpdate, ServerData
 }
 
 table MessageHeader {

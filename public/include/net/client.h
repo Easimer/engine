@@ -1,6 +1,7 @@
 #pragma once
 
 #include "networking.h"
+#include <chrono>
 
 namespace net {
 
@@ -10,6 +11,14 @@ namespace net {
 	public:
 		client(const std::string& addr, const std::string& username);
 		~client();
+
+		enum connection_status {
+			E_CLIENT_CONNSTATUS_OK = 0,
+			E_CLIENT_CONNSTATUS_FAIL = 1,
+			E_CLIENT_CONNSTATUS_ALRDCONN = 2,
+			E_CLIENT_CONNSTATUS_NAME_UNAVAIL = 3,
+			E_CLIENT_CONNSTATUS_FULL = 4,
+		};
 
 		void operator=(const client& other) = delete;
 		client(const client& other) = delete;
@@ -38,7 +47,13 @@ namespace net {
 		const edict_t* const get_edicts() const { return m_edicts; }
 		edict_t* const get_edicts() { return m_edicts; }
 
+		const std::chrono::duration<double> timeout_threshold = std::chrono::duration<double>(3);
+
 		void timeout(int secs = 0, int usecs = 0);
+
+		// Returns whether the server has timed out and
+		// sends an ECHO_REQUEST to it
+		bool timed_out();
 
 	private:
 		net::socket_t m_socket;
@@ -52,6 +67,16 @@ namespace net {
 
 		std::string m_username;
 		std::unordered_map<Schemas::Networking::MessageType, client_handler> m_handlers;
+
+		std::chrono::time_point<std::chrono::steady_clock> m_last_update;
+	};
+
+	struct server_entry {
+		sockaddr_in addr;
+		std::string name;
+		std::string level;
+		uint64_t players;
+		uint64_t max_players;
 	};
 
 	class server_discovery {
@@ -60,11 +85,15 @@ namespace net {
 		~server_discovery();
 		void probe();
 		void fetch();
-		const std::vector<sockaddr_in> get() const { return m_discovered_servers; }
+		const std::vector<server_entry> get() const { return m_discovered_servers; }
 		void timeout(int sec = 0, int usec = 0);
 	private:
 		socket_t m_socket;
 		sockaddr_in addr_rx;
-		std::vector<sockaddr_in> m_discovered_servers;
+		std::vector<server_entry> m_discovered_servers;
 	};
+}
+
+inline bool operator==(const net::server_entry& lhs, const net::server_entry& rhs) {
+	return lhs.addr == rhs.addr;
 }

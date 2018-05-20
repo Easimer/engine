@@ -7,7 +7,7 @@ using namespace gfx;
 
 void window::draw_window()
 {
-	if(ImGui::Begin(get_title())) {
+	if(ImGui::Begin(get_title(), nullptr, ImVec2(min_width(), min_height()))) {
 		draw_content();
 		ImGui::End();
 	}

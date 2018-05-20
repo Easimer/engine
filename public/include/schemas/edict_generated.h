@@ -17,6 +17,8 @@ struct EntityUpdate;
 
 struct ConnectData;
 
+struct ServerData;
+
 struct MessageHeader;
 
 enum MessageType {
@@ -29,11 +31,15 @@ enum MessageType {
   MessageType_DISCOVERY_RESPONSE = 6,
   MessageType_ENTITY_UPDATE = 7,
   MessageType_CLIENT_UPDATE = 8,
+  MessageType_ECHO_REQUEST = 9,
+  MessageType_ECHO_REPLY = 10,
+  MessageType_QUERY_REQUEST = 11,
+  MessageType_QUERY_REPLY = 12,
   MessageType_MIN = MessageType_NONE,
-  MessageType_MAX = MessageType_CLIENT_UPDATE
+  MessageType_MAX = MessageType_QUERY_REPLY
 };
 
-inline MessageType (&EnumValuesMessageType())[9] {
+inline MessageType (&EnumValuesMessageType())[13] {
   static MessageType values[] = {
     MessageType_NONE,
     MessageType_CONNECT,
@@ -43,7 +49,11 @@ inline MessageType (&EnumValuesMessageType())[9] {
     MessageType_DISCOVERY_PROBE,
     MessageType_DISCOVERY_RESPONSE,
     MessageType_ENTITY_UPDATE,
-    MessageType_CLIENT_UPDATE
+    MessageType_CLIENT_UPDATE,
+    MessageType_ECHO_REQUEST,
+    MessageType_ECHO_REPLY,
+    MessageType_QUERY_REQUEST,
+    MessageType_QUERY_REPLY
   };
   return values;
 }
@@ -59,6 +69,10 @@ inline const char **EnumNamesMessageType() {
     "DISCOVERY_RESPONSE",
     "ENTITY_UPDATE",
     "CLIENT_UPDATE",
+    "ECHO_REQUEST",
+    "ECHO_REPLY",
+    "QUERY_REQUEST",
+    "QUERY_REPLY",
     nullptr
   };
   return names;
@@ -108,15 +122,17 @@ enum MessageData {
   MessageData_NONE = 0,
   MessageData_ConnectData = 1,
   MessageData_EntityUpdate = 2,
+  MessageData_ServerData = 3,
   MessageData_MIN = MessageData_NONE,
-  MessageData_MAX = MessageData_EntityUpdate
+  MessageData_MAX = MessageData_ServerData
 };
 
-inline MessageData (&EnumValuesMessageData())[3] {
+inline MessageData (&EnumValuesMessageData())[4] {
   static MessageData values[] = {
     MessageData_NONE,
     MessageData_ConnectData,
-    MessageData_EntityUpdate
+    MessageData_EntityUpdate,
+    MessageData_ServerData
   };
   return values;
 }
@@ -126,6 +142,7 @@ inline const char **EnumNamesMessageData() {
     "NONE",
     "ConnectData",
     "EntityUpdate",
+    "ServerData",
     nullptr
   };
   return names;
@@ -146,6 +163,10 @@ template<> struct MessageDataTraits<ConnectData> {
 
 template<> struct MessageDataTraits<EntityUpdate> {
   static const MessageData enum_value = MessageData_EntityUpdate;
+};
+
+template<> struct MessageDataTraits<ServerData> {
+  static const MessageData enum_value = MessageData_ServerData;
 };
 
 bool VerifyMessageData(flatbuffers::Verifier &verifier, const void *obj, MessageData type);
@@ -395,6 +416,92 @@ inline flatbuffers::Offset<ConnectData> CreateConnectDataDirect(
       nak_reason);
 }
 
+struct ServerData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  enum {
+    VT_NAME = 4,
+    VT_PLAYERS = 6,
+    VT_MAX_PLAYERS = 8,
+    VT_LEVEL = 10
+  };
+  const flatbuffers::String *name() const {
+    return GetPointer<const flatbuffers::String *>(VT_NAME);
+  }
+  uint64_t players() const {
+    return GetField<uint64_t>(VT_PLAYERS, 0);
+  }
+  uint64_t max_players() const {
+    return GetField<uint64_t>(VT_MAX_PLAYERS, 0);
+  }
+  const flatbuffers::String *level() const {
+    return GetPointer<const flatbuffers::String *>(VT_LEVEL);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NAME) &&
+           verifier.Verify(name()) &&
+           VerifyField<uint64_t>(verifier, VT_PLAYERS) &&
+           VerifyField<uint64_t>(verifier, VT_MAX_PLAYERS) &&
+           VerifyOffset(verifier, VT_LEVEL) &&
+           verifier.Verify(level()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ServerDataBuilder {
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_name(flatbuffers::Offset<flatbuffers::String> name) {
+    fbb_.AddOffset(ServerData::VT_NAME, name);
+  }
+  void add_players(uint64_t players) {
+    fbb_.AddElement<uint64_t>(ServerData::VT_PLAYERS, players, 0);
+  }
+  void add_max_players(uint64_t max_players) {
+    fbb_.AddElement<uint64_t>(ServerData::VT_MAX_PLAYERS, max_players, 0);
+  }
+  void add_level(flatbuffers::Offset<flatbuffers::String> level) {
+    fbb_.AddOffset(ServerData::VT_LEVEL, level);
+  }
+  explicit ServerDataBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ServerDataBuilder &operator=(const ServerDataBuilder &);
+  flatbuffers::Offset<ServerData> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<ServerData>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<ServerData> CreateServerData(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> name = 0,
+    uint64_t players = 0,
+    uint64_t max_players = 0,
+    flatbuffers::Offset<flatbuffers::String> level = 0) {
+  ServerDataBuilder builder_(_fbb);
+  builder_.add_max_players(max_players);
+  builder_.add_players(players);
+  builder_.add_level(level);
+  builder_.add_name(name);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<ServerData> CreateServerDataDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *name = nullptr,
+    uint64_t players = 0,
+    uint64_t max_players = 0,
+    const char *level = nullptr) {
+  return Schemas::Networking::CreateServerData(
+      _fbb,
+      name ? _fbb.CreateString(name) : 0,
+      players,
+      max_players,
+      level ? _fbb.CreateString(level) : 0);
+}
+
 struct MessageHeader FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum {
     VT_TYPE = 4,
@@ -417,6 +524,9 @@ struct MessageHeader FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const EntityUpdate *data_as_EntityUpdate() const {
     return data_type() == MessageData_EntityUpdate ? static_cast<const EntityUpdate *>(data()) : nullptr;
   }
+  const ServerData *data_as_ServerData() const {
+    return data_type() == MessageData_ServerData ? static_cast<const ServerData *>(data()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int64_t>(verifier, VT_TYPE) &&
@@ -433,6 +543,10 @@ template<> inline const ConnectData *MessageHeader::data_as<ConnectData>() const
 
 template<> inline const EntityUpdate *MessageHeader::data_as<EntityUpdate>() const {
   return data_as_EntityUpdate();
+}
+
+template<> inline const ServerData *MessageHeader::data_as<ServerData>() const {
+  return data_as_ServerData();
 }
 
 struct MessageHeaderBuilder {
@@ -482,6 +596,10 @@ inline bool VerifyMessageData(flatbuffers::Verifier &verifier, const void *obj, 
     }
     case MessageData_EntityUpdate: {
       auto ptr = reinterpret_cast<const EntityUpdate *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MessageData_ServerData: {
+      auto ptr = reinterpret_cast<const ServerData *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return false;

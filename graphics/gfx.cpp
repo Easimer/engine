@@ -11,6 +11,7 @@
 #include <gfx/emf_loader.h>
 
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 using namespace gfx;
 
@@ -76,11 +77,31 @@ bool gfx::gfx_global::init(const char* szTitle, size_t width, size_t height, siz
 
 	flCurrentTime = 0.0;
 
+	if (TTF_Init() == 0) {
+		pDebugFont = TTF_OpenFont("data/resources/debug.ttf", 14);
+		if (!pDebugFont) {
+			PRINT_ERR("Failed to load debug font: " << TTF_GetError());
+#ifdef PLAT_WINDOWS
+			char buf[MAX_PATH];
+			GetCurrentDirectoryA(MAX_PATH, buf);
+			PRINT_ERR("\tWIN32: current directory: " << buf);
+#endif
+		}
+		ASSERT(pDebugFont);
+	} else {
+		PRINT_ERR("Failed to initialize SDL_TTF: " << TTF_GetError());
+		pDebugFont = nullptr;
+		ASSERT(0);
+	}
+
 	return true;
 }
 
 bool gfx::gfx_global::shutdown()
 {
+	if (pDebugFont) {
+		TTF_CloseFont(pDebugFont);
+	}
 	ImGui_ImplSdlGL3_Shutdown();
 	ImGui::DestroyContext();
 	if (pGLContext)
@@ -120,7 +141,7 @@ void gfx::gfx_global::draw_windows()
 void gfx::gfx_global::end_frame()
 {
 	ImGui::Render();
-	ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());
+	ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());	
 	SDL_GL_SwapWindow(pWindow);
 	if (m_event_handler) {
 		SDL_Event e;

@@ -7,6 +7,7 @@
 #include <functional>
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <gfx/window.h>
 #include <gfx/model.h>
 #include <gfx/material.h>
@@ -132,6 +133,7 @@ namespace gfx {
 		SDL_Window* pWindow;
 		SDL_GLContext pGLContext;
 		SDL_Renderer* pRenderer;
+		TTF_Font* pDebugFont;
 
 		model_id current_model;
 

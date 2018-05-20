@@ -17,6 +17,9 @@ set(SRC_CORE
 	game.cpp
 	game.h
 
+	base_entity.cpp
+	base_entity.h
+
 	globals.h
 )
 

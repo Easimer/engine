@@ -55,7 +55,7 @@ add_library(graphics STATIC
 	CMakeLists.txt
 )
 
-target_link_libraries(graphics SDL2 SDL2_image)
+target_link_libraries(graphics SDL2 SDL2_image SDL2_ttf)
 
 IF(WIN32)
 # Create filters

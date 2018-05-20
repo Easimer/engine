@@ -21,10 +21,10 @@ void game::connect(const char * pszHostname, const char * pszUsername) {
 	ASSERT(m_pNetClient);
 
 	m_pNetClient->connect();
-	while (!m_pNetClient->connected()) {
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-		m_pNetClient->attempt_connect();
-	}
+	//while (!m_pNetClient->connected()) {
+	//	std::this_thread::sleep_for(std::chrono::seconds(1));
+	//	m_pNetClient->attempt_connect();
+	//}
 }
 
 void game::connect(const sockaddr_in6 & addr, const char * pszUsername) {
@@ -87,14 +87,18 @@ bool game::tick() {
 			}
 			// Interpolate position
 			float dt = gpGfx->delta();
-			vec3 vel = edicts[i].velocity;
+			vec3 vel = edicts[i].ivelocity;
 			float dx = vel.x() * dt;
 			float dy = vel.y() * dt;
 			float dz = vel.z() * dt;
 			//PRINT_DBG((dt * vel));
 			edicts[i].iposition[0] += dx;
-			edicts[i].iposition[1] += dy;
+			if(edicts[i].iacceleration[1] < 0)
+				edicts[i].iposition[1] += dy / 2;
+			else
+				edicts[i].iposition[1] += dy;
 			edicts[i].iposition[2] += dz;
+			// Interpolate velocity
 		}
 	}
 

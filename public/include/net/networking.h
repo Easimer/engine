@@ -45,8 +45,10 @@ namespace net {
 		bool active = false;				// [S] is the entity active/networked
 		bool updated = false;				// [S] was the entity updated
 		math::vector3<float> position;		// [N] position at time of last_update
-		math::vector3<float> iposition;		// [C] interpolated position
-		math::vector3<float> velocity;		// [C] velocity of entity
+		math::vector3<float> velocity;		// [C] velocity of entity, calculated from old and current position
+		math::vector3<float> iposition;		// [C] interpolated position, calculated by applying velocity to position
+		math::vector3<float> iacceleration;	// [C] interpolated acceleration, calculated from old and current velocity
+		math::vector3<float> ivelocity;		// [C] interpolated velocity, calculated first from velocity, then by applying iacceleration to ivelocity
 		float rotation[16];					// [N] rotation transformation matrix of entity (unused atm)
 		math::vector3<float> rotation2;		// [N] rotation angles of entity (temp)
 		char modelname[128];				// [N] model name of entity

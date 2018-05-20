@@ -12,7 +12,7 @@ inline bool operator==(const sockaddr_in6& lhs, const sockaddr_in6& rhs) {
 	return ports;
 }
 
-mainmenu::mainmenu() : m_pSelected(nullptr) {
+mainmenu::mainmenu() : m_pSelected(nullptr), m_pMsg(nullptr) {
 	m_szAddressBuf[0] = 0;
 	m_szUsername[0] = 0;
 }
@@ -35,6 +35,8 @@ mainmenu::exitcode mainmenu::tick() {
 		}
 		if (ImGui::Button("Host Game")) {
 			ret = EMMENU_START_LOCAL_GAME;
+			strncpy(m_szAddressBuf, "127.0.0.1", 128);
+			strncpy(m_szUsername, "LOCALUSER", 128);
 		}
 		if (ImGui::Button("Quit")) {
 			ret = EMMENU_QUIT_GAME;
@@ -46,17 +48,28 @@ mainmenu::exitcode mainmenu::tick() {
 		if (ImGui::Begin("Server Browser")) {
 			ImGui::ListBoxHeader("Servers");
 			for (auto& srv : m_servers) {
-				inet_ntop(AF_INET, &srv.sin_addr, buf, 128);
-				//strncat(buf, std::to_string(srv.sin6_port).c_str(), 128);
-				if (ImGui::Selectable(buf, (&srv) == m_pSelected)) {
-					if(m_pSelected != &srv)
+				buf[0] = 0;
+				strncat(buf, srv.name.c_str(), 128);
+				strncat(buf, " - ", 128);
+				if (ImGui::Selectable(buf, &srv == m_pSelected)) {
+					if (m_pSelected != &srv) {
+						inet_ntop(AF_INET, &srv.addr.sin_addr, buf, 128);
 						strncpy(m_szAddressBuf, buf, 128);
+					}
 					m_pSelected = &srv;
-					
 				}
 			}
 			ImGui::ListBoxFooter();
-			ImGui::NewLine();
+			if (m_pSelected) {
+				inet_ntop(AF_INET, &m_pSelected->addr.sin_addr, buf, 128);
+				strncat(buf, ":", 128);
+				strncat(buf, std::to_string(ntohs(m_pSelected->addr.sin_port)).c_str(), 128);
+				ImGui::InputText("Address", buf, 128, ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputText("Level", (char*)m_pSelected->level.c_str(), m_pSelected->level.size(), ImGuiInputTextFlags_ReadOnly);
+				snprintf(buf, 128, "%llu/%llu", m_pSelected->players, m_pSelected->max_players);
+				ImGui::InputText("Players", buf, 128, ImGuiInputTextFlags_ReadOnly);
+				ImGui::Separator();
+			}
 			ImGui::InputText("Address", m_szAddressBuf, 128);
 			ImGui::NewLine();
 			ImGui::InputText("Player name", m_szUsername, 128);
@@ -67,6 +80,10 @@ mainmenu::exitcode mainmenu::tick() {
 			ImGui::SameLine();
 			if (ImGui::Button("Connect")) {
 				ret = EMMENU_JOIN_REMOTE_GAME;
+			}
+			if (m_pMsg) {
+				ImGui::NewLine();
+				ImGui::TextColored(ImVec4(1, 0, 0, 1), m_pMsg);
 			}
 		}
 		ImGui::End();

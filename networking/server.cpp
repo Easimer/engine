@@ -238,3 +238,11 @@ void net::server::push_full_update(const net::client_desc& cd) {
 	}
 	PRINT_DBG("net::server::push_full_update: updated " << cd.username);
 }
+
+size_t net::server::player_count() const {
+	size_t ret = 0;
+	for (auto& desc : m_clients) {
+		if (desc.slot_active) ret++;
+	}
+	return ret;
+}
