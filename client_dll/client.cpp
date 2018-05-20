@@ -31,6 +31,7 @@ protected:
 			if (edicts[i].active) {
 				ImGui::InputInt("ID", (int*)&i, 1, 100, ImGuiInputTextFlags_ReadOnly);
 				ImGui::InputFloat3("Position", (float*)edicts[i].position.ptr(), -1, ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputFloat3("iPosition", (float*)edicts[i].iposition.ptr(), -1, ImGuiInputTextFlags_ReadOnly);
 			}
 		}
 	}

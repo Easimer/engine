@@ -32,21 +32,21 @@ void c_prop_dynamic::spawn() {
 
 	auto pos = get_abspos();
 	pos[1] = -5;
-	pos[2] = -10;
+	pos[2] = -3.5;
 	set_abspos(pos);
 }
 
 void c_prop_dynamic::think() {
-	SetNextThink(gpGlobals->curtime + 0.001);
+	SetNextThink(gpGlobals->curtime + 0.5);
 
 	auto pos = get_abspos();
 	if(m_bDir)
-		pos[1] += 0.1;
+		pos[1] += 0.5;
 	else
-		pos[1] -= 0.1;
-	if (pos[1] > 5)
+		pos[1] -= 0.5;
+	if (pos[1] >= 5)
 		m_bDir = false;
-	if (pos[1] < -5)
+	if (pos[1] <= -5)
 		m_bDir = true;
 	set_abspos(pos);
 }

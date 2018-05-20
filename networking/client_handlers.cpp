@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include <net/client.h>
 
 void net::client::handle_connect_ack(const Schemas::Networking::ConnectData* pConnDat) {
@@ -19,11 +19,33 @@ void net::client::handle_entity_update(const Schemas::Networking::EntityUpdate* 
 	auto& e = m_edicts[pEntUpd->edict_id()];
 	e.active = true;
 	e.updated = false;
+
+	float dts = abs(pEntUpd->last_update() - e.last_update); // Δt_s [Δs]
+	PRINT_DBG(dts);
+	e.last_update = pEntUpd->last_update();
 	auto pos = pEntUpd->pos();
 	if (pos) {
-		e.position[0] = pos->x();
-		e.position[1] = pos->y();
-		e.position[2] = pos->z();
+		float x = pos->x();
+		float y = pos->y();
+		float z = pos->z();
+		if (dts != 0) {
+			float flDeltaX = (x - e.position[0]);
+			float flDeltaY = (y - e.position[1]);
+			float flDeltaZ = (z - e.position[2]);
+			e.velocity[0] = flDeltaX / dts;
+			e.velocity[1] = flDeltaY / dts;
+			e.velocity[2] = flDeltaZ / dts;
+		} else {
+			e.velocity[0] = 0;
+			e.velocity[1] = 0;
+			e.velocity[2] = 0;
+		}
+		e.position[0] = x;
+		e.position[1] = y;
+		e.position[2] = z;
+		e.iposition[0] = x;
+		e.iposition[1] = y;
+		e.iposition[2] = z;
 	}
 	auto rot = pEntUpd->rot();
 	if (rot) {

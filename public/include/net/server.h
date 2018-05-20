@@ -72,6 +72,8 @@ namespace net {
 		void push_updates();
 		void push_full_update(const net::client_desc&);
 
+		void set_time_ptr(const float* pCurTime) { m_pCurTime = pCurTime; }
+
 	private:
 		net::socket_t m_socket;
 		bool m_listening = false;
@@ -87,5 +89,7 @@ namespace net {
 
 		size_t m_max_players = net::max_players;
 		std::unordered_map<Schemas::Networking::MessageType, server_handler> m_handlers;
+
+		const float* m_pCurTime;
 	};
 }

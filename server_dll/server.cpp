@@ -18,6 +18,7 @@ void server::init() {
 	PRINT("server::init");
 	
 	gpGlobals->curtime = 0;
+	m_server.set_time_ptr(&gpGlobals->curtime);
 
 	m_thread_logic = std::thread([&]() {
 		std::flush(std::cout);

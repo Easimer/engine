@@ -2,7 +2,7 @@
 #include <net/server.h>
 #include <thread>
 
-net::server::server() {
+net::server::server() : m_pCurTime(nullptr) {
 	socket_t s;
 	struct sockaddr_in server;
 	int slen;
@@ -143,6 +143,10 @@ void net::server::broadcast_update(const entity_update& upd) {
 	eub.add_edict_id(upd.edict);
 	eub.add_pos(&pos);
 	eub.add_rot(&rot);
+	if(m_pCurTime)
+		eub.add_last_update(*m_pCurTime);
+	else
+		eub.add_last_update(0.f);
 	auto off_upd = eub.Finish();
 
 	Schemas::Networking::MessageHeaderBuilder mhb(fbb);

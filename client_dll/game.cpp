@@ -51,8 +51,8 @@ bool game::tick() {
 
 	glm::mat4 mat_view = m_camera.get_rot();
 	mat_view = glm::translate(mat_view, glm::vec3(m_camera.get_pos()));
-
-	auto edicts = m_pNetClient->get_edicts();
+	
+	net::edict_t* edicts = m_pNetClient->get_edicts();
 	for (size_t i = 0; i < 2048; i++) {
 		if (edicts[i].active) {
 			if (edicts[i].modelname[0] != '\0') {
@@ -75,7 +75,7 @@ bool game::tick() {
 					continue;
 				pShader = gpGfx->get_shader(iShader);
 
-				mat_trans = glm::translate(mat_trans, (glm::vec3)edicts->position);
+				mat_trans = glm::translate(mat_trans, (glm::vec3)edicts->iposition);
 
 				pShader->use();
 				pShader->set_mat_proj(glm::value_ptr(m_proj));
@@ -85,6 +85,16 @@ bool game::tick() {
 				pShader->use_material(mat);
 				gpGfx->draw_model();
 			}
+			// Interpolate position
+			float dt = gpGfx->delta();
+			vec3 vel = edicts[i].velocity;
+			float dx = vel.x() * dt;
+			float dy = vel.y() * dt;
+			float dz = vel.z() * dt;
+			//PRINT_DBG((dt * vel));
+			edicts[i].iposition[0] += dx;
+			edicts[i].iposition[1] += dy;
+			edicts[i].iposition[2] += dz;
 		}
 	}
 

@@ -206,7 +206,8 @@ struct EntityUpdate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_POS = 6,
     VT_ROT = 8,
     VT_MODEL = 10,
-    VT_PARENT = 12
+    VT_PARENT = 12,
+    VT_LAST_UPDATE = 14
   };
   uint64_t edict_id() const {
     return GetField<uint64_t>(VT_EDICT_ID, 0);
@@ -236,6 +237,9 @@ struct EntityUpdate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   uint64_t parent() const {
     return GetField<uint64_t>(VT_PARENT, 0);
   }
+  float last_update() const {
+    return GetField<float>(VT_LAST_UPDATE, 0.0f);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint64_t>(verifier, VT_EDICT_ID) &&
@@ -244,6 +248,7 @@ struct EntityUpdate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyOffset(verifier, VT_MODEL) &&
            verifier.Verify(model()) &&
            VerifyField<uint64_t>(verifier, VT_PARENT) &&
+           VerifyField<float>(verifier, VT_LAST_UPDATE) &&
            verifier.EndTable();
   }
 };
@@ -266,6 +271,9 @@ struct EntityUpdateBuilder {
   void add_parent(uint64_t parent) {
     fbb_.AddElement<uint64_t>(EntityUpdate::VT_PARENT, parent, 0);
   }
+  void add_last_update(float last_update) {
+    fbb_.AddElement<float>(EntityUpdate::VT_LAST_UPDATE, last_update, 0.0f);
+  }
   explicit EntityUpdateBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -284,10 +292,12 @@ inline flatbuffers::Offset<EntityUpdate> CreateEntityUpdate(
     const Schemas::Vector3 *pos = 0,
     const Schemas::Vector3 *rot = 0,
     flatbuffers::Offset<flatbuffers::String> model = 0,
-    uint64_t parent = 0) {
+    uint64_t parent = 0,
+    float last_update = 0.0f) {
   EntityUpdateBuilder builder_(_fbb);
   builder_.add_parent(parent);
   builder_.add_edict_id(edict_id);
+  builder_.add_last_update(last_update);
   builder_.add_model(model);
   builder_.add_rot(rot);
   builder_.add_pos(pos);
@@ -300,14 +310,16 @@ inline flatbuffers::Offset<EntityUpdate> CreateEntityUpdateDirect(
     const Schemas::Vector3 *pos = 0,
     const Schemas::Vector3 *rot = 0,
     const char *model = nullptr,
-    uint64_t parent = 0) {
+    uint64_t parent = 0,
+    float last_update = 0.0f) {
   return Schemas::Networking::CreateEntityUpdate(
       _fbb,
       edict_id,
       pos,
       rot,
       model ? _fbb.CreateString(model) : 0,
-      parent);
+      parent,
+      last_update);
 }
 
 struct ConnectData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {

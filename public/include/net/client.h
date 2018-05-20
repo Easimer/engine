@@ -36,6 +36,7 @@ namespace net {
 		void disconnect();
 
 		const edict_t* const get_edicts() const { return m_edicts; }
+		edict_t* const get_edicts() { return m_edicts; }
 
 		void timeout(int secs = 0, int usecs = 0);
 

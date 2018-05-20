@@ -40,14 +40,17 @@ namespace net {
 	using ent_id = uint32_t;
 	using frame = size_t;
 	
+	// N = networked, C = used by client only, S = used by server only
 	struct edict_t {
-		bool active = false;
-		bool updated = false;
-		math::vector3<float> position;
-		math::vector3<float> velocity;
-		float rotation[16];
-		math::vector3<float> rotation2;
-		char modelname[128];
+		bool active = false;				// [S] is the entity active/networked
+		bool updated = false;				// [S] was the entity updated
+		math::vector3<float> position;		// [N] position at time of last_update
+		math::vector3<float> iposition;		// [C] interpolated position
+		math::vector3<float> velocity;		// [C] velocity of entity
+		float rotation[16];					// [N] rotation transformation matrix of entity (unused atm)
+		math::vector3<float> rotation2;		// [N] rotation angles of entity (temp)
+		char modelname[128];				// [N] model name of entity
+		float last_update;					// [N] time the entity was last updated
 	};
 
 	struct world_update {
