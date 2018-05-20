@@ -28,10 +28,12 @@ namespace net {
 	const size_t max_players = 256;
 #if defined(PLAT_WINDOWS)
 	using socket_t = size_t;
+	using socklen_t = int;
 	const socket_t invalid_socket = INVALID_SOCKET;
 	const socket_t socket_error = SOCKET_ERROR;
 #elif defined(PLAT_LINUX)
 	using socket_t = int;
+	using socklen_t = ::socklen_t;
 	const socket_t invalid_socket = -1;
 	const socket_t socket_error = -1;
 #endif

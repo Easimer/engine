@@ -20,7 +20,7 @@ net::client::client(const std::string& addr, const std::string& username) : m_us
 #if defined(PLAT_WINDOWS)
 		PRINT_ERR("net::client::ctor: can't open socket: " << WSAGetLastError());
 #elif defined(PLAT_LINUX)
-		PRINT_ERR("net::client::ctor: can't open socket: " << strerror());
+		PRINT_ERR("net::client::ctor: can't open socket: " << strerror(errno));
 #endif
 		return;
 	}
@@ -81,7 +81,11 @@ void net::client::attempt_connect() {
 	int siz_sent = 0;
 
 	if ((siz_sent = sendto(m_socket, (char*)fbb.GetBufferPointer(), siz_expected, 0, (sockaddr*)&m_server_addr, sizeof(m_server_addr))) == net::socket_error) {
-		PRINT_ERR("net::client::connect: ERR: " << WSAGetLastError());
+#if defined(PLAT_WINDOWS)
+		PRINT_ERR("net::client::attempt_connect: sendto failed: " << WSAGetLastError());
+#elif defined(PLAT_LINUX)
+		PRINT_ERR("net::client::attempt_connect: sendto failed: " << strerror(errno));
+#endif
 		ASSERT(0);
 	}
 	PRINT_DBG(siz_sent);
@@ -100,10 +104,9 @@ void net::client::connect() {
 		attempt_connect();
 		while (true) {
 			char buf[4096];
-			int recv_len;
+			net::socklen_t recv_len;
 			sockaddr_in6 from;
-			int slen = sizeof(from);
-
+			net::socklen_t slen = sizeof(from);
 			if ((recv_len = recvfrom(socket, buf, 4096, 0, (sockaddr*)&from, &slen)) != net::socket_error) {
 				//PRINT_DBG("net::client::thread: received " << recv_len << " bytes");
 				auto verifier = flatbuffers::Verifier((const uint8_t*)buf, recv_len);
@@ -199,7 +202,7 @@ net::server_discovery::server_discovery() {
 #if defined(PLAT_WINDOWS)
 		PRINT_ERR("net::client::discovery_probe: can't open socket: " << WSAGetLastError());
 #elif defined(PLAT_LINUX)
-		PRINT_ERR("net::client::discovery_probe: can't open socket: " << strerror());
+		PRINT_ERR("net::client::discovery_probe: can't open socket: " << strerror(errno));
 #endif
 		return;
 	}
@@ -218,7 +221,9 @@ net::server_discovery::server_discovery() {
 
 net::server_discovery::~server_discovery() {
 	net::close_socket(m_socket);
+#if defined(PLAT_WINDOWS)
 	WSACleanup();
+#endif
 }
 
 void net::server_discovery::probe() {
@@ -240,7 +245,7 @@ void net::server_discovery::fetch() {
 	sockaddr_in addr_tx;
 	char buf[4096];
 	int recv_len;
-	int slen = sizeof(addr_tx);
+	net::socklen_t slen = sizeof(addr_tx);
 
 	if ((recv_len = recvfrom(m_socket, buf, 4096, 0, (sockaddr*)&addr_tx, &slen)) != net::socket_error) {
 		auto verifier = flatbuffers::Verifier((const uint8_t*)buf, recv_len);

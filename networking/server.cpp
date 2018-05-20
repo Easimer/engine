@@ -6,10 +6,10 @@ net::server::server() : m_pCurTime(nullptr) {
 	socket_t s;
 	struct sockaddr_in server;
 	int slen;
-	WSADATA wsa;
 
 	slen = sizeof(server);
 #if defined(PLAT_WINDOWS)
+	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
 		PRINT_ERR("net::server::ctor: can't init WS: " << WSAGetLastError());
 		return;
@@ -20,7 +20,7 @@ net::server::server() : m_pCurTime(nullptr) {
 #if defined(PLAT_WINDOWS)
 		PRINT_ERR("net::server::ctor: can't open socket: " << WSAGetLastError());
 #elif defined(PLAT_LINUX)
-		PRINT_ERR("net::server::ctor: can't open socket: " << strerror());
+		PRINT_ERR("net::server::ctor: can't open socket: " << strerror(errno));
 #endif
 		return;
 	}
@@ -34,7 +34,7 @@ net::server::server() : m_pCurTime(nullptr) {
 #if defined(PLAT_WINDOWS)
 		PRINT_ERR("net::server::ctor: can't bind socket: " << WSAGetLastError());
 #elif defined(PLAT_LINUX)
-		PRINT_ERR("net::server::ctor: can't bind socket: " << strerror());
+		PRINT_ERR("net::server::ctor: can't bind socket: " << strerror(errno));
 #endif
 		close_socket(s);
 		return;
@@ -52,8 +52,7 @@ net::server::server() : m_pCurTime(nullptr) {
 			char buf[4096];
 			int recv_len;
 			sockaddr_in from;
-			int slen = sizeof(from);
-
+			net::socklen_t slen = sizeof(from);
 			if ((recv_len = recvfrom(socket, buf, 4096, 0, (sockaddr*)&from, &slen)) != net::socket_error) {
 				char addrbuf[64];
 				inet_ntop(AF_INET, &from.sin_addr, addrbuf, 64);
