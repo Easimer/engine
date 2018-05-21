@@ -68,6 +68,8 @@ IF(CMAKE_BUILD_TYPE MATCHES "Debug")
 add_definitions(-DDEBUG)
 ENDIF()
 
+SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 add_subdirectory(game)
 #add_subdirectory(smd_parser)
 add_subdirectory(phys)

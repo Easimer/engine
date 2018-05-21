@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "entity_system.h"
+#include <algorithm>
 
 entity_handle entity_system::add_entity(base_entity * ent) {
 	auto pos = std::find(m_entities.cbegin(), m_entities.cend(), ent);
