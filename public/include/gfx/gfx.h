@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdint>
 #include <functional>
+#include <memory>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>

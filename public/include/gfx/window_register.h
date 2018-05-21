@@ -8,6 +8,9 @@
 #include <gfx/window.h>
 
 namespace gfx {
+	class window_register;
+	extern gfx::window_register* gpWindowRegister;
+
 	class iwindow_factory {
 	public:
 		virtual ~iwindow_factory() {}
@@ -62,7 +65,6 @@ namespace gfx {
 		std::vector<std::shared_ptr<gfx::window>> m_created_windows;
 	};
 
-	extern gfx::window_register* gpWindowRegister;
 }
 
 #define REGISTER_WINDOW(classname, name) static gfx::window_factory<classname> wfactory_##classname(name);

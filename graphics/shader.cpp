@@ -48,7 +48,6 @@ shader::shader(const char * szFilename, shader_type iType)
 
 shader::~shader()
 {
-	RESTRICT_THREAD_RENDERING;
 	glDeleteShader(m_iID); //ASSERT_OPENGL();
 }
 

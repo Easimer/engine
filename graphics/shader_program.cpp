@@ -197,7 +197,6 @@ shader_program::shader_program(const char * szFilename) :
 
 shader_program::~shader_program()
 {
-	RESTRICT_THREAD_RENDERING;
 	if (m_pShaderVert)
 	{
 		glDetachShader(m_iID, m_pShaderVert->get_id());
@@ -212,7 +211,7 @@ shader_program::~shader_program()
 
 bool shader_program::link()
 {
-	RESTRICT_THREAD_RENDERING;
+	
 	int iSuccess;
 	glLinkProgram(m_iID); ASSERT_OPENGL();
 	glGetProgramiv(m_iID, GL_LINK_STATUS, &iSuccess); ASSERT_OPENGL();
@@ -228,14 +227,12 @@ bool shader_program::link()
 
 void shader_program::use()
 {
-	RESTRICT_THREAD_RENDERING;
 	
 	glUseProgram(m_iID); ASSERT_OPENGL();
 }
 
 void shader_program::validate()
 {
-	RESTRICT_THREAD_RENDERING;
 	char szMsg[512];
 	int iSuccess;
 	glValidateProgram(m_iID);
@@ -270,7 +267,6 @@ void gfx::shader_program::attach_shader(shader * pShader)
 
 void shader_program::print_err()
 {
-	RESTRICT_THREAD_RENDERING;
 	char szMsg[512];
 	glGetProgramInfoLog(m_iID, 512, NULL, szMsg);
 	PRINT_ERR("Shader program link failed: " << szMsg);
@@ -278,28 +274,24 @@ void shader_program::print_err()
 
 void shader_program::set_mat_trans(void * pMat)
 {
-	RESTRICT_THREAD_RENDERING;
 	glUseProgram(m_iID); ASSERT_OPENGL();
 	glUniformMatrix4fv(m_iUniformMatTrans, 1, GL_FALSE, (const GLfloat*)pMat); ASSERT_OPENGL();
 }
 
 void shader_program::set_mat_view(void * pMat)
 {
-	RESTRICT_THREAD_RENDERING;
 	glUseProgram(m_iID); ASSERT_OPENGL();
 	glUniformMatrix4fv(m_iUniformMatView, 1, GL_FALSE, (const GLfloat*)pMat); ASSERT_OPENGL();
 }
 
 void shader_program::set_mat_proj(void * pMat)
 {
-	RESTRICT_THREAD_RENDERING;
 	glUseProgram(m_iID); ASSERT_OPENGL();
 	glUniformMatrix4fv(m_iUniformMatProj, 1, GL_FALSE, (const GLfloat*)pMat); ASSERT_OPENGL();
 }
 
 bool shader_program::load_material(material & mat)
 {
-	RESTRICT_THREAD_RENDERING;
 	const mdlc::qc& qcp = mat.get_parser();
 
 	for (size_t iTex = 0; iTex < SHADERTEX_MAX; iTex++) {
@@ -334,7 +326,6 @@ void shader_program::use_material(const material & mat)
 
 void shader_program::set_vec3(const std::string & name, const math::vector3<float>& v)
 {
-	RESTRICT_THREAD_RENDERING;
 	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
 	if(iLoc != -1)
 		glUniform3fv(iLoc, 1, v.ptr()); ASSERT_OPENGL();
@@ -343,7 +334,6 @@ void shader_program::set_vec3(const std::string & name, const math::vector3<floa
 
 void shader_program::set_vec4(const std::string & name, const float * v)
 {
-	RESTRICT_THREAD_RENDERING;
 	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
 	if (iLoc != -1)
 		glUniform4fv(iLoc, 1, v); ASSERT_OPENGL();
@@ -351,7 +341,6 @@ void shader_program::set_vec4(const std::string & name, const float * v)
 
 void shader_program::set_mat4(const std::string & name, const void * m)
 {
-	RESTRICT_THREAD_RENDERING;
 	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
 	if (iLoc != -1)
 		glUniformMatrix4fv(iLoc, 1, GL_FALSE, (const GLfloat*)m); ASSERT_OPENGL();
@@ -359,7 +348,6 @@ void shader_program::set_mat4(const std::string & name, const void * m)
 
 void shader_program::set_bool(const std::string & name, bool v)
 {
-	RESTRICT_THREAD_RENDERING;
 	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
 	if (iLoc != -1)
 		glUniform1i(iLoc, (v ? 1 : 0)); ASSERT_OPENGL();
@@ -367,7 +355,6 @@ void shader_program::set_bool(const std::string & name, bool v)
 
 void shader_program::set_local_light(const shader_light & l)
 {
-	RESTRICT_THREAD_RENDERING;
 
 	if (l.iType == shader_light_type::SLT_GLOBAL) {
 		PRINT_DBG("shader_program::set_local_light: shader_light passed to me describes a global light, redirected!");
@@ -392,7 +379,6 @@ void shader_program::set_local_light(const shader_light & l)
 
 void shader_program::set_global_light(const shader_light & l)
 {
-	RESTRICT_THREAD_RENDERING;
 
 	if (l.iType == shader_light_type::SLT_POINT) {
 		PRINT_DBG("shader_program::set_global_light: shader_light passed to me describes a local light, redirected!");
@@ -417,7 +403,6 @@ void shader_program::set_global_light(const shader_light & l)
 
 void gfx::shader_program::set_float(const std::string & name, float v)
 {
-	RESTRICT_THREAD_RENDERING;
 	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
 	if (iLoc != -1)
 		glUniform1f(iLoc, (GLfloat)v); ASSERT_OPENGL();
