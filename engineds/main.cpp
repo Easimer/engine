@@ -4,6 +4,12 @@
 #include <chrono>
 #include <thread>
 
+#if defined(PLAT_WINDOWS)
+const char* pszServerDLL = "bin/server_dll.dll";
+#elif defined(PLAT_LINUX)
+const char* pszServerDLL = "bin/libserver_dll.so";
+#endif
+
 #define ASSERT_WINDOWS(expr) \
 	{ \
 		if(!(expr)) \
@@ -34,10 +40,10 @@ typename std::enable_if<std::is_pointer<T>::value, T>::type link_dll(const std::
 		return nullptr;
 	}
 #elif defined(PLAT_LINUX)
-	auto module_hnd = dlopen(module.c_str());
+	auto module_hnd = dlopen(module.c_str(), RTLD_NOW);
 	ASSERT_CUSTOM(module_hnd, dlerror());
 	if (module_hnd) {
-		T func = dlsym(module_hnd, symbol.c_str());
+		T func = (T)dlsym(module_hnd, symbol.c_str());
 		ASSERT_CUSTOM(func, dlerror());
 		return func;
 	} else {
@@ -47,14 +53,15 @@ typename std::enable_if<std::is_pointer<T>::value, T>::type link_dll(const std::
 }
 
 int main(int argc, char** argv) {
+#if defined(PLAT_WINDOWS)
 	char buf[MAX_PATH];
 	GetCurrentDirectoryA(MAX_PATH, buf);
 	std::cout << buf << std::endl;
-
+#endif
 	std::flush(std::cout);
 
-	auto server_init = link_dll<iserver*(*)()>("bin/server_dll.dll", "server_dll_init");
-	auto server_shutdown = link_dll<void(*)(iserver*)>("bin/server_dll.dll", "server_dll_shutdown");
+	auto server_init = link_dll<iserver*(*)()>(pszServerDLL, "server_dll_init");
+	auto server_shutdown = link_dll<void(*)(iserver*)>(pszServerDLL, "server_dll_shutdown");
 
 	ASSERT(server_init);
 	ASSERT(server_shutdown);
