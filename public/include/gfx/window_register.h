@@ -17,18 +17,6 @@ namespace gfx {
 		virtual std::shared_ptr<gfx::window> create() = 0;
 	};
 
-	template<typename T>
-	class window_factory : public iwindow_factory {
-	public:
-		window_factory(const std::string& name) {
-			gpWindowRegister->emplace(name, this);
-		}
-		virtual std::shared_ptr<gfx::window> create() override {
-			return std::static_pointer_cast<gfx::window>(std::make_shared<T>());
-		}
-
-		static_assert(std::is_base_of<gfx::window, T>::value);
-	};
 
 	class window_register {
 	public:
@@ -65,6 +53,18 @@ namespace gfx {
 		std::vector<std::shared_ptr<gfx::window>> m_created_windows;
 	};
 
+	template<typename T>
+	class window_factory : public iwindow_factory {
+	public:
+		window_factory(const std::string& name) {
+			gpWindowRegister->emplace(name, this);
+		}
+		virtual std::shared_ptr<gfx::window> create() override {
+			return std::static_pointer_cast<gfx::window>(std::make_shared<T>());
+		}
+
+		static_assert(std::is_base_of<gfx::window, T>::value);
+	};
 }
 
 #define REGISTER_WINDOW(classname, name) static gfx::window_factory<classname> wfactory_##classname(name);
