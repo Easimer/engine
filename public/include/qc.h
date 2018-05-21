@@ -7,6 +7,7 @@
 #include <parseutils.h>
 #include <type_traits>
 #include <algorithm>
+#include <cstring>
 
 namespace mdlc {
 	class qc {

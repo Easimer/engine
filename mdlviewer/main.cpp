@@ -15,6 +15,12 @@
 #include "window_model.h"
 #include "window_properties.h"
 
+#if defined(PLAT_LINUX)
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#endif
+
 gfx::model_id giCurrentModel = 0;
 
 static bool bShutdown = false;
