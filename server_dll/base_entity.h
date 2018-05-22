@@ -68,11 +68,12 @@ public:
 		return m_pParent;
 	}
 
+	// Set relative rotation
+	// (which is also the absolute rotation for entities without a parent)
 	virtual void set_rotation(const vec3& v);
 
-	// REMOVED: not the server's job to calc this
 	// Returns the absolute rotation matrix of the entity
-	//virtual glm::mat4 get_rotation_matrix() const;
+	virtual glm::mat4 get_rotation_matrix() const;
 
 	// Returns the relative rotation of the entity.
 	virtual vec3 get_relrot() const {

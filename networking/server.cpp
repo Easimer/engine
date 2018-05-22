@@ -109,13 +109,16 @@ void net::server::unicast_update(const entity_update & upd, const net::client_de
 		off_model = fbb.CreateString(upd.model);
 	}
 	Schemas::Vector3 pos(upd.pos[0], upd.pos[1], upd.pos[2]);
-	Schemas::Vector3 rot(upd.rot[0], upd.rot[1], upd.rot[2]);
+	auto mat4f = fbb.CreateVector<float>(upd.rot, 16);
+	Schemas::Matrix4x4Builder m4b(fbb);
+	m4b.add_data(mat4f);
+	auto mat4 = m4b.Finish();
 	Schemas::Networking::EntityUpdateBuilder eub(fbb);
 	if (!off_model.IsNull())
 		eub.add_model(off_model);
 	eub.add_edict_id(upd.edict);
 	eub.add_pos(&pos);
-	eub.add_rot(&rot);
+	eub.add_rot(mat4);
 	auto off_upd = eub.Finish();
 
 	Schemas::Networking::MessageHeaderBuilder mhb(fbb);
@@ -135,17 +138,16 @@ void net::server::broadcast_update(const entity_update& upd) {
 		off_model = fbb.CreateString(upd.model);
 	}
 	Schemas::Vector3 pos(upd.pos[0], upd.pos[1], upd.pos[2]);
-	Schemas::Vector3 rot(upd.rot[0], upd.rot[1], upd.rot[2]);
+	auto mat4f = fbb.CreateVector<float>(upd.rot, 16);
+	Schemas::Matrix4x4Builder m4b(fbb);
+	m4b.add_data(mat4f);
+	auto mat4 = m4b.Finish();
 	Schemas::Networking::EntityUpdateBuilder eub(fbb);
 	if (!off_model.IsNull())
 		eub.add_model(off_model);
 	eub.add_edict_id(upd.edict);
 	eub.add_pos(&pos);
-	eub.add_rot(&rot);
-	if(m_pCurTime)
-		eub.add_last_update(*m_pCurTime);
-	else
-		eub.add_last_update(0.f);
+	eub.add_rot(mat4);
 	auto off_upd = eub.Finish();
 
 	Schemas::Networking::MessageHeaderBuilder mhb(fbb);
@@ -209,7 +211,8 @@ void net::server::push_updates() {
 			entity_update upd;
 			upd.edict = i;
 			upd.pos[0] = e.position[0]; upd.pos[1] = e.position[1]; upd.pos[2] = e.position[2];
-			upd.rot[0] = e.rotation2[0]; upd.rot[1] = e.rotation2[1]; upd.rot[2] = e.rotation2[2];
+			for (size_t i = 0; i < 16; i++)
+				upd.rot[i] = e.rotation[i];
 			upd.model = e.modelname;
 
 			broadcast_update(upd);

@@ -11,9 +11,8 @@ table StringIdentifier {
 table EntityUpdate {
 	edict_id : ulong (key);
 	pos : Vector3;
-	rot : Vector3;
+	rot : Matrix4x4;
 	model : string;
-	parent : ulong;
 	last_update : float;
 }
 

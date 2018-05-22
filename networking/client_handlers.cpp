@@ -61,10 +61,11 @@ void net::client::handle_entity_update(const Schemas::Networking::EntityUpdate* 
 		e.iposition[2] = z;
 	}
 	auto rot = pEntUpd->rot();
-	if (rot) {
-		e.rotation2[0] = rot->x();
-		e.rotation2[1] = rot->y();
-		e.rotation2[2] = rot->z();
+	if (rot && rot->data()) {
+		for (size_t i = 0; i < 16; i++) {
+			e.rotation[i] = rot->data()->Get(i);
+		}
+		//memcpy(e.rotation, rot->data()->data(), 16 * sizeof(float));
 	}
 	auto model = pEntUpd->model();
 	if (model) {

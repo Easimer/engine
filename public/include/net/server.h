@@ -23,7 +23,7 @@ namespace net {
 		entity_update() : model(nullptr) {}
 		size_t edict;
 		float pos[3];
-		float rot[3];
+		float rot[16];
 		const char* model;
 	};
 

@@ -2,6 +2,8 @@
 #include "server.h"
 #include "entity_system.h"
 #include "prop_common.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 extern "C" {
 	ENL_EXPORT iserver* server_dll_init() {
@@ -39,6 +41,9 @@ void server::init() {
 
 		c_base_prop* pEnt2 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
 
+		for (size_t i = 0; i < net::max_edicts; i++)
+			m_server.edict(i).reset();
+
 		while (!m_shutdown) {
 			gpGlobals->pEntSys->update_entities();
 			gpGlobals->curtime += (1.f / server_tickrate);
@@ -52,12 +57,16 @@ void server::init() {
 				e.active = true;
 				if (e.position != pEnt->get_abspos()) {
 					e.updated = true;
-					e.position = pEnt->get_abspos();
 				}
-				if (e.rotation2 != pEnt->get_relrot()) {
+				e.position = pEnt->get_abspos();
+				//if (e.rotation2 != pEnt->get_relrot()) {
+				//	e.updated = true;
+				//	e.rotation2 = pEnt->get_relrot();
+				//}
+				if (memcmp(glm::value_ptr(pEnt->get_rotation_matrix()), e.rotation, 16 * sizeof(float)) != 0) {
 					e.updated = true;
-					e.rotation2 = pEnt->get_relrot();
 				}
+				memcpy(e.rotation, glm::value_ptr(pEnt->get_rotation_matrix()), 16 * sizeof(float));
 				if (pEnt->is_drawable()) {
 					auto pProp = dynamic_cast<c_base_prop*>(pEnt);
 					if (pProp) {

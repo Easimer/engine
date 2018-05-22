@@ -46,5 +46,12 @@ void c_prop_dynamic::think() {
 	pos[0] = 2 * cos(m_flAngle);
 	pos[1] = 2 * sin(m_flAngle);
 	m_flAngle += (0.0523598776f);
+
+	auto rot = get_relrot();
+
+	rot[1] += (0.0523598776f);
+
+	set_rotation(rot);
+
 	set_abspos(pos);
 }

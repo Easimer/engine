@@ -17,6 +17,7 @@ void base_entity::spawn()
 	m_bSpawned = true;
 
 	load_keyvalues();
+	m_vecRot = vec3(0, 0, 0);
 }
 
 vec3 base_entity::get_abspos() const
@@ -67,6 +68,16 @@ void base_entity::set_parent(base_entity* pEnt)
 void base_entity::set_rotation(const vec3 & v)
 {
 	m_vecRot = v;
+}
+
+glm::mat4 base_entity::get_rotation_matrix() const {
+	if (m_pParent) {
+		glm::mat4 matParentRot = m_pParent->get_rotation_matrix();
+		glm::mat4 matMyRot = glm::eulerAngleXYZ(m_vecRot[0], m_vecRot[1], m_vecRot[2]);
+		return matParentRot * matMyRot;
+	} else {
+		return glm::eulerAngleXYZ(m_vecRot[0], m_vecRot[1], m_vecRot[2]);
+	}
 }
 
 base_entity * CreateEntity(const char * mapname)

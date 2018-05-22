@@ -75,7 +75,17 @@ bool game::tick() {
 					continue;
 				pShader = gpGfx->get_shader(iShader);
 
+				/*std::cout << "=========" << std::endl;
+				for (size_t y = 0; y < 4; y++) {
+					for (size_t x = 0; x < 4; x++) {
+						std::cout << edicts[i].rotation[4 * y + x] << '\t';
+					}
+					std::cout << std::endl;
+				}
+				std::cout << "=========" << std::endl;*/
+
 				mat_trans = glm::translate(mat_trans, (glm::vec3)edicts->iposition);
+				mat_trans = mat_trans * glm::make_mat4(edicts[i].rotation);
 
 				pShader->use();
 				pShader->set_mat_proj(glm::value_ptr(m_proj));

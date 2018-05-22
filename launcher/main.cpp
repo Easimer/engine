@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
 		if (cli && cli->is_shutdown()) break;
 		if (srv && srv->is_shutdown()) break;
 		std::this_thread::sleep_for(std::chrono::duration<float>(1.f));
-		if (cli->request_server() && !srv) {
+		if (!srv && cli->request_server()) {
 			srv = server_init();
 			ASSERT(srv);
 			srv->init();

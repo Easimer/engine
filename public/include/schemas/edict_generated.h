@@ -227,8 +227,7 @@ struct EntityUpdate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_POS = 6,
     VT_ROT = 8,
     VT_MODEL = 10,
-    VT_PARENT = 12,
-    VT_LAST_UPDATE = 14
+    VT_LAST_UPDATE = 12
   };
   uint64_t edict_id() const {
     return GetField<uint64_t>(VT_EDICT_ID, 0);
@@ -249,14 +248,11 @@ struct EntityUpdate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const Schemas::Vector3 *pos() const {
     return GetStruct<const Schemas::Vector3 *>(VT_POS);
   }
-  const Schemas::Vector3 *rot() const {
-    return GetStruct<const Schemas::Vector3 *>(VT_ROT);
+  const Schemas::Matrix4x4 *rot() const {
+    return GetPointer<const Schemas::Matrix4x4 *>(VT_ROT);
   }
   const flatbuffers::String *model() const {
     return GetPointer<const flatbuffers::String *>(VT_MODEL);
-  }
-  uint64_t parent() const {
-    return GetField<uint64_t>(VT_PARENT, 0);
   }
   float last_update() const {
     return GetField<float>(VT_LAST_UPDATE, 0.0f);
@@ -265,10 +261,10 @@ struct EntityUpdate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return VerifyTableStart(verifier) &&
            VerifyField<uint64_t>(verifier, VT_EDICT_ID) &&
            VerifyField<Schemas::Vector3>(verifier, VT_POS) &&
-           VerifyField<Schemas::Vector3>(verifier, VT_ROT) &&
+           VerifyOffset(verifier, VT_ROT) &&
+           verifier.VerifyTable(rot()) &&
            VerifyOffset(verifier, VT_MODEL) &&
            verifier.Verify(model()) &&
-           VerifyField<uint64_t>(verifier, VT_PARENT) &&
            VerifyField<float>(verifier, VT_LAST_UPDATE) &&
            verifier.EndTable();
   }
@@ -283,14 +279,11 @@ struct EntityUpdateBuilder {
   void add_pos(const Schemas::Vector3 *pos) {
     fbb_.AddStruct(EntityUpdate::VT_POS, pos);
   }
-  void add_rot(const Schemas::Vector3 *rot) {
-    fbb_.AddStruct(EntityUpdate::VT_ROT, rot);
+  void add_rot(flatbuffers::Offset<Schemas::Matrix4x4> rot) {
+    fbb_.AddOffset(EntityUpdate::VT_ROT, rot);
   }
   void add_model(flatbuffers::Offset<flatbuffers::String> model) {
     fbb_.AddOffset(EntityUpdate::VT_MODEL, model);
-  }
-  void add_parent(uint64_t parent) {
-    fbb_.AddElement<uint64_t>(EntityUpdate::VT_PARENT, parent, 0);
   }
   void add_last_update(float last_update) {
     fbb_.AddElement<float>(EntityUpdate::VT_LAST_UPDATE, last_update, 0.0f);
@@ -311,12 +304,10 @@ inline flatbuffers::Offset<EntityUpdate> CreateEntityUpdate(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint64_t edict_id = 0,
     const Schemas::Vector3 *pos = 0,
-    const Schemas::Vector3 *rot = 0,
+    flatbuffers::Offset<Schemas::Matrix4x4> rot = 0,
     flatbuffers::Offset<flatbuffers::String> model = 0,
-    uint64_t parent = 0,
     float last_update = 0.0f) {
   EntityUpdateBuilder builder_(_fbb);
-  builder_.add_parent(parent);
   builder_.add_edict_id(edict_id);
   builder_.add_last_update(last_update);
   builder_.add_model(model);
@@ -329,9 +320,8 @@ inline flatbuffers::Offset<EntityUpdate> CreateEntityUpdateDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint64_t edict_id = 0,
     const Schemas::Vector3 *pos = 0,
-    const Schemas::Vector3 *rot = 0,
+    flatbuffers::Offset<Schemas::Matrix4x4> rot = 0,
     const char *model = nullptr,
-    uint64_t parent = 0,
     float last_update = 0.0f) {
   return Schemas::Networking::CreateEntityUpdate(
       _fbb,
@@ -339,7 +329,6 @@ inline flatbuffers::Offset<EntityUpdate> CreateEntityUpdateDirect(
       pos,
       rot,
       model ? _fbb.CreateString(model) : 0,
-      parent,
       last_update);
 }
 
