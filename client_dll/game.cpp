@@ -12,6 +12,8 @@
 
 game::game() : m_bPaused(true), m_model_cache({ 0 }) {
 	m_proj = glm::perspective(glm::radians(90.f), (float)gpGfx->width() / (float)gpGfx->height(), 0.1f, 1000.0f);
+	m_input.assign_camera(&m_camera);
+	m_evhandler.assign_input_handler(&m_input);
 }
 
 void game::connect(const char * pszHostname, const char * pszUsername) {
@@ -25,6 +27,7 @@ void game::connect(const char * pszHostname, const char * pszUsername) {
 	//	std::this_thread::sleep_for(std::chrono::seconds(1));
 	//	m_pNetClient->attempt_connect();
 	//}
+	gpGfx->capture_mouse(true);
 }
 
 void game::connect(const sockaddr_in6 & addr, const char * pszUsername) {
@@ -37,14 +40,19 @@ void game::disconnect() {
 		return;
 	m_pNetClient->disconnect();
 	m_pNetClient.reset();
+	gpGfx->capture_mouse(false);
 }
 
 bool game::tick() {
 	std::vector<SDL_Event> events;
 	gpGfx->get_events(events);
 	
-	for (auto& ev : events)
+	for (auto& ev : events) {
+		m_evhandler.send_events(events);
 		gpGfx->gui_send_event(ev);
+	}
+
+	m_input.update();
 
 	if (!m_pNetClient)
 		return true;
@@ -55,14 +63,15 @@ bool game::tick() {
 	net::edict_t* edicts = m_pNetClient->get_edicts();
 	for (size_t i = 1; i < net::max_edicts; i++) {
 		if (edicts[i].active) {
-			if (edicts[i].modelname[0] != '\0') {
+			net::edict_t e = edicts[i];
+			if (e.modelname[0] != '\0') {
 				gfx::material mat;
 				int iShader;
 				gfx::shader_program* pShader;
 				glm::mat4 mat_trans(1.0);
 
 				if (m_model_cache[i] == 0) {
-					m_model_cache[i] = gpGfx->load_model(edicts[i].modelname);
+					m_model_cache[i] = gpGfx->load_model(e.modelname);
 				}
 
 				gfx::model_id mdl = m_model_cache[i];
@@ -83,9 +92,8 @@ bool game::tick() {
 					std::cout << std::endl;
 				}
 				std::cout << "=========" << std::endl;*/
-
-				mat_trans = glm::translate(mat_trans, (glm::vec3)edicts->iposition);
-				mat_trans = mat_trans * glm::make_mat4(edicts[i].irotation);
+				mat_trans = glm::translate(mat_trans, (glm::vec3)(e.iposition));
+				mat_trans = mat_trans * glm::make_mat4(e.irotation);
 
 				pShader->use();
 				pShader->set_mat_proj(glm::value_ptr(m_proj));
@@ -97,21 +105,13 @@ bool game::tick() {
 			}
 			// Interpolate position
 			float dt = gpGfx->delta();
-			vec3 vel = edicts[i].ivelocity;
-			float dx = vel.x() * dt;
-			float dy = vel.y() * dt;
-			float dz = vel.z() * dt;
+			vec3 vel = e.ivelocity;
 			//PRINT_DBG((dt * vel));
-			edicts[i].iposition[0] += dx;
-			if(edicts[i].iacceleration[1] < 0)
-				edicts[i].iposition[1] += dy / 2;
-			else
-				edicts[i].iposition[1] += dy;
-			edicts[i].iposition[2] += dz;
+			edicts[i].iposition += dt * vel;
 			// Interpolate rotation
-			glm::vec3 angps = glm::make_vec3(edicts[i].angular_vel) * gpGfx->delta();
+			glm::vec3 angps = glm::make_vec3(e.angular_vel) * gpGfx->delta();
 			glm::quat q(angps);
-			glm::quat r(glm::make_mat4(edicts[i].irotation));
+			glm::quat r(glm::make_mat4(e.irotation));
 			r *= q;
 			glm::mat4 m(r);
 			memcpy(edicts[i].irotation, glm::value_ptr(m), 16 * sizeof(float));

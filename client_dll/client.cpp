@@ -39,11 +39,11 @@ protected:
 				//ImGui::InputFloat("Last updated", &edicts[i].last_update, -1, ImGuiInputTextFlags_ReadOnly);
 				//ImGui::InputFloat3("Position", (float*)edicts[i].position.ptr(), -1, ImGuiInputTextFlags_ReadOnly);
 				ImGui::InputFloat3("iPosition", (float*)edicts[i].iposition.ptr(), -1, ImGuiInputTextFlags_ReadOnly);
-				ImGui::InputFloat3("Velocity", (float*)edicts[i].velocity.ptr(), -1, ImGuiInputTextFlags_ReadOnly);
-				ImGui::InputFloat4("Angular velocity", (float*)edicts[i].angular_vel, -1, ImGuiInputTextFlags_ReadOnly);
+				//ImGui::InputFloat3("Velocity", (float*)edicts[i].velocity.ptr(), -1, ImGuiInputTextFlags_ReadOnly);
+				//ImGui::InputFloat4("Angular velocity", (float*)edicts[i].angular_vel, -1, ImGuiInputTextFlags_ReadOnly);
 				//ImGui::InputFloat3("Acceleration", (float*)edicts[i].iacceleration.ptr(), -1, ImGuiInputTextFlags_ReadOnly);
 				//ImGui::InputFloat3("iVelocity", (float*)edicts[i].ivelocity.ptr(), -1, ImGuiInputTextFlags_ReadOnly);
-				ImGui::Matrix<float>("Rotation", edicts[i].rotation, 4, 4);
+				//ImGui::Matrix<float>("Rotation", edicts[i].rotation, 4, 4);
 				ImGui::Separator();
 			}
 		}

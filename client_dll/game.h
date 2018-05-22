@@ -4,6 +4,8 @@
 #include <gfx/gfx.h>
 #include <gfx/camera.h>
 #include <array>
+#include "input.h"
+#include "events.h"
 
 class game {
 public:
@@ -26,4 +28,6 @@ private:
 	// Stores model ID associated with edict index
 	std::array<gfx::model_id, net::max_edicts> m_model_cache;
 	glm::mat4 m_proj;
+	input m_input;
+	event_handler m_evhandler;
 };

@@ -20,6 +20,12 @@ set(SRC_CORE
 	base_entity.cpp
 	base_entity.h
 
+	input.cpp
+	input.h
+
+	events.cpp
+	events.h
+
 	globals.h
 )
 
