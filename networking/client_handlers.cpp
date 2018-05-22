@@ -1,5 +1,8 @@
 ﻿#include "stdafx.h"
 #include <net/client.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 void net::client::handle_connect_ack(const Schemas::Networking::ConnectData* pConnDat) {
 	m_connected = true;
@@ -59,13 +62,30 @@ void net::client::handle_entity_update(const Schemas::Networking::EntityUpdate* 
 		e.iposition[0] = x;
 		e.iposition[1] = y;
 		e.iposition[2] = z;
+
 	}
 	auto rot = pEntUpd->rot();
 	if (rot && rot->data()) {
-		for (size_t i = 0; i < 16; i++) {
-			e.rotation[i] = rot->data()->Get(i);
+		if (dts != 0) { 
+			// calculate angular velocity for rotation interpolation
+			// and copy new rotation matrix into the edict
+			glm::quat rot_old(glm::make_mat4(e.rotation));
+			memcpy(e.rotation, rot->data()->data(), 16 * sizeof(float));
+			memcpy(e.irotation, e.rotation, 16 * sizeof(float));
+			glm::quat rot_new(glm::make_mat4(e.rotation));
+
+			glm::quat rot_delta = rot_new * glm::inverse(rot_old);
+			glm::vec3 euler = glm::eulerAngles(rot_delta);
+			euler /= (dts); // scale angular vel
+
+			for (size_t i = 0; i < 3; i++) {
+				e.angular_vel[i] = euler[i];
+			}
+		} else {
+			// if deltatime was 0 then don't calculate angvel yet to prevent a div by zero
+			memcpy(e.rotation, rot->data()->data(), 16 * sizeof(float));
+			memcpy(e.irotation, e.rotation, 16 * sizeof(float));
 		}
-		//memcpy(e.rotation, rot->data()->data(), 16 * sizeof(float));
 	}
 	auto model = pEntUpd->model();
 	if (model) {

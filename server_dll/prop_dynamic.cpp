@@ -40,18 +40,18 @@ void c_prop_dynamic::spawn() {
 }
 
 void c_prop_dynamic::think() {
-	SetNextThink(gpGlobals->curtime + 0.008);
+	SetNextThink(gpGlobals->curtime + 0.5);
 
-	auto pos = get_abspos();
-	pos[0] = 2 * cos(m_flAngle);
-	pos[1] = 2 * sin(m_flAngle);
-	m_flAngle += (0.0523598776f);
+	//auto pos = get_abspos();
+	//pos[0] = 2 * cos(m_flAngle);
+	//pos[1] = 2 * sin(m_flAngle);
+	//m_flAngle += glm::radians(45.f);
 
 	auto rot = get_relrot();
 
-	rot[1] += (0.0523598776f);
+	rot[1] += glm::radians(45.f);
 
 	set_rotation(rot);
 
-	set_abspos(pos);
+	//set_abspos(pos);
 }

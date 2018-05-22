@@ -51,18 +51,21 @@ namespace net {
 		math::vector3<float> iposition;		// [C] interpolated position, calculated by applying velocity to position
 		math::vector3<float> iacceleration;	// [C] interpolated acceleration, calculated from old and current velocity
 		math::vector3<float> ivelocity;		// [C] interpolated velocity, calculated first from velocity, then by applying iacceleration to ivelocity
-		float rotation[16];					// [N] rotation transformation matrix of entity (unused atm)
-		math::vector3<float> rotation2;		// [N] rotation angles of entity (temp)
+		float rotation[16];					// [N] rotation transformation matrix of entity
+		float irotation[16];				// [C] interpolated rotation transformation matrix of entity
+		//math::vector3<float> rotation2;	// [N] rotation angles of entity (temp)
 		char modelname[128];				// [N] model name of entity
 		float last_update;					// [N] time the entity was last updated
+		float angular_vel[4];				// [C] angular velocity of the model
 
 		void reset() {
 			active = updated = false;
-			position = velocity = iposition = iacceleration = ivelocity = rotation2 = vec3(0, 0, 0);
+			position = velocity = iposition = iacceleration = ivelocity = vec3(0, 0, 0);
 			for (size_t i = 0; i < 16; i++) rotation[i] = 0;
 			rotation[0] = 1; rotation[5] = 1; rotation[10] = 1; rotation[15] = 1;
 			modelname[0] = 0;
 			last_update = 0.f;
+			angular_vel[0] = 0; angular_vel[1] = 0; angular_vel[2] = 0; angular_vel[3] = 0;
 		}
 	};
 

@@ -148,6 +148,7 @@ void net::server::broadcast_update(const entity_update& upd) {
 	eub.add_edict_id(upd.edict);
 	eub.add_pos(&pos);
 	eub.add_rot(mat4);
+	eub.add_last_update(upd.time);
 	auto off_upd = eub.Finish();
 
 	Schemas::Networking::MessageHeaderBuilder mhb(fbb);
@@ -211,9 +212,9 @@ void net::server::push_updates() {
 			entity_update upd;
 			upd.edict = i;
 			upd.pos[0] = e.position[0]; upd.pos[1] = e.position[1]; upd.pos[2] = e.position[2];
-			for (size_t i = 0; i < 16; i++)
-				upd.rot[i] = e.rotation[i];
+			memcpy(upd.rot, e.rotation, 16 * sizeof(float));
 			upd.model = e.modelname;
+			upd.time = e.last_update;
 
 			broadcast_update(upd);
 			e.updated = false;
@@ -231,7 +232,7 @@ void net::server::push_full_update(const net::client_desc& cd) {
 			entity_update upd;
 			upd.edict = i;
 			upd.pos[0] = e.position[0]; upd.pos[1] = e.position[1]; upd.pos[2] = e.position[2];
-			upd.rot[0] = e.rotation2[0]; upd.rot[1] = e.rotation2[1]; upd.rot[2] = e.rotation2[2];
+			memcpy(upd.rot, e.rotation, 16 * sizeof(float));
 			upd.model = e.modelname;
 
 			unicast_update(upd, cd);

@@ -76,6 +76,8 @@ void server::init() {
 						}
 					}
 				}
+				if (e.updated)
+					e.last_update = gpGlobals->curtime;
 			}
 
 			m_server.push_updates();

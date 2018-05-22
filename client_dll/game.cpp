@@ -85,7 +85,7 @@ bool game::tick() {
 				std::cout << "=========" << std::endl;*/
 
 				mat_trans = glm::translate(mat_trans, (glm::vec3)edicts->iposition);
-				mat_trans = mat_trans * glm::make_mat4(edicts[i].rotation);
+				mat_trans = mat_trans * glm::make_mat4(edicts[i].irotation);
 
 				pShader->use();
 				pShader->set_mat_proj(glm::value_ptr(m_proj));
@@ -108,7 +108,13 @@ bool game::tick() {
 			else
 				edicts[i].iposition[1] += dy;
 			edicts[i].iposition[2] += dz;
-			// Interpolate velocity
+			// Interpolate rotation
+			glm::vec3 angps = glm::make_vec3(edicts[i].angular_vel) * gpGfx->delta();
+			glm::quat q(angps);
+			glm::quat r(glm::make_mat4(edicts[i].irotation));
+			r *= q;
+			glm::mat4 m(r);
+			memcpy(edicts[i].irotation, glm::value_ptr(m), 16 * sizeof(float));
 		}
 	}
 

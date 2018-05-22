@@ -25,6 +25,7 @@ namespace net {
 		float pos[3];
 		float rot[16];
 		const char* model;
+		float time;
 	};
 
 	using server_handler = std::function<bool(const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz)>;
