@@ -56,7 +56,7 @@ namespace net {
 		//math::vector3<float> rotation2;	// [N] rotation angles of entity (temp)
 		char modelname[128];				// [N] model name of entity
 		float last_update;					// [N] time the entity was last updated
-		float angular_vel[4];				// [C] angular velocity of the model
+		float angular_vel[3];				// [C] angular velocity of the model
 
 		void reset() {
 			active = updated = false;
