@@ -9,12 +9,13 @@ class link_dll {
 public:
 	link_dll(const char* pszModule, const char* pszSymbol)
 		: m_pFunc(nullptr), m_pDll(nullptr) {
+		ASSERT(pszModule); ASSERT(pszSymbol);
 		if (!(pszModule && pszSymbol)) return;
 		load_module(pszModule);
 		link(pszSymbol);
 	}
 
-	~link_dll() { unload_module() }
+	~link_dll() { unload_module(); }
 
 	inline operator bool() const {
 		return m_pDll && m_pFunc;
