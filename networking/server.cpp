@@ -53,6 +53,15 @@ net::server::server() : m_pCurTime(nullptr) {
 			int recv_len;
 			sockaddr_in from;
 			net::socklen_t slen = sizeof(from);
+
+			// Push full world update to all clients every 10 secs
+			std::chrono::time_point<std::chrono::steady_clock> last_full_update = std::chrono::steady_clock::now();
+			if ((std::chrono::steady_clock::now() - last_full_update) < std::chrono::duration<float>(10)) {
+				for (auto& client : m_clients) {
+					push_full_update(client);
+				}
+			}
+
 			if ((recv_len = recvfrom(socket, buf, 4096, 0, (sockaddr*)&from, &slen)) != net::socket_error) {
 				char addrbuf[64];
 				inet_ntop(AF_INET, &from.sin_addr, addrbuf, 64);
@@ -239,7 +248,6 @@ void net::server::push_full_update(const net::client_desc& cd) {
 			e.updated = false;
 		}
 	}
-	PRINT_DBG("net::server::push_full_update: updated " << cd.username);
 }
 
 size_t net::server::player_count() const {

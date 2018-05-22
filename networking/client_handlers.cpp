@@ -24,7 +24,6 @@ void net::client::handle_entity_update(const Schemas::Networking::EntityUpdate* 
 	e.updated = false;
 
 	float dts = abs(pEntUpd->last_update() - e.last_update); // Δt_s [Δs]
-	PRINT_DBG(dts);
 	e.last_update = pEntUpd->last_update();
 	auto pos = pEntUpd->pos();
 	if (pos) {
@@ -37,7 +36,6 @@ void net::client::handle_entity_update(const Schemas::Networking::EntityUpdate* 
 		float ey = (y - e.iposition[1]);
 		float ez = (z - e.iposition[2]);
 		float err = vec3(ex, ey, ez).length();
-		PRINT_DBG("Error: " << err);
 
 		if (dts != 0) {
 			float flDeltaX = (x - e.position[0]);
@@ -62,7 +60,6 @@ void net::client::handle_entity_update(const Schemas::Networking::EntityUpdate* 
 		e.iposition[0] = x;
 		e.iposition[1] = y;
 		e.iposition[2] = z;
-
 	}
 	auto rot = pEntUpd->rot();
 	if (rot && rot->data()) {
