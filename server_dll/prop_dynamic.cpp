@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "prop_common.h"
-#include "glm/gtc/quaternion.hpp"
 
 class c_prop_dynamic : public c_base_prop {
 public:
@@ -8,14 +7,8 @@ public:
 	virtual void precache() override;
 	virtual void spawn() override;
 
-	virtual void think() override;
-
 	BEGIN_KEYVALUES(c_prop_dynamic)
 	END_KEYVALUES()
-private:
-	bool m_bDir = false;
-
-	float m_flAngle = 0;
 };
 
 REGISTER_ENTITY(c_prop_dynamic, prop_dynamic);
@@ -27,31 +20,6 @@ void c_prop_dynamic::precache() {
 void c_prop_dynamic::spawn() {
 	BaseClass::spawn();
 	precache();
-	set_abspos(vec3_origin);
-	SetThink(&c_prop_dynamic::think);
-	SetNextThink(gpGlobals->curtime + 1);
+	SetNextThink(DONT_THINK);
 	m_nFilter = ENT_FILTER_PROP;
-
-	auto pos = get_abspos();
-	pos[0] = 0;
-	pos[1] = 0;
-	pos[2] = -3.5;
-	set_abspos(pos);
-}
-
-void c_prop_dynamic::think() {
-	SetNextThink(gpGlobals->curtime + 0.5);
-
-	//auto pos = get_abspos();
-	//pos[0] = 2 * cos(m_flAngle);
-	//pos[1] = 2 * sin(m_flAngle);
-	//m_flAngle += glm::radians(45.f);
-
-	auto rot = get_relrot();
-
-	rot[1] += glm::radians(45.f);
-
-	set_rotation(rot);
-
-	//set_abspos(pos);
 }

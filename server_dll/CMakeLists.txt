@@ -27,6 +27,7 @@ set(SRC_ENTSYS
 set(SRC_ENTSYS_PROP
 	prop_common.h
 	prop_dynamic.cpp
+	prop_static.cpp
 )
 
 set(SRC_ENTSYS_LIGHT

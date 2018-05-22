@@ -35,11 +35,29 @@ void server::init() {
 
 		// Create test entity
 
-		c_base_prop* pEnt = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
-		pEnt->model("data/models/wolf.emf");
-		pEnt->spawn();
+		c_base_prop* pDog1 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+		pDog1->model("data/models/wolf.emf");
+		pDog1->spawn();
+		pDog1->set_abspos(vec3(0.5, 0, -0.1));
 
-		c_base_prop* pEnt2 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+		c_base_prop* pDog2 = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+		pDog2->model("data/models/traffic_barrel.emf");
+		pDog2->spawn();
+		pDog2->set_abspos(vec3(-0.5, 0, 0));
+
+		c_base_prop* pArthas = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+		pArthas->model("data/models/arthas.emf");
+		pArthas->spawn();
+		pArthas->set_abspos(vec3(-0.5, 0, -1));
+
+		c_base_prop* pCSoldier = (c_base_prop*)CreateEntityNoSpawn("prop_dynamic");
+		pCSoldier->model("data/models/csoldier.emf");
+		pCSoldier->spawn();
+		pCSoldier->set_abspos(vec3(0, 0, -0.2));
+
+		c_base_prop* pHat = (c_base_prop*)CreateEntityNoSpawn("prop_static");
+		pHat->model("data/models/test_terrain.smd");
+		pHat->spawn();
 
 		for (size_t i = 0; i < net::max_edicts; i++)
 			m_server.edict(i).reset();
