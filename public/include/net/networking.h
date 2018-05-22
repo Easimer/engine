@@ -26,6 +26,7 @@ namespace net {
 	const size_t stored_updates = 4;
 	const unsigned short port = 38576;
 	const size_t max_players = 256;
+	const size_t invalid_edict = 0;
 #if defined(PLAT_WINDOWS)
 	using socket_t = size_t;
 	using socklen_t = int;
@@ -37,6 +38,11 @@ namespace net {
 	const socket_t invalid_socket = -1;
 	const socket_t socket_error = -1;
 #endif
+
+	// Since the first [max_players] edicts are reserved for players
+	// we have to make sure that there are enough edicts for all
+	// players.
+	static_assert(max_edicts >= max_players);
 
 	using client_id = uint8_t;
 	using ent_id = uint32_t;

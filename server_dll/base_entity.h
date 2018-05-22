@@ -117,6 +117,10 @@ public:
 	inline size_t edict() const { return m_iEdict; }
 	inline void edict(size_t i) { m_iEdict = i; }
 
+	virtual bool is_player() const {
+		return false;
+	}
+
 protected:
 	// This is the absolute pos if this ent has no parent
 	// Otherwise this is relative

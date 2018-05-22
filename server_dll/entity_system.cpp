@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "entity_system.h"
 #include <algorithm>
+#include <net/networking.h>
 
 entity_handle entity_system::add_entity(base_entity * ent) {
 	auto pos = std::find(m_entities.cbegin(), m_entities.cend(), ent);
@@ -8,8 +9,10 @@ entity_handle entity_system::add_entity(base_entity * ent) {
 		return pos - m_entities.cbegin();
 	}
 	m_entities.push_back(ent);
-	size_t e = m_entities.size() - 1;
+	entity_handle e = get_free_edict(ent->is_player());
 	ent->edict(e);
+	m_edicts[e] = true;
+	PRINT_DBG("Entity " << ent->get_classname() << " assigned to edict " << e);
 	return e;
 }
 
@@ -49,4 +52,17 @@ void entity_system::update_entities() {
 			}
 		}
 	}
+}
+
+entity_handle entity_system::get_free_edict(bool bPlayer) const {
+	entity_handle hEnt;
+	if (bPlayer)
+		hEnt = 1;
+	else
+		hEnt = net::max_players + 1;
+	for (; hEnt < net::max_edicts; hEnt++) {
+		if (!m_edicts[hEnt])
+			return hEnt;
+	}
+	return net::invalid_edict;
 }

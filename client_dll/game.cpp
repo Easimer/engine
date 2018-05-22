@@ -53,7 +53,7 @@ bool game::tick() {
 	mat_view = glm::translate(mat_view, glm::vec3(m_camera.get_pos()));
 	
 	net::edict_t* edicts = m_pNetClient->get_edicts();
-	for (size_t i = 0; i < 2048; i++) {
+	for (size_t i = 1; i < net::max_edicts; i++) {
 		if (edicts[i].active) {
 			if (edicts[i].modelname[0] != '\0') {
 				gfx::material mat;

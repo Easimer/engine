@@ -1,7 +1,9 @@
 #pragma once
 
 #include <vector>
+#include <array>
 #include "base_entity.h"
+#include <net/networking.h>
 
 using entity_id = size_t;
 using entity_handle = size_t;
@@ -17,6 +19,9 @@ public:
 
 	const std::vector<base_entity*>& ptr() const { return m_entities; }
 
+	entity_handle get_free_edict(bool bPlayer) const;
+
 private:
 	std::vector<base_entity*> m_entities;
+	std::array<bool, net::max_edicts> m_edicts;
 };
