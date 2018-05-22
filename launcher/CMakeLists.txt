@@ -14,6 +14,7 @@ set(SRC_CORE
 set(SRC_PUBLIC
 	../public/include/iserver.h
 	../public/include/iclient.h
+	../public/include/dl.h
 )
 
 add_executable(launcher

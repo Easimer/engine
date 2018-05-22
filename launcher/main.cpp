@@ -4,12 +4,12 @@
 #include <type_traits>
 #include <chrono>
 #include <thread>
+#include <dl.h>
 
 #if defined(PLAT_WINDOWS)
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #elif defined(PLAT_LINUX)
-#include <dlfcn.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
@@ -39,31 +39,6 @@ const char* pszClientDLL = "bin/libclient_dll.so";
 				exit(1); \
 		} \
 	}
-
-template<typename T>
-typename std::enable_if<std::is_pointer<T>::value, T>::type link_dll(const std::string& module, const std::string& symbol) {
-#if defined(PLAT_WINDOWS)
-	HINSTANCE module_hnd = LoadLibraryA(module.c_str());
-	ASSERT_WINDOWS(module_hnd);
-	if (module_hnd) {
-		T func = (T)GetProcAddress(module_hnd, symbol.c_str());
-		ASSERT_WINDOWS(func);
-		return func;
-	} else {
-		return nullptr;
-	}
-#elif defined(PLAT_LINUX)
-	auto module_hnd = dlopen(module.c_str(), RTLD_NOW);
-	ASSERT_CUSTOM(module_hnd, dlerror());
-	if (module_hnd) {
-		T func = (T)dlsym(module_hnd, symbol.c_str());
-		ASSERT_CUSTOM(func, dlerror());
-		return func;
-	} else {
-		return nullptr;
-	}
-#endif
-}
 
 /// Set the current working directory to the game root directory
 /// (we're launching from /bin/)
@@ -115,11 +90,11 @@ int main(int argc, char** argv) {
 #endif
 	std::flush(std::cout);
 
-	auto server_init = link_dll<iserver*(*)()>(pszServerDLL, "server_dll_init");
-	auto server_shutdown = link_dll<void(*)(iserver*)>(pszServerDLL, "server_dll_shutdown");
+	auto server_init = link_dll<iserver*>(pszServerDLL, "server_dll_init");
+	auto server_shutdown = link_dll<void, iserver*>(pszServerDLL, "server_dll_shutdown");
 
-	auto client_init = link_dll<iclient*(*)()>(pszClientDLL, "client_dll_init");
-	auto client_shutdown = link_dll<void(*)(iclient*)>(pszClientDLL, "client_dll_shutdown");
+	auto client_init = link_dll<iclient*>(pszClientDLL, "client_dll_init");
+	auto client_shutdown = link_dll<void, iclient*>(pszClientDLL, "client_dll_shutdown");
 
 	ASSERT(server_init);
 	ASSERT(server_shutdown);
