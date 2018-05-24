@@ -39,6 +39,26 @@ namespace net {
 	const socket_t socket_error = -1;
 #endif
 
+	// == Statistics ==
+	enum packet_stat_type {
+		E_PKSTAT_ENTITY_UPDATE	= 0,	// Entity update that was not about a player
+		E_PKSTAT_OTHER			= 1,	// Other
+		E_PKSTAT_CLIENT_UPDATE	= 2,	// Client update
+		E_PKSTAT_MAX
+	};
+
+	struct packet_stat {
+		size_t packet_siz[E_PKSTAT_MAX];
+	};
+
+	static const uint32_t stat_type_colors[E_PKSTAT_MAX] = {
+		0xFF00FFFF, // Yellow
+		0xFF0000FF, // Red
+		0xFFFF0000, // Blue
+	};
+
+	// == Statistics ==
+
 	// Since the first [max_players] edicts are reserved for players
 	// we have to make sure that there are enough edicts for all
 	// players.

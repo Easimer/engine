@@ -3,6 +3,7 @@
 #include <gfx/gfx.h>
 #include <gfx/material.h>
 #include <gfx/shader_program.h>
+#include "imgui_netgraph.h"
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
@@ -62,6 +63,8 @@ bool game::tick() {
 	}
 
 	m_pNetClient->push_client_updates();
+
+	ImGui::NetGraph(m_pNetClient->get_packet_stats());
 
 	glm::mat4 mat_view = m_camera.get_rot();
 	mat_view = glm::translate(mat_view, glm::vec3(m_camera.get_pos()));

@@ -17,6 +17,11 @@ public:
 	bool empty() { std::lock_guard<std::mutex> lg(m_lock); return m_empty; }
 	bool full() { std::lock_guard<std::mutex> lg(m_lock); return m_head == m_tail && !m_empty; }
 
+	size_t head() const { return m_head; }
+	size_t tail() const { return m_tail; }
+	const std::array<T, N>& ptr() const { return m_buf; }
+	size_t size() const { return N; }
+
 	static_assert(std::is_copy_constructible<T>::value);
 protected:
 	void advance_head() {

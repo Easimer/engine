@@ -61,6 +61,10 @@ void net::client::push_client_updates() {
 		mhb.add_data(off_payload.Union());
 		Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
 		send_to_server(fbb.GetBufferPointer(), fbb.GetSize());
+		{
+			std::lock_guard<std::mutex> lg(m_current_stat_lock);
+			m_current_stat.packet_siz[E_PKSTAT_CLIENT_UPDATE] += fbb.GetSize();
+		}
 	}
 }
 
@@ -121,6 +125,7 @@ void net::client::connect() {
 		auto socket = get_socket();
 		PRINT_DBG("net::client: receiver thread is running");
 		attempt_connect();
+		std::chrono::time_point<std::chrono::steady_clock> pkstat_last_commit = std::chrono::steady_clock::now();
 		while (true) {
 			char buf[4096];
 			net::socklen_t recv_len;
@@ -137,6 +142,10 @@ void net::client::connect() {
 					switch (msgtype) {
 					case Schemas::Networking::MessageType_NONE:
 						PRINT_ERR("net::client::thread: keepalive from server");
+						{
+							std::lock_guard<std::mutex> lg(m_current_stat_lock);
+							m_current_stat.packet_siz[E_PKSTAT_OTHER] += recv_len;
+						}
 						break;
 					case Schemas::Networking::MessageType_CONNECT_ACK:
 						PRINT_ERR("net::client::thread: server acknowledges connection!");
@@ -148,8 +157,16 @@ void net::client::connect() {
 						break;
 					case Schemas::Networking::MessageType_ENTITY_UPDATE:
 						handle_entity_update((Schemas::Networking::EntityUpdate*)(*msghdr).data());
+						{
+							std::lock_guard<std::mutex> lg(m_current_stat_lock);
+							m_current_stat.packet_siz[E_PKSTAT_ENTITY_UPDATE] += recv_len;
+						}
 						break;
 					case Schemas::Networking::MessageType_ECHO_REPLY:
+						{
+							std::lock_guard<std::mutex> lg(m_current_stat_lock);
+							m_current_stat.packet_siz[E_PKSTAT_OTHER] += recv_len;
+						}
 						break;
 					default:
 						PRINT_ERR("net::client::thread: unknown message type " << Schemas::Networking::EnumNameMessageType(msgtype));
@@ -160,6 +177,13 @@ void net::client::connect() {
 				} else {
 					PRINT_ERR("net::client::thread: verify failed!");
 				}
+			}
+
+			if (std::chrono::duration<float>(std::chrono::steady_clock::now() - pkstat_last_commit).count() > 0.1) {
+				std::lock_guard<std::mutex> lg(m_current_stat_lock);
+				m_stats.push_front(m_current_stat);
+				pkstat_last_commit = std::chrono::steady_clock::now();
+				memset(&m_current_stat, 0, sizeof(m_current_stat));
 			}
 		}
 	});

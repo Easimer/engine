@@ -26,6 +26,9 @@ set(SRC_CORE
 	events.cpp
 	events.h
 
+	imgui_netgraph.cpp
+	imgui_netgraph.h
+
 	globals.h
 )
 

@@ -3,6 +3,7 @@
 #include "networking.h"
 #include <chrono>
 #include <ring_buffer.h>
+#include <mutex>
 
 namespace net {
 
@@ -58,6 +59,8 @@ namespace net {
 		bool timed_out();
 
 		ring_buffer<std::string, 128>& get_command_buf() { return m_command_buf; }
+		const ring_buffer<net::packet_stat, 128>& get_packet_stats() const { return m_stats; }
+		ring_buffer<net::packet_stat, 128>& get_packet_stats() { return m_stats; }
 
 	private:
 		net::socket_t m_socket;
@@ -75,6 +78,10 @@ namespace net {
 		std::chrono::time_point<std::chrono::steady_clock> m_last_update;
 
 		ring_buffer<std::string, 128> m_command_buf;
+
+		net::packet_stat m_current_stat;
+		std::mutex m_current_stat_lock;
+		ring_buffer<net::packet_stat, 128> m_stats;
 	};
 
 	struct server_entry {
