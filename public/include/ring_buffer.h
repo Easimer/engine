@@ -57,7 +57,8 @@ T ring_buffer<T, N>::pop_back() {
 	T& ret = m_buf[m_tail];
 
 	advance_tail();
-
+	if (m_head == m_tail)
+		m_empty = true;
 	return ret;
 }
 
