@@ -138,9 +138,17 @@ void server::client_input_handler(const net::client_desc & client, size_t edict,
 		vel[2] += 1;
 	if (strcmp(pszCommand, "-forward") == 0)
 		vel[2] -= 1;
-	if (strcmp(pszCommand, "+forward") == 0)
-		vel[2] += 1;
-	if (strcmp(pszCommand, "-forward") == 0)
+	if (strcmp(pszCommand, "+backward") == 0)
 		vel[2] -= 1;
+	if (strcmp(pszCommand, "-backward") == 0)
+		vel[2] += 1;
+	if (strcmp(pszCommand, "+moveleft") == 0)
+		vel[0] -= 1;
+	if (strcmp(pszCommand, "-moveleft") == 0)
+		vel[0] += 1;
+	if (strcmp(pszCommand, "+moveright") == 0)
+		vel[0] += 1;
+	if (strcmp(pszCommand, "-moveright") == 0)
+		vel[0] -= 1;
 	PRINT_DBG(pszCommand);
 }
