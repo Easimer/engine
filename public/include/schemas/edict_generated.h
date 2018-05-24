@@ -19,6 +19,8 @@ struct ConnectData;
 
 struct ServerData;
 
+struct ClientInput;
+
 struct MessageHeader;
 
 enum MessageType {
@@ -35,11 +37,12 @@ enum MessageType {
   MessageType_ECHO_REPLY = 10,
   MessageType_QUERY_REQUEST = 11,
   MessageType_QUERY_REPLY = 12,
+  MessageType_SYNC_CLOCK = 13,
   MessageType_MIN = MessageType_NONE,
-  MessageType_MAX = MessageType_QUERY_REPLY
+  MessageType_MAX = MessageType_SYNC_CLOCK
 };
 
-inline MessageType (&EnumValuesMessageType())[13] {
+inline MessageType (&EnumValuesMessageType())[14] {
   static MessageType values[] = {
     MessageType_NONE,
     MessageType_CONNECT,
@@ -53,7 +56,8 @@ inline MessageType (&EnumValuesMessageType())[13] {
     MessageType_ECHO_REQUEST,
     MessageType_ECHO_REPLY,
     MessageType_QUERY_REQUEST,
-    MessageType_QUERY_REPLY
+    MessageType_QUERY_REPLY,
+    MessageType_SYNC_CLOCK
   };
   return values;
 }
@@ -73,6 +77,7 @@ inline const char **EnumNamesMessageType() {
     "ECHO_REPLY",
     "QUERY_REQUEST",
     "QUERY_REPLY",
+    "SYNC_CLOCK",
     nullptr
   };
   return names;
@@ -88,16 +93,18 @@ enum ConnectionNakReason {
   ConnectionNakReason_ALREADY_CONNECTED = 1,
   ConnectionNakReason_NAME_UNAVAILABLE = 2,
   ConnectionNakReason_FULL = 3,
+  ConnectionNakReason_CUSTOM = 4,
   ConnectionNakReason_MIN = ConnectionNakReason_RESERVED,
-  ConnectionNakReason_MAX = ConnectionNakReason_FULL
+  ConnectionNakReason_MAX = ConnectionNakReason_CUSTOM
 };
 
-inline ConnectionNakReason (&EnumValuesConnectionNakReason())[4] {
+inline ConnectionNakReason (&EnumValuesConnectionNakReason())[5] {
   static ConnectionNakReason values[] = {
     ConnectionNakReason_RESERVED,
     ConnectionNakReason_ALREADY_CONNECTED,
     ConnectionNakReason_NAME_UNAVAILABLE,
-    ConnectionNakReason_FULL
+    ConnectionNakReason_FULL,
+    ConnectionNakReason_CUSTOM
   };
   return values;
 }
@@ -108,6 +115,7 @@ inline const char **EnumNamesConnectionNakReason() {
     "ALREADY_CONNECTED",
     "NAME_UNAVAILABLE",
     "FULL",
+    "CUSTOM",
     nullptr
   };
   return names;
@@ -123,16 +131,18 @@ enum MessageData {
   MessageData_ConnectData = 1,
   MessageData_EntityUpdate = 2,
   MessageData_ServerData = 3,
+  MessageData_ClientInput = 4,
   MessageData_MIN = MessageData_NONE,
-  MessageData_MAX = MessageData_ServerData
+  MessageData_MAX = MessageData_ClientInput
 };
 
-inline MessageData (&EnumValuesMessageData())[4] {
+inline MessageData (&EnumValuesMessageData())[5] {
   static MessageData values[] = {
     MessageData_NONE,
     MessageData_ConnectData,
     MessageData_EntityUpdate,
-    MessageData_ServerData
+    MessageData_ServerData,
+    MessageData_ClientInput
   };
   return values;
 }
@@ -143,6 +153,7 @@ inline const char **EnumNamesMessageData() {
     "ConnectData",
     "EntityUpdate",
     "ServerData",
+    "ClientInput",
     nullptr
   };
   return names;
@@ -167,6 +178,10 @@ template<> struct MessageDataTraits<EntityUpdate> {
 
 template<> struct MessageDataTraits<ServerData> {
   static const MessageData enum_value = MessageData_ServerData;
+};
+
+template<> struct MessageDataTraits<ClientInput> {
+  static const MessageData enum_value = MessageData_ClientInput;
 };
 
 bool VerifyMessageData(flatbuffers::Verifier &verifier, const void *obj, MessageData type);
@@ -336,7 +351,8 @@ struct ConnectData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum {
     VT_USERNAME = 4,
     VT_CONN_ID = 6,
-    VT_NAK_REASON = 8
+    VT_NAK_REASON = 8,
+    VT_NAK_REASON_CUSTOM = 10
   };
   const flatbuffers::String *username() const {
     return GetPointer<const flatbuffers::String *>(VT_USERNAME);
@@ -347,12 +363,17 @@ struct ConnectData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   ConnectionNakReason nak_reason() const {
     return static_cast<ConnectionNakReason>(GetField<int64_t>(VT_NAK_REASON, 0));
   }
+  const flatbuffers::String *nak_reason_custom() const {
+    return GetPointer<const flatbuffers::String *>(VT_NAK_REASON_CUSTOM);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_USERNAME) &&
            verifier.Verify(username()) &&
            VerifyField<uint64_t>(verifier, VT_CONN_ID) &&
            VerifyField<int64_t>(verifier, VT_NAK_REASON) &&
+           VerifyOffset(verifier, VT_NAK_REASON_CUSTOM) &&
+           verifier.Verify(nak_reason_custom()) &&
            verifier.EndTable();
   }
 };
@@ -368,6 +389,9 @@ struct ConnectDataBuilder {
   }
   void add_nak_reason(ConnectionNakReason nak_reason) {
     fbb_.AddElement<int64_t>(ConnectData::VT_NAK_REASON, static_cast<int64_t>(nak_reason), 0);
+  }
+  void add_nak_reason_custom(flatbuffers::Offset<flatbuffers::String> nak_reason_custom) {
+    fbb_.AddOffset(ConnectData::VT_NAK_REASON_CUSTOM, nak_reason_custom);
   }
   explicit ConnectDataBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -385,10 +409,12 @@ inline flatbuffers::Offset<ConnectData> CreateConnectData(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> username = 0,
     uint64_t conn_id = 0,
-    ConnectionNakReason nak_reason = ConnectionNakReason_RESERVED) {
+    ConnectionNakReason nak_reason = ConnectionNakReason_RESERVED,
+    flatbuffers::Offset<flatbuffers::String> nak_reason_custom = 0) {
   ConnectDataBuilder builder_(_fbb);
   builder_.add_nak_reason(nak_reason);
   builder_.add_conn_id(conn_id);
+  builder_.add_nak_reason_custom(nak_reason_custom);
   builder_.add_username(username);
   return builder_.Finish();
 }
@@ -397,12 +423,14 @@ inline flatbuffers::Offset<ConnectData> CreateConnectDataDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *username = nullptr,
     uint64_t conn_id = 0,
-    ConnectionNakReason nak_reason = ConnectionNakReason_RESERVED) {
+    ConnectionNakReason nak_reason = ConnectionNakReason_RESERVED,
+    const char *nak_reason_custom = nullptr) {
   return Schemas::Networking::CreateConnectData(
       _fbb,
       username ? _fbb.CreateString(username) : 0,
       conn_id,
-      nak_reason);
+      nak_reason,
+      nak_reason_custom ? _fbb.CreateString(nak_reason_custom) : 0);
 }
 
 struct ServerData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -491,14 +519,79 @@ inline flatbuffers::Offset<ServerData> CreateServerDataDirect(
       level ? _fbb.CreateString(level) : 0);
 }
 
+struct ClientInput FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  enum {
+    VT_CURRENT_CLIENT_TIME = 4,
+    VT_COMMAND = 6
+  };
+  uint64_t current_client_time() const {
+    return GetField<uint64_t>(VT_CURRENT_CLIENT_TIME, 0);
+  }
+  const flatbuffers::String *command() const {
+    return GetPointer<const flatbuffers::String *>(VT_COMMAND);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_CURRENT_CLIENT_TIME) &&
+           VerifyOffset(verifier, VT_COMMAND) &&
+           verifier.Verify(command()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ClientInputBuilder {
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_current_client_time(uint64_t current_client_time) {
+    fbb_.AddElement<uint64_t>(ClientInput::VT_CURRENT_CLIENT_TIME, current_client_time, 0);
+  }
+  void add_command(flatbuffers::Offset<flatbuffers::String> command) {
+    fbb_.AddOffset(ClientInput::VT_COMMAND, command);
+  }
+  explicit ClientInputBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ClientInputBuilder &operator=(const ClientInputBuilder &);
+  flatbuffers::Offset<ClientInput> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<ClientInput>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<ClientInput> CreateClientInput(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t current_client_time = 0,
+    flatbuffers::Offset<flatbuffers::String> command = 0) {
+  ClientInputBuilder builder_(_fbb);
+  builder_.add_current_client_time(current_client_time);
+  builder_.add_command(command);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<ClientInput> CreateClientInputDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t current_client_time = 0,
+    const char *command = nullptr) {
+  return Schemas::Networking::CreateClientInput(
+      _fbb,
+      current_client_time,
+      command ? _fbb.CreateString(command) : 0);
+}
+
 struct MessageHeader FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum {
     VT_TYPE = 4,
-    VT_DATA_TYPE = 6,
-    VT_DATA = 8
+    VT_TICK = 6,
+    VT_DATA_TYPE = 8,
+    VT_DATA = 10
   };
   MessageType type() const {
     return static_cast<MessageType>(GetField<int64_t>(VT_TYPE, 0));
+  }
+  uint64_t tick() const {
+    return GetField<uint64_t>(VT_TICK, 0);
   }
   MessageData data_type() const {
     return static_cast<MessageData>(GetField<uint8_t>(VT_DATA_TYPE, 0));
@@ -516,9 +609,13 @@ struct MessageHeader FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const ServerData *data_as_ServerData() const {
     return data_type() == MessageData_ServerData ? static_cast<const ServerData *>(data()) : nullptr;
   }
+  const ClientInput *data_as_ClientInput() const {
+    return data_type() == MessageData_ClientInput ? static_cast<const ClientInput *>(data()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int64_t>(verifier, VT_TYPE) &&
+           VerifyField<uint64_t>(verifier, VT_TICK) &&
            VerifyField<uint8_t>(verifier, VT_DATA_TYPE) &&
            VerifyOffset(verifier, VT_DATA) &&
            VerifyMessageData(verifier, data(), data_type()) &&
@@ -538,11 +635,18 @@ template<> inline const ServerData *MessageHeader::data_as<ServerData>() const {
   return data_as_ServerData();
 }
 
+template<> inline const ClientInput *MessageHeader::data_as<ClientInput>() const {
+  return data_as_ClientInput();
+}
+
 struct MessageHeaderBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_type(MessageType type) {
     fbb_.AddElement<int64_t>(MessageHeader::VT_TYPE, static_cast<int64_t>(type), 0);
+  }
+  void add_tick(uint64_t tick) {
+    fbb_.AddElement<uint64_t>(MessageHeader::VT_TICK, tick, 0);
   }
   void add_data_type(MessageData data_type) {
     fbb_.AddElement<uint8_t>(MessageHeader::VT_DATA_TYPE, static_cast<uint8_t>(data_type), 0);
@@ -565,9 +669,11 @@ struct MessageHeaderBuilder {
 inline flatbuffers::Offset<MessageHeader> CreateMessageHeader(
     flatbuffers::FlatBufferBuilder &_fbb,
     MessageType type = MessageType_NONE,
+    uint64_t tick = 0,
     MessageData data_type = MessageData_NONE,
     flatbuffers::Offset<void> data = 0) {
   MessageHeaderBuilder builder_(_fbb);
+  builder_.add_tick(tick);
   builder_.add_type(type);
   builder_.add_data(data);
   builder_.add_data_type(data_type);
@@ -589,6 +695,10 @@ inline bool VerifyMessageData(flatbuffers::Verifier &verifier, const void *obj, 
     }
     case MessageData_ServerData: {
       auto ptr = reinterpret_cast<const ServerData *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MessageData_ClientInput: {
+      auto ptr = reinterpret_cast<const ClientInput *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return false;

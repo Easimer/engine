@@ -12,6 +12,7 @@ entity_handle entity_system::add_entity(base_entity * ent) {
 	entity_handle e = get_free_edict(ent->is_player());
 	ent->edict(e);
 	m_edicts[e] = true;
+	m_map_edicts_entities.emplace(e, m_entities.size() - 1);
 	PRINT_DBG("Entity " << ent->get_classname() << " assigned to edict " << e);
 	return e;
 }
@@ -20,6 +21,16 @@ base_entity * entity_system::get_entity(entity_handle h) {
 	if(h >= m_entities.size())
 		return nullptr;
 	return m_entities[h];
+}
+
+base_entity * entity_system::get_entity_by_edict(size_t edict) {
+	if (!m_map_edicts_entities.count(edict))
+		return nullptr;
+	size_t i = m_map_edicts_entities[edict];
+	if (i >= m_entities.size())
+		return nullptr;
+	base_entity* pEnt = m_entities[i];
+	return pEnt;
 }
 
 void entity_system::remove_entity(base_entity * ent) {

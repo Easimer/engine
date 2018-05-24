@@ -12,6 +12,7 @@ class entity_system {
 public:
 	entity_handle add_entity(base_entity* ent);
 	base_entity* get_entity(entity_handle h);
+	base_entity* get_entity_by_edict(size_t edict);
 	void remove_entity(base_entity* ent);
 	void remove_entity(entity_handle h);
 
@@ -23,5 +24,6 @@ public:
 
 private:
 	std::vector<base_entity*> m_entities;
+	std::map<size_t, size_t> m_map_edicts_entities;
 	std::array<bool, net::max_edicts> m_edicts;
 };

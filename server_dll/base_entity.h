@@ -3,6 +3,7 @@
 #include "base_thinker.h"
 #include <math/vector.h>
 #include "keyvalues.h"
+#include <type_traits>
 
 #define DEC_CLASS(classname, basename) \
 	typedef basename BaseClass; \
@@ -117,6 +118,9 @@ public:
 	inline size_t edict() const { return m_iEdict; }
 	inline void edict(size_t i) { m_iEdict = i; }
 
+	// Is this entity a player?
+	// Player entities are treated specially as in
+	// they get an edict from the range reserved for them
 	virtual bool is_player() const {
 		return false;
 	}

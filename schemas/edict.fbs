@@ -37,6 +37,8 @@ enum MessageType : long {
 
 	QUERY_REQUEST,
 	QUERY_REPLY,
+
+	SYNC_CLOCK,
 }
 
 enum ConnectionNakReason : long {
@@ -44,6 +46,7 @@ enum ConnectionNakReason : long {
 	ALREADY_CONNECTED = 1,
 	NAME_UNAVAILABLE = 2,
 	FULL = 3,
+	CUSTOM = 4
 }
 
 table ConnectData {
@@ -53,6 +56,7 @@ table ConnectData {
 	conn_id : ulong;
 	// CONNECT_NAK
 	nak_reason : ConnectionNakReason;
+	nak_reason_custom : string;
 }
 
 table ServerData {
@@ -65,12 +69,18 @@ table ServerData {
 	level : string;
 }
 
+table ClientInput {
+	current_client_time : ulong;
+	command : string;
+}
+
 union MessageData {
-	ConnectData, EntityUpdate, ServerData
+	ConnectData, EntityUpdate, ServerData, ClientInput
 }
 
 table MessageHeader {
 	type : MessageType;
+	tick : ulong;
 	data : MessageData;
 }
 

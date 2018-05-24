@@ -78,6 +78,7 @@ void net::server::add_handles() {
 		mhb.add_data_type(Schemas::Networking::MessageData::MessageData_ConnectData);
 		if (ack) {
 			mhb.add_type(Schemas::Networking::MessageType::MessageType_CONNECT_ACK);
+			mhb.add_tick(m_server_current_frame);
 		} else {
 			mhb.add_type(Schemas::Networking::MessageType::MessageType_CONNECT_NAK);
 		}
@@ -108,6 +109,26 @@ void net::server::add_handles() {
 	// CLIENT_UPDATE
 	m_handlers.emplace(Schemas::Networking::MessageType::MessageType_CLIENT_UPDATE,
 		[&](const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
+		// Get client descriptor
+		net::client_desc* cd = get_client_desc(client);
+		if (!cd)
+			return false;
+		if (!cd->slot_active)
+			return false;
+		// Calculate descriptor index
+		size_t i = ((size_t)cd - (size_t)m_clients.data()) / sizeof(net::client_desc);
+		//net::edict_t& e = get_player(i);
+		// TODO: we should send this up to the control plane and handle it there for e.g.
+		// checking gamerules and anti-cheat
+		auto client_input = hdr.data_as_ClientInput();
+		if (!client_input)
+			return false;
+		if (!client_input->command())
+			return false;
+		if (m_client_input_handler) {
+			m_client_input_handler(*cd, i + 1, hdr.tick(), client_input->command()->c_str());
+			return true;
+		}
 		return false;
 	});
 
@@ -165,5 +186,12 @@ void net::server::add_handles() {
 		for (int i = 0; i < 3; i++)
 			send_to_client(client, fbb.GetBufferPointer(), fbb.GetSize());
 		return true;
+	});
+
+	// SYNC_CLOCK
+	m_handlers.emplace(Schemas::Networking::MessageType::MessageType_SYNC_CLOCK,
+		[&](const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz) {
+		flatbuffers::FlatBufferBuilder fbb;
+		return false;
 	});
 }

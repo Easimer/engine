@@ -43,6 +43,7 @@ set(SRC_GUI
 
 set(SRC_PUBLIC
 	../public/include/iclient.h
+	../public/include/ring_buffer.h
 )
 
 IF(WIN32)

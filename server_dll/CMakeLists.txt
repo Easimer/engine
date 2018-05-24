@@ -33,6 +33,13 @@ set(SRC_ENTSYS_PROP
 set(SRC_ENTSYS_LIGHT
 )
 
+set(SRC_ENTSYS_PLAYER
+	base_player.cpp
+	base_player.h
+	fps_player.cpp
+	fps_player.h
+)
+
 set(SRC_GFX
 )
 
@@ -58,6 +65,7 @@ add_library(server_dll SHARED
 	${SRC_CORE}
 	${SRC_ENTSYS}
 	${SRC_ENTSYS_PROP}
+	${SRC_ENTSYS_PLAYER}
 	${SRC_ENTSYS_LIGHT}
 	${SRC_GFX}
 	${SRC_RES_SHADERS}
@@ -84,6 +92,7 @@ source_group("Source Files" FILES ${SRC_GAME})
 source_group("Source Files\\Model Loader" FILES ${SRC_MDLLDR})
 source_group("Source Files\\Entity System" FILES ${SRC_ENTSYS})
 source_group("Source Files\\Entity System\\Props" FILES ${SRC_ENTSYS_PROP})
+source_group("Source Files\\Entity System\\Player" FILES ${SRC_ENTSYS_PLAYER})
 source_group("Source Files\\Entity System\\Lighting" FILES ${SRC_ENTSYS_LIGHT})
 source_group("Source Files\\Graphics" FILES ${SRC_GFX})
 source_group("Source Files\\GUI" FILES ${SRC_GUI})

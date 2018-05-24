@@ -45,6 +45,25 @@ net::client::~client() {
 void net::client::send_update(const net::client_update & update) {
 }
 
+void net::client::push_client_updates() {
+	while (!m_command_buf.empty()) {
+		const std::string& cmd = m_command_buf.pop_back();
+
+		flatbuffers::FlatBufferBuilder fbb;
+		auto off_cmd = fbb.CreateString(cmd);
+		Schemas::Networking::ClientInputBuilder cib(fbb);
+		cib.add_command(off_cmd);
+		cib.add_current_client_time(m_current_frame);
+		auto off_payload = cib.Finish();
+		Schemas::Networking::MessageHeaderBuilder mhb(fbb);
+		mhb.add_type(Schemas::Networking::MessageType_CLIENT_UPDATE);
+		mhb.add_data_type(Schemas::Networking::MessageData_ClientInput);
+		mhb.add_data(off_payload.Union());
+		Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
+		send_to_server(fbb.GetBufferPointer(), fbb.GetSize());
+	}
+}
+
 void net::client::send_to_server(const void * pBuf, size_t nSiz) {
 	size_t sent = 0;
 	if ((sent = sendto(m_socket, (char*)pBuf, nSiz, 0, (sockaddr*)&m_server_addr, m_server_addr_siz)) == net::socket_error) {
@@ -113,6 +132,7 @@ void net::client::connect() {
 				if (Schemas::Networking::VerifyMessageHeaderBuffer(verifier)) {
 					auto msghdr = Schemas::Networking::GetMessageHeader(buf);
 					ASSERT(msghdr->Verify(verifier));
+					m_current_frame = msghdr->tick();
 					Schemas::Networking::MessageType msgtype = (*msghdr).type();
 					switch (msgtype) {
 					case Schemas::Networking::MessageType_NONE:

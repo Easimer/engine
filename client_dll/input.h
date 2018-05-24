@@ -20,16 +20,31 @@ public:
 	void assign_camera(gfx::icamera* cam) { m_pCamera = cam; }
 	void press_key(long int keysym);
 	void release_key(long int keysym);
-	void bind_key(long int keysym, input_action ia);
-	void update();
+	void bind_key(long int keysym, const std::string& cmd);
+	void define_command(const std::string& cmd, const std::function<void()>& f);
+	std::vector<std::string> update();
 	void mouse_motion(const int x, const int y);
+
+	enum action_state {
+		RISING, // The button state transitions from released to pressed
+		PRESSED, // The button is held
+		FALLING, // The button state transitions from pressed to released
+		RELEASED // The button is not held
+	};
 
 protected:
 	void check_conflicting_actions(const input_action&);
 
 private:
-	std::map<long int, input_action> m_keybinds;
-	std::map<input_action, bool> m_action_state;
+	//std::map<long int, std::pair<std::string, std::function<void>>> m_keybinds;
+	//std::map<input_action, action_state> m_action_state;
+
+	// Maps keys to a state
+	std::map<long int, action_state> m_keystates;
+	// Maps keys to a command
+	std::map<long int, std::string> m_keybinds;
+	// Maps commands to a client-side action
+	std::map<std::string, std::function<void()>> m_commands;
 
 	bool m_bMouseCaptured = false;
 

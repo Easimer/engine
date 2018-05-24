@@ -134,6 +134,7 @@ void net::server::unicast_update(const entity_update & upd, const net::client_de
 	mhb.add_type(Schemas::Networking::MessageType::MessageType_ENTITY_UPDATE);
 	mhb.add_data_type(Schemas::Networking::MessageData::MessageData_EntityUpdate);
 	mhb.add_data(off_upd.Union());
+	mhb.add_tick(m_server_current_frame);
 
 	Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
 
@@ -164,6 +165,7 @@ void net::server::broadcast_update(const entity_update& upd) {
 	mhb.add_type(Schemas::Networking::MessageType::MessageType_ENTITY_UPDATE);
 	mhb.add_data_type(Schemas::Networking::MessageData::MessageData_EntityUpdate);
 	mhb.add_data(off_upd.Union());
+	mhb.add_tick(m_server_current_frame);
 
 	Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
 

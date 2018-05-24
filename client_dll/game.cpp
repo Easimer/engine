@@ -52,10 +52,16 @@ bool game::tick() {
 		gpGfx->gui_send_event(ev);
 	}
 
-	m_input.update();
-
 	if (!m_pNetClient)
 		return true;
+
+	std::vector<std::string> commands = m_input.update();
+	auto& cmdbuf = m_pNetClient->get_command_buf();
+	for (auto& cmd : commands) {
+		cmdbuf.push_front(cmd);
+	}
+
+	m_pNetClient->push_client_updates();
 
 	glm::mat4 mat_view = m_camera.get_rot();
 	mat_view = glm::translate(mat_view, glm::vec3(m_camera.get_pos()));

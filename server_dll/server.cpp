@@ -4,6 +4,7 @@
 #include "prop_common.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "fps_player.h"
 
 extern "C" {
 	ENL_EXPORT iserver* server_dll_init() {
@@ -32,6 +33,11 @@ void server::init() {
 		auto next_tick = std::chrono::high_resolution_clock::now() + timestep(1);
 
 		gpGlobals->pEntSys = new entity_system();
+
+		// Reserve all player entities
+		for (size_t i = 0; i < net::max_players; i++) {
+			base_entity* pEnt = CreateEntity("player");
+		}
 
 		// Create test entity
 
@@ -62,7 +68,10 @@ void server::init() {
 		for (size_t i = 0; i < net::max_edicts; i++)
 			m_server.edict(i).reset();
 
-		while (!m_shutdown) {
+		auto f = std::bind(&server::client_input_handler, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+		m_server.set_client_input_handler(f);
+
+		while (!m_shutdown) {			
 			gpGlobals->pEntSys->update_entities();
 			gpGlobals->curtime += (1.f / server_tickrate);
 			
@@ -113,4 +122,25 @@ void server::shutdown() {
 	if(m_thread_logic.joinable())
 		m_thread_logic.join();
 	if (gpGlobals->pEntSys) delete gpGlobals->pEntSys;
+}
+
+void server::client_input_handler(const net::client_desc & client, size_t edict, uint64_t cli_tick, const char * pszCommand) {
+	net::edict_t& player = m_server.edict(edict);
+	if (!player.active)
+		return;
+	base_entity* pPlayer = gpGlobals->pEntSys->get_entity_by_edict(edict);
+	if (!pPlayer)
+		return;
+	fps_player* pFPSPlayer = (fps_player*)pPlayer;
+	vec3 pos = pFPSPlayer->get_abspos();
+	vec3& vel = pFPSPlayer->velocity();
+	if (strcmp(pszCommand, "+forward") == 0)
+		vel[2] += 1;
+	if (strcmp(pszCommand, "-forward") == 0)
+		vel[2] -= 1;
+	if (strcmp(pszCommand, "+forward") == 0)
+		vel[2] += 1;
+	if (strcmp(pszCommand, "-forward") == 0)
+		vel[2] -= 1;
+	PRINT_DBG(pszCommand);
 }

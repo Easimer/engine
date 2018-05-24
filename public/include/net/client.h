@@ -2,6 +2,7 @@
 
 #include "networking.h"
 #include <chrono>
+#include <ring_buffer.h>
 
 namespace net {
 
@@ -24,6 +25,7 @@ namespace net {
 		client(const client& other) = delete;
 
 		void send_update(const net::client_update& update);
+		void push_client_updates();
 
 		void send_to_server(const void* pBuf, size_t nSiz);
 
@@ -55,6 +57,8 @@ namespace net {
 		// sends an ECHO_REQUEST to it
 		bool timed_out();
 
+		ring_buffer<std::string, 128>& get_command_buf() { return m_command_buf; }
+
 	private:
 		net::socket_t m_socket;
 		bool m_connected = false;
@@ -69,6 +73,8 @@ namespace net {
 		std::unordered_map<Schemas::Networking::MessageType, client_handler> m_handlers;
 
 		std::chrono::time_point<std::chrono::steady_clock> m_last_update;
+
+		ring_buffer<std::string, 128> m_command_buf;
 	};
 
 	struct server_entry {

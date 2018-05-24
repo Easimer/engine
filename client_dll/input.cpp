@@ -9,7 +9,35 @@
 
 input::input() : m_pCamera(nullptr) {
 	// action states
-	for (size_t i = 0; i < IA_MAX; i++)
+	m_keystates[SDLK_w] = RELEASED;
+	m_keystates[SDLK_s] = RELEASED;
+	m_keystates[SDLK_a] = RELEASED;
+	m_keystates[SDLK_d] = RELEASED;
+	m_keystates[SDLK_SPACE] = RELEASED;
+
+	bind_key(SDLK_w, "+forward");
+	bind_key(SDLK_s, "+backward");
+	bind_key(SDLK_a, "+moveleft");
+	bind_key(SDLK_d, "+moveright");
+	bind_key(SDLK_SPACE, "+jump");
+
+	define_command("+forward", std::function<void()>([&]() {
+		if (!m_pCamera) return;
+		m_pCamera->forward(gpGfx->delta());
+	}));
+	define_command("+backward", [&]() {
+		if (!m_pCamera) return;
+		m_pCamera->backward(gpGfx->delta());
+	});
+	define_command("+moveleft", [&]() {
+		if (!m_pCamera) return;
+		m_pCamera->strafe_left(gpGfx->delta());
+	});
+	define_command("+moveright", [&]() {
+		if (!m_pCamera) return;
+		m_pCamera->strafe_right(gpGfx->delta());
+	});
+	/*for (size_t i = 0; i < IA_MAX; i++)
 		m_action_state[(input_action)i] = false;
 	// default binds
 	bind_key(SDLK_w, IA_FORWARD);
@@ -18,7 +46,8 @@ input::input() : m_pCamera(nullptr) {
 	bind_key(SDLK_d, IA_STRAFE_R);
 	bind_key(SDLK_PERIOD, IA_TURN_L);
 	bind_key(SDLK_COMMA, IA_TURN_R);
-	bind_key(SDLK_SPACE, IA_JUMP);
+	bind_key(SDLK_SPACE, IA_JUMP);*/
+	
 	PRINT_DBG("input::input: default keybindings loaded");
 }
 
@@ -45,47 +74,94 @@ void input::release_key(long int keysym) {
 	}
 }
 
-void input::bind_key(long int keysym, input_action ia) {
-	m_keybinds.emplace(keysym, ia);
+void input::bind_key(long int keysym, const std::string& cmd) {
+	m_keybinds.emplace(keysym, cmd);
 }
 
-void input::update() {
+void input::define_command(const std::string & cmd, const std::function<void()>& f) {
+	m_commands.emplace(cmd, f);
+}
+
+std::vector<std::string> input::update() {
 	//if (gpGlobals->bDevGUI)
 	//	return;
 	auto pKeyState = SDL_GetKeyboardState(NULL);
 	for (auto& keybind : m_keybinds) {
-		m_action_state[keybind.second] = pKeyState[SDL_GetScancodeFromKey(keybind.first)];
-	}
-	if (!m_pCamera) return;
-	for (auto& ks : m_action_state) {
-		if (ks.second) // is action active
-		{
-			switch (ks.first) {
-			case IA_FORWARD:
-				
-				m_pCamera->forward(gpGfx->delta());
+		bool bKeyState = pKeyState[SDL_GetScancodeFromKey(keybind.first)];
+		//action_state& as = m_action_state[keybind.first];
+		action_state& as = m_keystates[keybind.first];
+		if (bKeyState) {
+			switch (as) {
+			case RELEASED:
+				as = RISING;
 				break;
-			case IA_BACKWARD:
-				m_pCamera->backward(gpGfx->delta());
+			case RISING:
+				as = PRESSED;
 				break;
-			case IA_TURN_L:
-				m_pCamera->turn_left(gpGfx->delta());
+			case FALLING:
+				as = PRESSED;
 				break;
-			case IA_TURN_R:
-				m_pCamera->turn_right(gpGfx->delta());
+			// PRESSED -> PRESSED
+			}
+		} else {
+			switch (as) {
+			case PRESSED:
+				as = FALLING;
 				break;
-			case IA_STRAFE_L:
-				m_pCamera->strafe_left(gpGfx->delta());
+			case FALLING:
+				as = RELEASED;
 				break;
-			case IA_STRAFE_R:
-				m_pCamera->strafe_right(gpGfx->delta());
+			case RISING: // Button was only held for one frame
+				as = FALLING;
 				break;
-			case IA_JUMP:
-				//gpGlobals->pCamera->jump();
-				break;
+			// RELEASED -> RELEASED
 			}
 		}
 	}
+	std::vector<std::string> commands;
+
+	// Enumerate all keys that we have info about their state:
+	// 1.	Is the key bound to a command? If not: CONTINUE
+	// 2.	Acquire the command bound to the key
+	// 3.	Is it a toggleable command? If so: GOTO 4; otherwise: GOTO 5
+	// 4.a	Is it RISING? If so: add command as POSITIVE and CONTINUE
+	// 4.b	Is it FALLING? if so: add command as NEGATIVE and CONTINUE
+	// 5.	Add command and CONTINUE
+	for (auto& ks : m_keystates) {
+		if (m_keybinds.count(ks.first)) {
+			std::string& cmd = m_keybinds[ks.first];
+			if (cmd[0] == '+') {
+				if (ks.second == PRESSED) {
+					if (m_commands.count(cmd))
+						m_commands[cmd]();
+					continue;
+				}
+				else if (ks.second == RISING) {
+					commands.push_back(cmd);
+					if (m_commands.count(cmd))
+						m_commands[cmd]();
+					continue;
+				}
+				else if (ks.second == FALLING) {
+					cmd[0] = '-';
+					commands.push_back(cmd);
+					cmd[0] = '+';
+					if (m_commands.count(cmd))
+						m_commands[cmd]();
+					continue;
+				}
+			} else if(ks.second == PRESSED) {
+				// NOTE: this effectively spams the command,
+				// although this is how it works in Source1
+				// so I guess it's good enough
+				commands.push_back(cmd);
+				if(m_commands.count(cmd))
+					m_commands[cmd]();
+			}
+		}
+	}
+
+	return commands;
 }
 
 void input::mouse_motion(const int x, const int y) {
@@ -95,24 +171,24 @@ void input::mouse_motion(const int x, const int y) {
 }
 
 void input::check_conflicting_actions(const input_action& act) {
-	switch (act) {
-	case IA_FORWARD:
-		m_action_state[IA_BACKWARD] = false;
-		break;
-	case IA_BACKWARD:
-		m_action_state[IA_FORWARD] = false;
-		break;
-	case IA_TURN_L:
-		m_action_state[IA_TURN_R] = false;
-		break;
-	case IA_TURN_R:
-		m_action_state[IA_TURN_L] = false;
-		break;
-	case IA_STRAFE_L:
-		m_action_state[IA_STRAFE_R] = false;
-		break;
-	case IA_STRAFE_R:
-		m_action_state[IA_STRAFE_L] = false;
-		break;
-	}
+	//switch (act) {
+	//case IA_FORWARD:
+	//	m_action_state[IA_BACKWARD] = false;
+	//	break;
+	//case IA_BACKWARD:
+	//	m_action_state[IA_FORWARD] = false;
+	//	break;
+	//case IA_TURN_L:
+	//	m_action_state[IA_TURN_R] = false;
+	//	break;
+	//case IA_TURN_R:
+	//	m_action_state[IA_TURN_L] = false;
+	//	break;
+	//case IA_STRAFE_L:
+	//	m_action_state[IA_STRAFE_R] = false;
+	//	break;
+	//case IA_STRAFE_R:
+	//	m_action_state[IA_STRAFE_L] = false;
+	//	break;
+	//}
 }
