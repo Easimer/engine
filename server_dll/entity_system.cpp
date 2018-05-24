@@ -9,12 +9,15 @@ entity_handle entity_system::add_entity(base_entity * ent) {
 		return pos - m_entities.cbegin();
 	}
 	m_entities.push_back(ent);
+	entity_handle hEnt = m_entities.size() - 1;
+	if (!ent->networked())
+		return hEnt;
 	entity_handle e = get_free_edict(ent->is_player());
 	ent->edict(e);
 	m_edicts[e] = true;
 	m_map_edicts_entities.emplace(e, m_entities.size() - 1);
 	PRINT_DBG("Entity " << ent->get_classname() << " assigned to edict " << e);
-	return e;
+	return hEnt;
 }
 
 base_entity * entity_system::get_entity(entity_handle h) {

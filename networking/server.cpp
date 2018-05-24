@@ -55,14 +55,17 @@ net::server::server() : m_pCurTime(nullptr) {
 			net::socklen_t slen = sizeof(from);
 
 			// Push full world update to all clients every 10 secs
+#if NETWORKING_SERVER_PERIODIC_WORLD_UPDATES
 			std::chrono::time_point<std::chrono::steady_clock> last_full_update = std::chrono::steady_clock::now();
 			if ((std::chrono::steady_clock::now() - last_full_update) < std::chrono::duration<float>(10)) {
 				for (auto& client : m_clients) {
 					push_full_update(client);
 				}
 			}
+#endif
 
 			if ((recv_len = recvfrom(socket, buf, 4096, 0, (sockaddr*)&from, &slen)) != net::socket_error) {
+				m_nStatPackets++;
 				char addrbuf[64];
 				inet_ntop(AF_INET, &from.sin_addr, addrbuf, 64);
 				//PRINT_DBG("net::server::thread: received " << recv_len << " bytes from " << addrbuf);
@@ -81,6 +84,15 @@ net::server::server() : m_pCurTime(nullptr) {
 				} else {
 					PRINT_ERR("net::server: verify failed!");
 				}
+			}
+
+			// Statistics
+			float flStatElapsed = std::chrono::duration<float>((std::chrono::high_resolution_clock::now() - m_nStatPacketsLastCheck)).count();
+			if (flStatElapsed >= 1) {
+				m_nStatPacketsPerSec = (float)m_nStatPackets / flStatElapsed;
+				m_nStatPackets = 0;
+				m_nStatPacketsLastCheck = std::chrono::high_resolution_clock::now();
+				PRINT_DBG("net::server: packets per sec: " << m_nStatPacketsPerSec);
 			}
 		}
 	});
@@ -191,6 +203,7 @@ void net::server::send_to_client(const sockaddr_in & client, const void * pBuf, 
 		//PRINT_DBG("net::server::send_to_client: sent " << nSent << " bytes");
 	}
 	ASSERT(nSent == nSiz);
+	m_nStatPackets++;
 }
 
 net::client_desc * net::server::get_client_desc(const sockaddr_in& addr) {

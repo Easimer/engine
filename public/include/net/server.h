@@ -6,6 +6,9 @@
 #include <functional>
 #include <string>
 #include <mutex>
+#include <atomic>
+
+#define NETWORKING_SERVER_PERIODIC_WORLD_UPDATES 1
 
 namespace net {
 	struct client_desc {
@@ -119,6 +122,8 @@ namespace net {
 			m_client_input_handler = f;
 		}
 
+		size_t packets_per_sec() const { return m_nStatPacketsPerSec; }
+
 	private:
 		net::socket_t m_socket;
 		bool m_listening = false;
@@ -140,5 +145,12 @@ namespace net {
 		std::string m_level_name;
 
 		client_input_handler_t  m_client_input_handler;
+
+		// statistics
+		// Packets sent and received since m_nStatPacketsLastCheck
+		std::atomic<size_t> m_nStatPackets = 0;
+		std::chrono::time_point<std::chrono::high_resolution_clock> m_nStatPacketsLastCheck = std::chrono::high_resolution_clock::now();
+		// Packets sent and received in the last second
+		size_t m_nStatPacketsPerSec = 0;
 	};
 }
