@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <functional>
 #include <gfx/icamera.h>
 
 enum input_action {
