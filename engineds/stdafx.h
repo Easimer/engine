@@ -3,6 +3,7 @@
 #include <iostream>
 #include <enl/platform.h>
 #include <enl/assert.h>
+#include <cpuid.h>
 #if defined(PLAT_WINDOWS)
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
