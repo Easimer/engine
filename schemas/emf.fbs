@@ -1,0 +1,40 @@
+include "base.fbs";
+
+namespace Schemas.Map;
+
+table KeyValueInt {
+	value : int;
+}
+
+table KeyValueFloat {
+	value : float;
+}
+
+table KeyValueString {
+	value : string;
+}
+
+table KeyValueVector {
+	value : Vector3;
+}
+
+union KeyValueValue {
+	KeyValueInt, KeyValueFloat, KeyValueString, KeyValueVector
+}
+
+table KeyValue {
+	key : string;
+	value : KeyValueValue;
+}
+
+table Entity {
+	classname : string;
+	targetname : string;
+	keyvalues : [KeyValue];
+}
+
+table Header {
+	
+}
+
+root_type Header;
