@@ -74,8 +74,6 @@ bool set_workdir() {
 }
 
 int main(int argc, char** argv) {
-	CMDLINE_INIT();
-
 	if (!set_workdir()) {
 		PRINT_ERR("Couldn't switch to rootdir!!!");
 	}
@@ -127,6 +125,5 @@ int main(int argc, char** argv) {
 		std::cout << "Stopping server: "; srv->shutdown(); server_shutdown(srv); std::cout << "OK" << std::endl;
 	}
 
-	CMDLINE_SHUTDOWN();
 	return 0;
 }

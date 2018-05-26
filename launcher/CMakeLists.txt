@@ -26,9 +26,7 @@ add_executable(launcher
 vs_link_static(launcher)
 
 IF(UNIX AND NOT APPLE)
-target_link_libraries(launcher enl dl pthread)
-ELSE()
-target_link_libraries(launcher enl)
+target_link_libraries(launcher dl pthread)
 ENDIF()
 install(TARGETS launcher DESTINATION bin/)
 

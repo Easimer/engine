@@ -2,7 +2,6 @@
 
 #include <enl/platform.h>
 #include <enl/assert.h>
-#include <enl/cmdline.h>
 #include <print.h>
 #if defined(PLAT_WINDOWS)
 #include <Windows.h>
