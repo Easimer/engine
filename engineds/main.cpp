@@ -20,15 +20,6 @@ int main(int argc, char** argv) {
 #endif
 	std::flush(std::cout);
 
-	if (cpu::features::sse2()) {
-		std::cerr << "Your CPU does not support SSE2!" << std::endl;
-		return -1;
-	}
-	if (cpu::features::sse3()) {
-		std::cerr << "Your CPU does not support SSE3!" << std::endl;
-		return -1;
-	}
-
 	auto server_init = link_dll<iserver*>(pszServerDLL, "server_dll_init");
 	auto server_shutdown = link_dll<void, iserver*>(pszServerDLL, "server_dll_shutdown");
 

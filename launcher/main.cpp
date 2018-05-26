@@ -89,28 +89,6 @@ int main(int argc, char** argv) {
 #endif
 	std::flush(std::cout);
 
-	PRINT_DBG("CPUID: ");
-	if (cpu::features::sse2()) {
-		PRINT("SSE2 - OK");
-	} else {
-		PRINT("SSE2 - MISSING");
-		return -1;
-	}
-	if (cpu::features::sse3()) {
-		PRINT("SSE3 - OK");
-	} else {
-		PRINT("SSE3 - MISSING");
-		return -1;
-	}
-	if (cpu::features::sse41())
-		PRINT("SSE4.1 - OK");
-	if (cpu::features::sse42())
-		PRINT("SSE4.2 - OK");
-	if (cpu::features::avx())
-		PRINT("AVX - OK");
-	if (cpu::features::avx2())
-		PRINT("AVX2 - OK");
-
 	auto server_init = link_dll<iserver*>(pszServerDLL, "server_dll_init");
 	auto server_shutdown = link_dll<void, iserver*>(pszServerDLL, "server_dll_shutdown");
 
