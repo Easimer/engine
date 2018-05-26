@@ -96,8 +96,12 @@ int main(int argc, char** argv) {
 		PRINT("SSE2 - MISSING");
 		return -1;
 	}
-	if (cpu::features::sse3())
+	if (cpu::features::sse3()) {
 		PRINT("SSE3 - OK");
+	} else {
+		PRINT("SSE3 - MISSING");
+		return -1;
+	}
 	if (cpu::features::sse41())
 		PRINT("SSE4.1 - OK");
 	if (cpu::features::sse42())
