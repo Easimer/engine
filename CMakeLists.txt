@@ -49,6 +49,10 @@ if(MSVC)
 	  CACHE STRING "Release compiler flags" FORCE
 	)
 endif(MSVC)
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANG)
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -msse3 -mfpmath=sse")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3 -mfpmath=sse")
+endif()
 
 # include libenl for all projects
 include_directories(${CMAKE_SOURCE_DIR}/libenl/include/)
