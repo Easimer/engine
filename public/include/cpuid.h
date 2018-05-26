@@ -17,7 +17,7 @@ namespace cpu {
 #if defined(PLAT_WINDOWS)
 			__cpuid((int*)m_regs, i);
 #elif (defined(PLAT_LINUX) || defined(PLAT_OSX)) && (__GNUG__ || __clang__)
-			__cpuid(i, m_regs[0], m_regs[1], m_regs[2], m_regs[3]);
+			asm volatile("cpuid" : "=a" (m_regs[0]), "=b" (m_regs[1]), "=c" (m_regs[2]), "=c" (m_regs[2]), "=d" (m_regs[3]) : "a" (i));
 #else
 			// On unknown platforms, assume that everything is supported and hope for the best
 			m_regs[0] = m_regs[1] = m_regs[2] = m_regs[3] = 0xffffffff;
