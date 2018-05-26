@@ -44,6 +44,7 @@ namespace net {
 		void handle_connect_ack(const Schemas::Networking::ConnectData* pConnDat);
 		void handle_connect_nak(const Schemas::Networking::ConnectData* pConnDat);
 		void handle_entity_update(const Schemas::Networking::EntityUpdate* pEntUpd);
+		void handle_entity_deletion(const Schemas::Networking::ULongIdentifier* pEntUpd);
 
 		void disconnect();
 

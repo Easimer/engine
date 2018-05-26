@@ -8,6 +8,10 @@ table StringIdentifier {
 	id : string;
 }
 
+table ULongIdentifier {
+	id : ulong;
+}
+
 table EntityUpdate {
 	edict_id : ulong (key);
 	pos : Vector3;
@@ -39,6 +43,8 @@ enum MessageType : long {
 	QUERY_REPLY,
 
 	SYNC_CLOCK,
+
+	ENTITY_DELETE, // Mark entity inactive clientside
 }
 
 enum ConnectionNakReason : long {
@@ -75,7 +81,7 @@ table ClientInput {
 }
 
 union MessageData {
-	ConnectData, EntityUpdate, ServerData, ClientInput
+	ConnectData, EntityUpdate, ServerData, ClientInput, ULongIdentifier
 }
 
 table MessageHeader {

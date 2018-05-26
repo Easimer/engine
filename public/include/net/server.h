@@ -30,6 +30,7 @@ namespace net {
 		float rot[16];
 		const char* model;
 		float time;
+		bool deleted = false;
 	};
 
 	using server_handler = std::function<bool(const sockaddr_in& client, const Schemas::Networking::MessageHeader& hdr, size_t siz)>;

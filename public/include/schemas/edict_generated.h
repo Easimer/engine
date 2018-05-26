@@ -13,6 +13,8 @@ namespace Networking {
 
 struct StringIdentifier;
 
+struct ULongIdentifier;
+
 struct EntityUpdate;
 
 struct ConnectData;
@@ -38,11 +40,12 @@ enum MessageType {
   MessageType_QUERY_REQUEST = 11,
   MessageType_QUERY_REPLY = 12,
   MessageType_SYNC_CLOCK = 13,
+  MessageType_ENTITY_DELETE = 14,
   MessageType_MIN = MessageType_NONE,
-  MessageType_MAX = MessageType_SYNC_CLOCK
+  MessageType_MAX = MessageType_ENTITY_DELETE
 };
 
-inline MessageType (&EnumValuesMessageType())[14] {
+inline MessageType (&EnumValuesMessageType())[15] {
   static MessageType values[] = {
     MessageType_NONE,
     MessageType_CONNECT,
@@ -57,7 +60,8 @@ inline MessageType (&EnumValuesMessageType())[14] {
     MessageType_ECHO_REPLY,
     MessageType_QUERY_REQUEST,
     MessageType_QUERY_REPLY,
-    MessageType_SYNC_CLOCK
+    MessageType_SYNC_CLOCK,
+    MessageType_ENTITY_DELETE
   };
   return values;
 }
@@ -78,6 +82,7 @@ inline const char **EnumNamesMessageType() {
     "QUERY_REQUEST",
     "QUERY_REPLY",
     "SYNC_CLOCK",
+    "ENTITY_DELETE",
     nullptr
   };
   return names;
@@ -132,17 +137,19 @@ enum MessageData {
   MessageData_EntityUpdate = 2,
   MessageData_ServerData = 3,
   MessageData_ClientInput = 4,
+  MessageData_ULongIdentifier = 5,
   MessageData_MIN = MessageData_NONE,
-  MessageData_MAX = MessageData_ClientInput
+  MessageData_MAX = MessageData_ULongIdentifier
 };
 
-inline MessageData (&EnumValuesMessageData())[5] {
+inline MessageData (&EnumValuesMessageData())[6] {
   static MessageData values[] = {
     MessageData_NONE,
     MessageData_ConnectData,
     MessageData_EntityUpdate,
     MessageData_ServerData,
-    MessageData_ClientInput
+    MessageData_ClientInput,
+    MessageData_ULongIdentifier
   };
   return values;
 }
@@ -154,6 +161,7 @@ inline const char **EnumNamesMessageData() {
     "EntityUpdate",
     "ServerData",
     "ClientInput",
+    "ULongIdentifier",
     nullptr
   };
   return names;
@@ -182,6 +190,10 @@ template<> struct MessageDataTraits<ServerData> {
 
 template<> struct MessageDataTraits<ClientInput> {
   static const MessageData enum_value = MessageData_ClientInput;
+};
+
+template<> struct MessageDataTraits<ULongIdentifier> {
+  static const MessageData enum_value = MessageData_ULongIdentifier;
 };
 
 bool VerifyMessageData(flatbuffers::Verifier &verifier, const void *obj, MessageData type);
@@ -234,6 +246,46 @@ inline flatbuffers::Offset<StringIdentifier> CreateStringIdentifierDirect(
   return Schemas::Networking::CreateStringIdentifier(
       _fbb,
       id ? _fbb.CreateString(id) : 0);
+}
+
+struct ULongIdentifier FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  enum {
+    VT_ID = 4
+  };
+  uint64_t id() const {
+    return GetField<uint64_t>(VT_ID, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_ID) &&
+           verifier.EndTable();
+  }
+};
+
+struct ULongIdentifierBuilder {
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_id(uint64_t id) {
+    fbb_.AddElement<uint64_t>(ULongIdentifier::VT_ID, id, 0);
+  }
+  explicit ULongIdentifierBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ULongIdentifierBuilder &operator=(const ULongIdentifierBuilder &);
+  flatbuffers::Offset<ULongIdentifier> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<ULongIdentifier>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<ULongIdentifier> CreateULongIdentifier(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t id = 0) {
+  ULongIdentifierBuilder builder_(_fbb);
+  builder_.add_id(id);
+  return builder_.Finish();
 }
 
 struct EntityUpdate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -612,6 +664,9 @@ struct MessageHeader FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const ClientInput *data_as_ClientInput() const {
     return data_type() == MessageData_ClientInput ? static_cast<const ClientInput *>(data()) : nullptr;
   }
+  const ULongIdentifier *data_as_ULongIdentifier() const {
+    return data_type() == MessageData_ULongIdentifier ? static_cast<const ULongIdentifier *>(data()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int64_t>(verifier, VT_TYPE) &&
@@ -637,6 +692,10 @@ template<> inline const ServerData *MessageHeader::data_as<ServerData>() const {
 
 template<> inline const ClientInput *MessageHeader::data_as<ClientInput>() const {
   return data_as_ClientInput();
+}
+
+template<> inline const ULongIdentifier *MessageHeader::data_as<ULongIdentifier>() const {
+  return data_as_ULongIdentifier();
 }
 
 struct MessageHeaderBuilder {
@@ -699,6 +758,10 @@ inline bool VerifyMessageData(flatbuffers::Verifier &verifier, const void *obj, 
     }
     case MessageData_ClientInput: {
       auto ptr = reinterpret_cast<const ClientInput *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case MessageData_ULongIdentifier: {
+      auto ptr = reinterpret_cast<const ULongIdentifier *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return false;

@@ -48,6 +48,8 @@ net::server::server() : m_pCurTime(nullptr) {
 	std::thread t([&]() {
 		auto socket = get_socket();
 		PRINT_DBG("net::server: receiver thread is running");
+		std::chrono::time_point<std::chrono::steady_clock> last_full_update = std::chrono::steady_clock::now();
+		std::chrono::time_point<std::chrono::steady_clock> last_player_gc = std::chrono::steady_clock::now();
 		while (true) {
 			char buf[4096];
 			int recv_len;
@@ -56,8 +58,7 @@ net::server::server() : m_pCurTime(nullptr) {
 
 			// Push full world update to all clients every 10 secs
 #if NETWORKING_SERVER_PERIODIC_WORLD_UPDATES
-			std::chrono::time_point<std::chrono::steady_clock> last_full_update = std::chrono::steady_clock::now();
-			if ((std::chrono::steady_clock::now() - last_full_update) < std::chrono::duration<float>(10)) {
+			if ((std::chrono::steady_clock::now() - last_full_update) >= std::chrono::duration<float>(10)) {
 				for (auto& client : m_clients) {
 					push_full_update(client);
 				}
@@ -155,32 +156,42 @@ void net::server::unicast_update(const entity_update & upd, const net::client_de
 
 void net::server::broadcast_update(const entity_update& upd) {
 	flatbuffers::FlatBufferBuilder fbb;
-	flatbuffers::Offset<flatbuffers::String> off_model;
-	if (upd.model) {
-		off_model = fbb.CreateString(upd.model);
+	if (!upd.deleted) {
+		flatbuffers::Offset<flatbuffers::String> off_model;
+		if (upd.model) {
+			off_model = fbb.CreateString(upd.model);
+		}
+		Schemas::Vector3 pos(upd.pos[0], upd.pos[1], upd.pos[2]);
+		auto mat4f = fbb.CreateVector<float>(upd.rot, 16);
+		Schemas::Matrix4x4Builder m4b(fbb);
+		m4b.add_data(mat4f);
+		auto mat4 = m4b.Finish();
+		Schemas::Networking::EntityUpdateBuilder eub(fbb);
+		if (!off_model.IsNull())
+			eub.add_model(off_model);
+		eub.add_edict_id(upd.edict);
+		eub.add_pos(&pos);
+		eub.add_rot(mat4);
+		eub.add_last_update(upd.time);
+		auto off_upd = eub.Finish();
+		Schemas::Networking::MessageHeaderBuilder mhb(fbb);
+		mhb.add_type(Schemas::Networking::MessageType::MessageType_ENTITY_UPDATE);
+		mhb.add_data_type(Schemas::Networking::MessageData::MessageData_EntityUpdate);
+		mhb.add_data(off_upd.Union());
+		mhb.add_tick(m_server_current_frame);
+		Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
+	} else {
+		Schemas::Networking::ULongIdentifierBuilder ulib(fbb);
+		ulib.add_id(upd.edict);
+		auto off_ulib = ulib.Finish();
+		Schemas::Networking::MessageHeaderBuilder mhb(fbb);
+		mhb.add_type(Schemas::Networking::MessageType::MessageType_ENTITY_DELETE);
+		mhb.add_data_type(Schemas::Networking::MessageData::MessageData_ULongIdentifier);
+		mhb.add_data(off_ulib.Union());
+		mhb.add_tick(m_server_current_frame);
+		Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
 	}
-	Schemas::Vector3 pos(upd.pos[0], upd.pos[1], upd.pos[2]);
-	auto mat4f = fbb.CreateVector<float>(upd.rot, 16);
-	Schemas::Matrix4x4Builder m4b(fbb);
-	m4b.add_data(mat4f);
-	auto mat4 = m4b.Finish();
-	Schemas::Networking::EntityUpdateBuilder eub(fbb);
-	if (!off_model.IsNull())
-		eub.add_model(off_model);
-	eub.add_edict_id(upd.edict);
-	eub.add_pos(&pos);
-	eub.add_rot(mat4);
-	eub.add_last_update(upd.time);
-	auto off_upd = eub.Finish();
-
-	Schemas::Networking::MessageHeaderBuilder mhb(fbb);
-	mhb.add_type(Schemas::Networking::MessageType::MessageType_ENTITY_UPDATE);
-	mhb.add_data_type(Schemas::Networking::MessageData::MessageData_EntityUpdate);
-	mhb.add_data(off_upd.Union());
-	mhb.add_tick(m_server_current_frame);
-
-	Schemas::Networking::FinishMessageHeaderBuffer(fbb, mhb.Finish());
-
+	
 	for (const auto& client : m_clients) {
 		if (client.slot_active)
 			send_to_client(client.addr, fbb.GetBufferPointer(), fbb.GetSize());
@@ -230,6 +241,17 @@ net::client_desc * net::server::get_client_desc(const std::string_view& username
 
 void net::server::push_updates() {
 	size_t n = 0;
+
+	// Check for offline players
+	for (size_t i = 0; i < net::max_players; i++) {
+		net::client_desc& cd = m_clients[i];
+		net::edict_t& e = m_edicts[i + 1];
+		if (!cd.slot_active && e.active) {
+			e.active = false;
+			e.updated = true;
+		}
+	}
+
 	for (size_t i = 0; i < net::max_edicts; i++) {
 		edict_t& e = m_edicts[i];
 		if (e.active && e.updated) {
@@ -243,6 +265,13 @@ void net::server::push_updates() {
 			broadcast_update(upd);
 			e.updated = false;
 			n++;
+		} else if (!e.active && e.updated) {
+			entity_update upd;
+			upd.edict = i;
+			upd.deleted = true;
+			broadcast_update(upd);
+			e.updated = false;
+			n++;
 		}
 	}
 	//if(n)
@@ -250,7 +279,7 @@ void net::server::push_updates() {
 }
 
 void net::server::push_full_update(const net::client_desc& cd) {
-	for (size_t i = 0; i < net::max_edicts; i++) {
+	for (size_t i = 1; i < net::max_edicts; i++) {
 		edict_t& e = m_edicts[i];
 		if (e.active) {
 			entity_update upd;

@@ -5,17 +5,39 @@
 #include <net/networking.h>
 
 using namespace ImGui;
-void ImGui::NetGraph(const std::vector<net::packet_stat>& stat) {
+
+static void DrawColorGuide(ImU32 color, const char* pszName) {
 	ImGuiWindow* window = GetCurrentWindow();
 	if (window->SkipItems)
 		return;
 
 	ImGuiContext& g = *GImGui;
 	const ImGuiStyle& style = g.Style;
+	ImVec2 p(window->DC.CursorPos.x + g.FontSize, window->DC.CursorPos.y + g.FontSize);
+	ImRect cgbb(window->DC.CursorPos, p);
+	window->DrawList->AddRectFilled(window->DC.CursorPos, p, color);
+
+	ItemSize(cgbb);
+	ItemAdd(cgbb, 0);
+
+	ImGui::SameLine();
+	ImGui::Text(pszName);
+}
+
+void ImGui::NetGraph(const std::vector<net::packet_stat>& stat) {
+	ImGui::SetNextWindowSize(ImVec2(600, 400));
+	ImGui::Begin("netgraph");
+	ImGuiWindow* window = GetCurrentWindow();
+	if (window->SkipItems)
+		return;
+
+
+	ImGuiContext& g = *GImGui;
+	const ImGuiStyle& style = g.Style;
 
 	float flColumnWidth = (window->SizeFull.x - 10) / stat.size();
 	
-	const ImVec2 frame_rb(window->DC.CursorPos.x + window->SizeFull.x - 10, window->DC.CursorPos.y + 200);
+	const ImVec2 frame_rb(window->DC.CursorPos.x + window->SizeFull.x - 10, window->DC.CursorPos.y + (window->SizeFull.y / 2));
 	const ImRect frame_bb(window->DC.CursorPos, frame_rb);
 
 	RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
@@ -29,8 +51,8 @@ void ImGui::NetGraph(const std::vector<net::packet_stat>& stat) {
 			sum += pkttype.packet_siz[i];
 		}
 		total_sum += sum;
-		if (sum < 250000)
-			sum = 250000;
+		if (sum < 2048)
+			sum = 2048;
 
 		for (size_t i = 0; i < (size_t)net::E_PKSTAT_MAX; i++) {
 			ratios[i] = (float)pkttype.packet_siz[i] / (float)sum;
@@ -53,6 +75,15 @@ void ImGui::NetGraph(const std::vector<net::packet_stat>& stat) {
 	ItemSize(frame_bb);
 	ItemAdd(frame_bb, 0);
 
+	// Draw color guide
+	DrawColorGuide(net::stat_type_colors[net::E_PKSTAT_CLIENT_UPDATE], "Client update");
+	DrawColorGuide(net::stat_type_colors[net::E_PKSTAT_ENTITY_UPDATE], "Entity update");
+	DrawColorGuide(net::stat_type_colors[net::E_PKSTAT_OTHER], "Other");
+
+	ImGui::Separator();
+
 	float kbps = total_sum / 1024.f / 128.f;
 	ImGui::Text("net: %f kB/s", kbps);
+
+	ImGui::End();
 }

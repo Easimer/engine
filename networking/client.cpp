@@ -140,6 +140,20 @@ void net::client::connect() {
 					m_current_frame = msghdr->tick();
 					Schemas::Networking::MessageType msgtype = (*msghdr).type();
 					switch (msgtype) {
+					case Schemas::Networking::MessageType_ENTITY_UPDATE:
+						handle_entity_update((Schemas::Networking::EntityUpdate*)(*msghdr).data());
+						{
+							std::lock_guard<std::mutex> lg(m_current_stat_lock);
+							m_current_stat.packet_siz[E_PKSTAT_ENTITY_UPDATE] += recv_len;
+						}
+						break;
+					case Schemas::Networking::MessageType_ENTITY_DELETE:
+						handle_entity_deletion((Schemas::Networking::ULongIdentifier*)(*msghdr).data());
+						{
+							std::lock_guard<std::mutex> lg(m_current_stat_lock);
+							m_current_stat.packet_siz[E_PKSTAT_OTHER] += recv_len;
+						}
+						break;
 					case Schemas::Networking::MessageType_NONE:
 						PRINT_ERR("net::client::thread: keepalive from server");
 						{
@@ -154,13 +168,6 @@ void net::client::connect() {
 					case Schemas::Networking::MessageType_CONNECT_NAK:
 						if(!m_connected) // check for duplicate conreq response
 							handle_connect_nak((Schemas::Networking::ConnectData*)(*msghdr).data());
-						break;
-					case Schemas::Networking::MessageType_ENTITY_UPDATE:
-						handle_entity_update((Schemas::Networking::EntityUpdate*)(*msghdr).data());
-						{
-							std::lock_guard<std::mutex> lg(m_current_stat_lock);
-							m_current_stat.packet_siz[E_PKSTAT_ENTITY_UPDATE] += recv_len;
-						}
 						break;
 					case Schemas::Networking::MessageType_ECHO_REPLY:
 						{

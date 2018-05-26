@@ -89,3 +89,13 @@ void net::client::handle_entity_update(const Schemas::Networking::EntityUpdate* 
 		strncpy(e.modelname, model->c_str(), 128);
 	}
 }
+
+void net::client::handle_entity_deletion(const Schemas::Networking::ULongIdentifier* pID) {
+	if (!pID)
+		return;
+	size_t iEnt = pID->id();
+	if (iEnt && iEnt < net::max_edicts) {
+		m_edicts[iEnt].active = false;
+		m_edicts[iEnt].updated = false;
+	}
+}

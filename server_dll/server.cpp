@@ -37,6 +37,9 @@ void server::init() {
 		// Reserve all player entities
 		for (size_t i = 0; i < net::max_players; i++) {
 			base_entity* pEnt = CreateEntity("player");
+			auto e = m_server.get_player(i);
+			e.active = false;
+			e.updated = false;
 		}
 
 		// Create test entity
@@ -80,6 +83,15 @@ void server::init() {
 				if (!pEnt) continue;
 				if (!pEnt->networked()) continue;
 				//PRINT_DBG("Updating network entity(" << pEnt->edict() << "): " << pEnt->get_classname());
+
+				// Skip entity if it's a player, but the assigned client is offline
+				if (pEnt->is_player()) {
+					const net::client_desc* cd = m_server.get_client_desc(pEnt->edict() - 1);
+					if (!cd->slot_active) {
+						continue;
+					}
+				}
+
 				net::edict_t& e = m_server.edict(pEnt->edict());
 				e.active = true;
 				if (e.position != pEnt->get_abspos()) {
@@ -150,5 +162,4 @@ void server::client_input_handler(const net::client_desc & client, size_t edict,
 		vel[0] += 1;
 	if (strcmp(pszCommand, "-moveright") == 0)
 		vel[0] -= 1;
-	PRINT_DBG(pszCommand);
 }
