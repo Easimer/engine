@@ -19,7 +19,7 @@ namespace math {
 	template<typename T>
 	class vector3 {
 	public:
-		vector3(T v1 = (T)0, T v2 = (T)0, T v3 = (T)0) : m_nValues{ v1, v2, v3 } {}
+		vector3(T v1 = (T)0, T v2 = (T)0, T v3 = (T)0) : m_nValues{ v1, v2, v3, 0.f } {}
 
 		vector3(const glm::vec<3, T>& other) {
 			m_nValues[0] = other[0];
@@ -122,8 +122,12 @@ namespace math {
 			return m_nValues;
 		}
 
+		T* ptr() {
+			return m_nValues;
+		}
+
 	protected:
-		T m_nValues[3];
+		alignas(16) T m_nValues[4];
 	};
 
 	template<typename T>
@@ -219,6 +223,46 @@ namespace math {
 		if (std::abs(lhs.y() - rhs.y()) > EPSILON) return true;
 		if (std::abs(lhs.z() - rhs.z()) > EPSILON) return true;
 		return false;
+	}
+
+	template<>
+	inline vector3<float> operator+(const vector3<float>& lhs, const vector3<float>& rhs) {
+		vector3<float> ret;
+		__m128 l = _mm_load_ps(lhs.ptr());
+		__m128 r = _mm_load_ps(rhs.ptr());
+		__m128 sum = _mm_add_ps(l, r);
+		_mm_store_ps(ret.ptr(), sum);
+		return ret;
+	}
+
+	template<>
+	inline vector3<float> operator-(const vector3<float>& lhs, const vector3<float>& rhs) {
+		vector3<float> ret;
+		__m128 l = _mm_load_ps(lhs.ptr());
+		__m128 r = _mm_load_ps(rhs.ptr());
+		__m128 diff = _mm_sub_ps(l, r);
+		_mm_store_ps(ret.ptr(), diff);
+		return ret;
+	}
+
+	template<>
+	inline vector3<float> operator*(float lhs, const vector3<float>& rhs) {
+		vector3<float> ret;
+		__m128 l = _mm_set_ps1(lhs);
+		__m128 r = _mm_load_ps(rhs.ptr());
+		__m128 prod = _mm_mul_ps(l, r);
+		_mm_store_ps(ret.ptr(), prod);
+		return ret;
+	}
+
+	template<>
+	inline vector3<float> operator/(const vector3<float>& lhs, float rhs) {
+		vector3<float> ret;
+		__m128 l = _mm_load_ps(lhs.ptr());
+		__m128 r = _mm_set_ps1(rhs);
+		__m128 res = _mm_div_ps(l, r);
+		_mm_store_ps(ret.ptr(), res);
+		return ret;
 	}
 }
 
