@@ -1,8 +1,6 @@
 set(SRC
 	stdafx.h
 	stdafx.cpp
-
-	vector.cpp
 )
 
 set(SRC_PUBLIC
