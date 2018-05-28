@@ -25,8 +25,11 @@ add_executable(launcher
 
 vs_link_static(launcher)
 
-IF(UNIX AND NOT APPLE)
-target_link_libraries(launcher dl pthread)
+set(GAME_LIBRARIES ifsys)
+IF(WIN32)
+target_link_libraries(launcher ${GAME_LIBRARIES})
+ELSEIF(UNIX AND NOT APPLE)
+target_link_libraries(launcher dl pthread ${GAME_LIBRARIES})
 ENDIF()
 install(TARGETS launcher DESTINATION bin/)
 

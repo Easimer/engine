@@ -6,6 +6,7 @@
 #include <thread>
 #include <dl.h>
 #include <cpuid.h>
+#include <ifsys/ifsys.h>
 
 #if defined(PLAT_WINDOWS)
 #define WIN32_LEAN_AND_MEAN
@@ -74,6 +75,9 @@ bool set_workdir() {
 #endif
 }
 
+iclient* gpCli;
+iserver* gpSrv;
+
 int main(int argc, char** argv) {
 	if (!set_workdir()) {
 		PRINT_ERR("Couldn't switch to rootdir!!!");
@@ -89,41 +93,35 @@ int main(int argc, char** argv) {
 #endif
 	std::flush(std::cout);
 
-	auto server_init = link_dll<iserver*>(pszServerDLL, "server_dll_init");
-	auto server_shutdown = link_dll<void, iserver*>(pszServerDLL, "server_dll_shutdown");
+	ifsys is;
+	auto srv_fn = LINK_MODULE(pszServerDLL);
+	auto cli_fn = LINK_MODULE(pszClientDLL);
+	ASSERT(srv_fn);
+	ASSERT(cli_fn);
 
-	auto client_init = link_dll<iclient*>(pszClientDLL, "client_dll_init");
-	auto client_shutdown = link_dll<void, iclient*>(pszClientDLL, "client_dll_shutdown");
+	srv_fn(&is);
+	cli_fn(&is);
 
-	ASSERT(server_init);
-	ASSERT(server_shutdown);
-	ASSERT(client_init);
-	ASSERT(client_shutdown);
-
-	// Start client
-
-	auto cli = client_init();
-	ASSERT(cli);
-	cli->init("127.0.0.1", "LOCALUSER");
-
-	iserver* srv = nullptr;
+	gpCli = (iclient*)is.query("GameClient0001");
+	gpSrv = (iserver*)is.query("GameServer0001");
+	ASSERT(gpCli);
+	gpCli->init();
 
 	while (true) {
-		if (cli && cli->is_shutdown()) break;
-		if (srv && srv->is_shutdown()) break;
+		if (gpCli && gpCli->is_shutdown()) break;
+		if (gpSrv && gpSrv->is_shutdown()) break;
 		std::this_thread::sleep_for(std::chrono::duration<float>(1.f));
-		if (!srv && cli->request_server()) {
-			srv = server_init();
-			ASSERT(srv);
-			srv->init();
+		if (gpCli->request_server()) {
+			ASSERT(gpSrv);
+			gpSrv->init();
 		}
 	}
 
-	if (cli) {
-		std::cout << "Stopping client: "; cli->shutdown(); client_shutdown(cli); std::cout << "OK" << std::endl;
+	if (gpCli) {
+		std::cout << "Stopping client: "; gpCli->shutdown(); std::cout << "OK" << std::endl;
 	}
-	if (srv) {
-		std::cout << "Stopping server: "; srv->shutdown(); server_shutdown(srv); std::cout << "OK" << std::endl;
+	if (gpSrv) {
+		std::cout << "Stopping server: "; gpSrv->shutdown(); std::cout << "OK" << std::endl;
 	}
 
 	return 0;

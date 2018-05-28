@@ -39,7 +39,6 @@ net::client::client(const std::string& addr, const std::string& username) : m_us
 }
 
 net::client::~client() {
-	disconnect();
 }
 
 void net::client::send_update(const net::client_update & update) {

@@ -66,7 +66,7 @@ bool gfx::gfx_global::init(const char* szTitle, size_t width, size_t height, siz
 
 	glEnable(GL_MULTISAMPLE); ASSERT_OPENGL();
 
-	SDL_GL_SetSwapInterval(-1);
+	SDL_GL_SetSwapInterval(1);
 
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;

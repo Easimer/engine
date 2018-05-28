@@ -6,10 +6,12 @@
 
 class client : public iclient {
 public:
-	virtual void init(const char* pszHostname, const char* pszUsername) override;
+	virtual ~client();
+	virtual void init() override;
 	virtual void shutdown() override;
 	virtual bool is_shutdown() override;
 	virtual bool request_server() override { return m_bRequestServer; }
+	virtual const char * name() const override;
 
 	bool m_bShutdown;
 	bool m_bRequestServer;

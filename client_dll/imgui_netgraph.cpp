@@ -31,12 +31,11 @@ void ImGui::NetGraph(const std::vector<net::packet_stat>& stat) {
 	if (window->SkipItems)
 		return;
 
-
 	ImGuiContext& g = *GImGui;
 	const ImGuiStyle& style = g.Style;
 
 	float flColumnWidth = (window->SizeFull.x - 10) / stat.size();
-	
+
 	const ImVec2 frame_rb(window->DC.CursorPos.x + window->SizeFull.x - 10, window->DC.CursorPos.y + (window->SizeFull.y / 2));
 	const ImRect frame_bb(window->DC.CursorPos, frame_rb);
 

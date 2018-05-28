@@ -49,6 +49,8 @@ bool game::tick() {
 	gpGfx->get_events(events);
 	
 	for (auto& ev : events) {
+		if (ev.type == SDL_QUIT)
+			return false;
 		m_evhandler.send_events(events);
 		gpGfx->gui_send_event(ev);
 	}
@@ -70,6 +72,7 @@ bool game::tick() {
 	mat_view = glm::translate(mat_view, glm::vec3(m_camera.get_pos()));
 	
 	net::edict_t* edicts = m_pNetClient->get_edicts();
+	gfx::shader_program* pPrevShader = nullptr;
 	for (size_t i = 1; i < net::max_edicts; i++) {
 		if (edicts[i].active) {
 			net::edict_t e = edicts[i];
@@ -104,7 +107,9 @@ bool game::tick() {
 				mat_trans = glm::translate(mat_trans, (glm::vec3)(e.iposition));
 				mat_trans = mat_trans * glm::make_mat4(e.irotation);
 
-				pShader->use();
+				if(pShader != pPrevShader)
+					pShader->use();
+				pPrevShader = pShader;
 				pShader->set_mat_proj(glm::value_ptr(m_proj));
 				pShader->set_mat_view(glm::value_ptr(mat_view));
 				pShader->set_mat_trans(glm::value_ptr(mat_trans));

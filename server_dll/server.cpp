@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "fps_player.h"
+#include <ifsys/ifsys.h>
 
 extern "C" {
 	ENL_EXPORT iserver* server_dll_init() {
@@ -14,16 +15,24 @@ extern "C" {
 	ENL_EXPORT void server_dll_shutdown(iserver* p) {
 		delete static_cast<server*>(p);
 	}
+
+	ENL_EXPORT void ifsys_fn(ifsys* is) {
+		static server ifserver;
+		is->connect(ifserver.name(), &ifserver);
+	}
 }
 
 void server::init() {
 	std::flush(std::cout);
-	PRINT("server::init");
+	
+	if (m_server) return;
+	
+	m_server = std::make_unique<net::server>();
 	
 	gpGlobals->curtime = 0;
-	m_server.set_time_ptr(&gpGlobals->curtime);
-	m_server.set_name("Default Server Name");
-	m_server.set_level_name("<no level loaded>");
+	m_server->set_time_ptr(&gpGlobals->curtime);
+	m_server->set_name("Default Server Name");
+	m_server->set_level_name("<no level loaded>");
 
 	m_thread_logic = std::thread([&]() {
 		std::flush(std::cout);
@@ -37,7 +46,7 @@ void server::init() {
 		// Reserve all player entities
 		for (size_t i = 0; i < net::max_players; i++) {
 			base_entity* pEnt = CreateEntity("player");
-			auto e = m_server.get_player(i);
+			auto e = m_server->get_player(i);
 			e.active = false;
 			e.updated = false;
 		}
@@ -69,10 +78,10 @@ void server::init() {
 		pHat->spawn();
 
 		for (size_t i = 0; i < net::max_edicts; i++)
-			m_server.edict(i).reset();
+			m_server->edict(i).reset();
 
 		auto f = std::bind(&server::client_input_handler, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-		m_server.set_client_input_handler(f);
+		m_server->set_client_input_handler(f);
 
 		while (!m_shutdown) {			
 			gpGlobals->pEntSys->update_entities();
@@ -86,13 +95,13 @@ void server::init() {
 
 				// Skip entity if it's a player, but the assigned client is offline
 				if (pEnt->is_player()) {
-					const net::client_desc* cd = m_server.get_client_desc(pEnt->edict() - 1);
+					const net::client_desc* cd = m_server->get_client_desc(pEnt->edict() - 1);
 					if (!cd->slot_active) {
 						continue;
 					}
 				}
 
-				net::edict_t& e = m_server.edict(pEnt->edict());
+				net::edict_t& e = m_server->edict(pEnt->edict());
 				e.active = true;
 				if (e.position != pEnt->get_abspos()) {
 					e.updated = true;
@@ -119,7 +128,7 @@ void server::init() {
 					e.last_update = gpGlobals->curtime;
 			}
 
-			m_server.push_updates();
+			m_server->push_updates();
 			std::this_thread::sleep_until(next_tick);
 			next_tick += timestep(1);
 		}
@@ -136,8 +145,12 @@ void server::shutdown() {
 	if (gpGlobals->pEntSys) delete gpGlobals->pEntSys;
 }
 
+const char * server::name() const {
+	return "GameServer0001";
+}
+
 void server::client_input_handler(const net::client_desc & client, size_t edict, uint64_t cli_tick, const char * pszCommand) {
-	net::edict_t& player = m_server.edict(edict);
+	net::edict_t& player = m_server->edict(edict);
 	if (!player.active)
 		return;
 	base_entity* pPlayer = gpGlobals->pEntSys->get_entity_by_edict(edict);

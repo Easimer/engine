@@ -25,9 +25,9 @@ add_executable(engineds
 vs_link_static(engineds)
 
 IF(UNIX AND NOT APPLE)
-target_link_libraries(engineds dl pthread)
+target_link_libraries(engineds dl pthread ifsys)
 ELSE()
-target_link_libraries(engineds)
+target_link_libraries(engineds ifsys)
 ENDIF()
 install(TARGETS engineds DESTINATION bin/../)
 

@@ -6,6 +6,8 @@
 #include "mainmenu.h"
 #include "game.h"
 
+#include <ifsys/ifsys.h>
+
 extern "C" {
 	ENL_EXPORT iclient* client_dll_init() {
 		return new client();
@@ -13,6 +15,11 @@ extern "C" {
 
 	ENL_EXPORT void client_dll_shutdown(iclient* p) {
 		delete static_cast<client*>(p);
+	}
+
+	ENL_EXPORT void ifsys_fn(ifsys* is) {
+		static client ifclient;
+		is->connect("GameClient0001", &ifclient);
 	}
 }
 
@@ -71,7 +78,7 @@ private:
 	const char* m_pszText;
 };
 
-void client_main(client* cli, const char* pszHostname, const char* pszUsername) {
+void client_main(client* cli) {
 	if (!gpGfx->init("game")) {
 		PRINT_ERR("client::init: couldn't initialize graphics subsystem!!!!");
 		cli->m_bShutdown = true;
@@ -130,7 +137,10 @@ void client_main(client* cli, const char* pszHostname, const char* pszUsername) 
 			}
 		}
 		else if (state == E_CLIENT_STATE_GAME) {
-			g.tick();
+			if (!g.tick()) {
+				g.disconnect();
+				cli->m_bShutdown = true;
+			}
 		}
 		else if (state >= E_CLIENT_STATE_CONNECTING && state <= E_CLIENT_STATE_CONNECTING_MAX) {
 			gpGfx->handle_events();
@@ -168,7 +178,7 @@ void client_main(client* cli, const char* pszHostname, const char* pszUsername) 
 	}
 }
 
-void client::init(const char* pszHostname, const char* pszUsername)
+void client::init()
 {
 	/*std::flush(std::cout);
 	print("client::init");
@@ -184,16 +194,30 @@ void client::init(const char* pszHostname, const char* pszUsername)
 	}*/
 	m_bShutdown = false;
 	m_bRequestServer = false;
-	m_client_thread = std::thread(client_main, this, pszHostname, pszUsername);
+	m_client_thread = std::thread(client_main, this);
 }
 
 void client::shutdown()
 {
-	if(m_client_thread.joinable())
+	PRINT_DBG("client::shutdown");
+	m_bShutdown = true;
+	while(m_client_thread.joinable())
 		m_client_thread.join();
 }
 
 bool client::is_shutdown()
 {
 	return m_bShutdown;
+}
+
+const char* client::name() const {
+	return "GameClient0001";
+}
+
+client::~client() {
+	m_bShutdown = true;
+	if (m_client_thread.joinable()) {
+		PRINT_DBG("client::dtor: Attempting late join");
+		m_client_thread.join();
+	}
 }

@@ -1,18 +1,20 @@
 #pragma once
 
 #include <enl/platform.h>
+#include <ifsys/imodule.h>
 
-class iclient {
+class iclient : public imodule {
 public:
 	virtual ~iclient() {}
-	// Init module
-	virtual void init(const char* pszHostname, const char* pszUsername) = 0;
+	virtual void init() override = 0;
 	// Free module
 	virtual void shutdown() = 0;
 	// Does the module want to shut down
 	virtual bool is_shutdown() = 0;
 	// Request launcher to load server.dll
 	virtual bool request_server() = 0;
+
+	virtual const char * name() const override = 0;
 };
 
 extern "C" {

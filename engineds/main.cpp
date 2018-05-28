@@ -5,6 +5,7 @@
 #include <thread>
 #include <dl.h>
 #include <cpuid.h>
+#include <ifsys/ifsys.h>
 
 #if defined(PLAT_WINDOWS)
 const char* pszServerDLL = "bin/server_dll.dll";
@@ -20,14 +21,12 @@ int main(int argc, char** argv) {
 #endif
 	std::flush(std::cout);
 
-	auto server_init = link_dll<iserver*>(pszServerDLL, "server_dll_init");
-	auto server_shutdown = link_dll<void, iserver*>(pszServerDLL, "server_dll_shutdown");
+	ifsys is;
 
-	ASSERT(server_init);
-	ASSERT(server_shutdown);
+	auto srv_fn = LINK_MODULE(pszServerDLL);
+	srv_fn(&is);
 
-	// Start client
-	iserver* srv = server_init();
+	auto srv = (iserver*)is.query("GameServer0001");
 	ASSERT(srv);
 	srv->init();
 
@@ -36,7 +35,7 @@ int main(int argc, char** argv) {
 	}
 
 	if (srv) {
-		std::cout << "Stopping server: "; srv->shutdown(); server_shutdown(srv); std::cout << "OK" << std::endl;
+		std::cout << "Stopping server: "; srv->shutdown(); std::cout << "OK" << std::endl;
 	}
 	return 0;
 }
