@@ -25,6 +25,8 @@ static void gfx_debug_callback(GLenum source, GLenum type, GLuint id,
 		PRINT_DBG("==============");
 		PRINT_DBG("OpenGL Error:");
 		PRINT_DBG(message);
+		PRINT_DBG("Source: " << source);
+		PRINT_DBG("ID: " << id);
 		PRINT_DBG("==============");
 		ASSERT(0);
 	}
@@ -119,6 +121,44 @@ bool gfx::gfx_global::init(const char* szTitle, size_t width, size_t height, siz
 		ASSERT(0);
 	}
 
+	// Create and upload built-in quad
+	float aflQuadPos[] = {
+		-1.0f, -1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		1.0f,  1.0f, 0.0f,
+	};
+	
+	float aflQuadUV[] = {
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		0.0f, 1.0f,
+		0.0f, 1.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+	};
+
+	glGenVertexArrays(1, &m_iModelQuadVAO);
+	glBindVertexArray(m_iModelQuadVAO);
+	glGenBuffers(1, &m_iModelQuadVBOPos);
+	glGenBuffers(1, &m_iModelQuadVBOUV);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_iModelQuadVBOPos);
+	glBufferData(GL_ARRAY_BUFFER, 18 * sizeof(float), aflQuadPos, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_iModelQuadVBOUV);
+	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), aflQuadUV, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+
 	return true;
 }
 
@@ -174,6 +214,11 @@ void gfx::gfx_global::end_frame()
 			m_event_handler(e);
 		}
 	}
+	for (auto& iTex : m_vec_texgc) {
+		glDeleteTextures(1, &iTex);
+		PRINT_DBG("gfx::texgc: " << iTex << " deleted");
+	}
+	m_vec_texgc.clear();
 }
 
 bool gfx::gfx_global::handle_events()
@@ -203,16 +248,8 @@ void gfx::gfx_global::set_viewport(int sx, int sy, int ex, int ey)
 	nViewportW = ex - sx;
 	nViewportH = ey - sy;
 
-	PRINT_DBG(sy << ' ' << ey);
-
-	//
-	GLint X = nViewportX;
-	GLint Y = nViewportY;
-	GLsizei W = nViewportW;
-	GLsizei H = nViewportH;
-
-	glViewport(X, Y, W, H); ASSERT_OPENGL();
-	glScissor(X, Y, W, H); ASSERT_OPENGL();
+	glViewport(nViewportX, nViewportY, nViewportW, nViewportH); ASSERT_OPENGL();
+	glScissor(nViewportX, nViewportY, nViewportW, nViewportH); ASSERT_OPENGL();
 	glEnable(GL_SCISSOR_TEST); ASSERT_OPENGL();
 }
 
@@ -639,4 +676,20 @@ model_id gfx::gfx_global::upload_terrain(const elf::terrain_chunk & chunk) {
 }
 
 void gfx::gfx_global::draw_terrain(const model_id& id) {
+}
+
+void gfx::gfx_global::draw_framebuffer(gfx::framebuffer & fb) {
+	gfx::shader_program* pShader = shaders[get_shader_program_index("framebuffer")];
+	ASSERT(pShader);
+	if (!pShader)
+		return;
+	gfx::material m;
+	m.set_texture(gfx::mat_tex_index::MAT_TEX_DIFFUSE, fb.diffuse());
+	m.set_texture(gfx::mat_tex_index::MAT_TEX_NORMAL, fb.diffuse());
+	m.set_texture(gfx::mat_tex_index::MAT_TEX_OPACITY, fb.diffuse());
+	m.set_texture(gfx::mat_tex_index::MAT_TEX_SPECULAR, fb.diffuse());
+	//m.set_texture(gfx::mat_tex_index::MAT_TEX_DEPTH, fb.diffuse());
+	pShader->use_material(m);
+	glBindVertexArray(m_iModelQuadVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 }

@@ -64,9 +64,6 @@ void mapeditor::init() {
 
 		gpGfx->add_window(pWndObjects);
 
-		PRINT_DBG("EEEEEEEEEEEEEEEEEEEEE");
-		PRINT_DBG(pWndObjects->get_title());
-
 		while (!m_bShutdown) {
 			handle_events();
 			gpGfx->begin_frame();

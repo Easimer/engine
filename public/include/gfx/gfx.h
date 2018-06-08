@@ -12,6 +12,7 @@
 #include <gfx/window.h>
 #include <gfx/model.h>
 #include <gfx/material.h>
+#include <gfx/framebuffer.h>
 
 #include <elf/elf.h>
 
@@ -139,6 +140,12 @@ namespace gfx {
 		model_id upload_terrain(const elf::terrain_chunk& chunk);
 		void draw_terrain(const model_id& id);
 
+		void draw_framebuffer(gfx::framebuffer& fb);
+
+		void delete_texture(uint32_t iTex) {
+			m_vec_texgc.push_back(iTex);
+		}
+
 	private:
 		SDL_Window* pWindow;
 		SDL_GLContext pGLContext;
@@ -174,6 +181,15 @@ namespace gfx {
 		std::map<size_t, std::string> material_filename_map;
 
 		std::function<void(const SDL_Event& e)> m_event_handler;
+
+		// Built-in quad spanning the whole screen
+		uint32_t m_iModelQuadVAO;
+		uint32_t m_iModelQuadVBOPos;
+		uint32_t m_iModelQuadVBOUV;
+
+		// Texture GC
+		// These textures get deleted at the end of the frame
+		std::vector<uint32_t> m_vec_texgc;
 	};
 }
 

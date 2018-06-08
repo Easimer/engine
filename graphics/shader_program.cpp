@@ -320,7 +320,8 @@ void shader_program::use_material(const material & mat)
 {
 	for (size_t i = 0; i < SHADERTEX_MAX; i++) {
 		glActiveTexture(GL_TEXTURE0 + i); ASSERT_OPENGL();
-		glBindTexture(GL_TEXTURE_2D, mat.get_texture((mat_tex_index)i)); ASSERT_OPENGL();
+		uint32_t iTex = mat.get_texture((mat_tex_index)i);
+		glBindTexture(GL_TEXTURE_2D, iTex); ASSERT_OPENGL();
 	}
 }
 
