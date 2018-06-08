@@ -7,6 +7,7 @@ set(SRC
 	mapeditor.h
 
 	gui_objects.cpp
+	gui_objects.h
 )
 
 set(SRC_PUBLIC

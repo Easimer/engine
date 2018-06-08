@@ -2,7 +2,15 @@
 #include <ifsys/ifsys.h>
 #include "mapeditor.h"
 #include <gui/imgui.h>
+#include <gfx/gfx.h>
+#include <gfx/shader_program.h>
 #include <gfx/window_register.h>
+#include "gui_objects.h"
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 namespace ImGui {
 
@@ -61,12 +69,14 @@ void mapeditor::init() {
 		gpGfx->load_default_shaders();
 
 		auto pWndObjects = gfx::gpWindowRegister->create("GUIObjects");
-
+		std::shared_ptr<gui_objects> pWndObjects2 = std::static_pointer_cast<gui_objects, gfx::window>(pWndObjects);
+		pWndObjects2->set_is(m_pIfSys);
 		gpGfx->add_window(pWndObjects);
 
 		while (!m_bShutdown) {
 			handle_events();
 			gpGfx->begin_frame();
+			draw_world();
 			draw_gui();
 			gpGfx->draw_windows();
 			gpGfx->end_frame();
@@ -141,12 +151,43 @@ void mapeditor::draw_gui() {
 	}
 }
 
-void mapeditor::new_world() {
+void mapeditor::draw_world() {
+	glm::mat4 proj = glm::perspective(glm::radians(110.f), (float)gpGfx->width() / (float)gpGfx->height(), 0.0f, 1000.0f);
+	//glm::mat4 proj = glm::perspective(glm::radians(120.f), 1.0f, 0.0f, 1000.0f);
+	//glm::mat4 proj = glm::ortho(0.0f, 512.f, 512.f, 0.0f, 0.0f, 1000.0f);
+	glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.5f, -0.75f));
+	for (const auto& object : m_objects) {
+		gfx::material pMaterial = gpGfx->model_material(object.iModel);
+		int iShader = pMaterial.get_shader();
+		if (iShader != -1) {
+			gfx::shader_program* pShader = gpGfx->get_shader(iShader);
+			glm::mat4 trans = glm::translate(glm::mat4(1.0f), (glm::vec3)object.vecPos) * glm::eulerAngleXYZ(object.vecRot.x(), object.vecRot.y(), object.vecRot.z());
+			gpGfx->bind_model(object.iModel);
+			pShader->use();
+			pShader->use_material(pMaterial);
 
+			pShader->set_mat_view(glm::value_ptr(view));
+			pShader->set_mat_proj(glm::value_ptr(proj));
+			pShader->set_mat_trans(glm::value_ptr(trans));
+
+			gpGfx->draw_model();
+		}
+	}
+}
+
+void mapeditor::new_world() {
+	m_objects.clear();
 }
 
 void mapeditor::load_icon(mapeditor::tool id, const std::string & filename) {
 	uint32_t iTex = gpGfx->load_texture(filename);
 	void* tex = (void*)(((uint64_t)0) | iTex);
 	m_icons.emplace(id, tex);
+}
+
+void mapeditor::add_object(const char* szFilename) {
+	world_object obj;
+	obj.szModel = szFilename;
+	obj.iModel = gpGfx->load_model(obj.szModel);
+	m_objects.push_back(obj);
 }

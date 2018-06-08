@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "gui_objects.h"
 #include <gfx/gfx.h>
 #include <gfx/shader.h>
 #include <gfx/shader_program.h>
@@ -15,51 +16,6 @@
 
 #include <vector>
 #include <string>
-
-// A window that shows all placeable models
-// Users can navigate the directory structure
-// All models have preview icons that are generated
-// when the user opens a directory
-
-class gui_objects : public gfx::window {
-public:
-	virtual ~gui_objects() {
-		for (auto& kv : m_preview_cache) {
-			gpGfx->delete_texture(kv.second);
-		}
-	}
-	virtual const char* get_title() override { return "Objects"; }
-	virtual float min_width() override { return gpGfx->width(); }
-	virtual float min_height() override { return 300; }
-protected:
-	virtual void draw_content() override;
-
-	struct dir_entry {
-		bool bDirectory;
-		bool bUp;
-		std::string filename;
-	};
-
-	// Returns a list of files and directories
-	std::vector<dir_entry> list_files() const;
-
-	const std::string cwd() const {
-		std::string path = "data/models/";
-		for (const auto& dir : m_stack_path) {
-			path.append(dir);
-			path.append("/");
-		}
-		return path;
-	}
-
-	uint32_t generate_preview(gfx::model_id id);
-private:
-	std::vector<std::string> m_stack_path;
-	std::vector<dir_entry> m_cur_entries;
-
-	std::map<std::string, gfx::model_id> m_object_cache;
-	std::map<gfx::model_id, uint32_t> m_preview_cache;
-};
 
 namespace ImGui {
 
@@ -86,8 +42,10 @@ bool ObjectButton(ImTextureID tex, const char* label, ImVec2& size) {
 	ImVec2 image_br(window->DC.CursorPos.x + size.x + padding.x, window->DC.CursorPos.y + size.y + padding.y);
 	const ImRect image_bb(image_tl, image_br);
 	ItemSize(bb);
-	if (!ItemAdd(bb, id))
+	if (!ItemAdd(bb, id)) {
+		ImGui::EndGroup();
 		return false;
+	}
 
 	bool hovered, held;
 	bool pressed = ButtonBehavior(bb, id, &hovered, &held);
@@ -105,6 +63,11 @@ bool ObjectButton(ImTextureID tex, const char* label, ImVec2& size) {
 	return pressed;
 }
 
+}
+
+void gui_objects::set_is(ifsys * is) {
+	m_pISys = is;
+	m_pMapEditor = (imapeditor*)is->query("EngineLevelEditor0001");
 }
 
 void gui_objects::draw_content() {
@@ -155,6 +118,9 @@ void gui_objects::draw_content() {
 			}
 			if (ImGui::ObjectButton((ImTextureID)iTex, e.filename.c_str(), button_size)) {
 				PRINT_DBG("Selected object " << filename);
+				if (m_pMapEditor) {
+					m_pMapEditor->add_object(filename.c_str());
+				}
 			}
 		}
 		if (iRowIndex++ < nMaxPerRow) {

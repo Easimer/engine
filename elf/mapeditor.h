@@ -19,6 +19,7 @@ public:
 
 	void handle_events();
 	void draw_gui();
+	void draw_world();
 
 	void new_world();
 
@@ -32,6 +33,14 @@ public:
 
 	void load_icon(mapeditor::tool id, const std::string& filename);
 
+	struct world_object {
+		gfx::model_id iModel;
+		bool bStatic;
+		vec3 vecPos;
+		vec3 vecRot;
+		std::string szModel;
+	};
+
 private:
 	ifsys* m_pIfSys;
 	std::thread m_thread;
@@ -42,8 +51,12 @@ private:
 	std::map<mapeditor::tool, void*> m_icons;
 
 	// Editor world state
+	std::vector<world_object> m_objects;
 
 	// GUI State
 	bool m_bGUILevelSelectorOpen = false;
 	std::array<char, 64> m_szGUILevelSelectorMap;
+
+	// Inherited via imapeditor
+	virtual void add_object(const char* szFilename) override;
 };
