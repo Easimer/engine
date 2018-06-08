@@ -117,12 +117,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	if (gpCli) {
-		std::cout << "Stopping client: "; gpCli->shutdown(); std::cout << "OK" << std::endl;
-	}
-	if (gpSrv) {
-		std::cout << "Stopping server: "; gpSrv->shutdown(); std::cout << "OK" << std::endl;
-	}
+	is.shutdown();
 
 	return 0;
 }

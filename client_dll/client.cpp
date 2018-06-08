@@ -20,6 +20,7 @@ extern "C" {
 	ENL_EXPORT void ifsys_fn(ifsys* is) {
 		static client ifclient;
 		is->connect("GameClient0001", &ifclient);
+		ifclient.m_pIfSys = is;
 	}
 }
 
@@ -87,6 +88,8 @@ void client_main(client* cli) {
 
 	mainmenu mm;
 	game g;
+
+	mm.set_ifsys(cli->m_pIfSys);
 
 	gpGfx->load_default_shaders();
 	gpGfx->load_shader("data/shaders/model_dynamic.qc");
@@ -197,12 +200,15 @@ void client::init()
 	m_client_thread = std::thread(client_main, this);
 }
 
-void client::shutdown()
+bool client::shutdown()
 {
 	PRINT_DBG("client::shutdown");
 	m_bShutdown = true;
-	while(m_client_thread.joinable())
+	if (m_client_thread.joinable()) {
 		m_client_thread.join();
+		return false;
+	}
+	return true;
 }
 
 bool client::is_shutdown()

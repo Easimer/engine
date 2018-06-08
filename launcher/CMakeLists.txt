@@ -39,4 +39,4 @@ source_group("Source Files" FILES ${SRC_GAME})
 source_group("Public Header Files" FILES ${SRC_PUBLIC})
 ENDIF()
 
-add_dependencies(launcher server_dll client_dll)
+add_dependencies(launcher server_dll client_dll elf)

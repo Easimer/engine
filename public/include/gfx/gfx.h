@@ -13,6 +13,8 @@
 #include <gfx/model.h>
 #include <gfx/material.h>
 
+#include <elf/elf.h>
+
 namespace gfx {
 	class shader;
 	class shader_program;
@@ -57,6 +59,10 @@ namespace gfx {
 		void set_viewport(int sx, int sy, int ex, int ey);
 		// Restore viewport to fullscreen
 		void restore_viewport();
+		// Clears the screen
+		void clear();
+		// Set the clear color
+		void clear_color(float r, float g, float b);
 
 		// Get shader program index by name
 		int get_shader_program_index(const std::string& name);
@@ -68,9 +74,9 @@ namespace gfx {
 		// Load texture from file
 		uint32_t load_texture(const std::string& filename);
 		// Load model from file
-		uint32_t load_model(const std::string& filename);
+		gfx::model_id load_model(const std::string& filename);
 		// Load model from model container
-		uint32_t load_model(const gfx::model& mdl);
+		gfx::model_id load_model(const gfx::model& mdl);
 		// Load material from file
 		size_t load_material(const std::string& filename);
 
@@ -129,6 +135,9 @@ namespace gfx {
 		void capture_mouse(bool b);
 
 		void load_default_shaders();
+
+		model_id upload_terrain(const elf::terrain_chunk& chunk);
+		void draw_terrain(const model_id& id);
 
 	private:
 		SDL_Window* pWindow;

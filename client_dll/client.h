@@ -8,7 +8,7 @@ class client : public iclient {
 public:
 	virtual ~client();
 	virtual void init() override;
-	virtual void shutdown() override;
+	virtual bool shutdown() override;
 	virtual bool is_shutdown() override;
 	virtual bool request_server() override { return m_bRequestServer; }
 	virtual const char * name() const override;
@@ -16,6 +16,7 @@ public:
 	bool m_bShutdown;
 	bool m_bRequestServer;
 	std::shared_ptr<net::client> m_pClient;
+	ifsys* m_pIfSys;
 private:
 	std::thread m_client_thread;
 };

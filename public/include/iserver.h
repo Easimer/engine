@@ -6,7 +6,7 @@
 class iserver : public imodule {
 public:
 	virtual void init() = 0;
-	virtual void shutdown() = 0;
+	virtual bool shutdown() = 0;
 	virtual bool is_shutdown() = 0;
 	virtual const char * name() const override = 0;
 };

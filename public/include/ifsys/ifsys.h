@@ -16,6 +16,7 @@ class ifsys {
 public:
 	virtual void connect(const char* pszName, void* pModule);
 	virtual void* query(const char* pszName);
+	void shutdown();
 private:
 	std::map<std::string, void*> m_modules;
 };

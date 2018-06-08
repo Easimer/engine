@@ -18,6 +18,22 @@ using namespace gfx;
 gfx::gfx_global gGfx;
 gfx::gfx_global* gpGfx = &gGfx;
 
+static void gfx_debug_callback(GLenum source, GLenum type, GLuint id,
+	GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+	gfx::gfx_global* pGfx = (gfx::gfx_global*)userParam;
+	if (type == GL_DEBUG_TYPE_ERROR) {
+		PRINT_DBG("==============");
+		PRINT_DBG("OpenGL Error:");
+		PRINT_DBG(message);
+		PRINT_DBG("==============");
+		ASSERT(0);
+	}
+	if (type == GL_DEBUG_TYPE_PERFORMANCE) {
+		PRINT_DBG("OpenGL Warning:");
+		PRINT_DBG(message);
+	}
+}
+
 bool gfx::gfx_global::init(const char* szTitle, size_t width, size_t height, size_t glVersionMajor, size_t glVersionMinor)
 {
 	SDL_SetMainReady();
@@ -50,6 +66,15 @@ bool gfx::gfx_global::init(const char* szTitle, size_t width, size_t height, siz
 	gladLoadGLLoader(SDL_GL_GetProcAddress);
 
 	SDL_GetWindowSize(pWindow, &nWidth, &nHeight);
+
+#if defined(PLAT_DEBUG)
+	if (glDebugMessageCallback) {
+		glEnable(GL_DEBUG_OUTPUT);
+		glDebugMessageCallback(gfx_debug_callback, (void*)this);
+	} else {
+		PRINT_DBG("No glDebugMessageCallback!!");
+	}
+#endif
 
 	glViewport(0, 0, nWidth, nHeight);
 	glClearColor(0.39215686274f, 0.58431372549f, 0.9294117647f, 1.0f);
@@ -177,12 +202,35 @@ void gfx::gfx_global::set_viewport(int sx, int sy, int ex, int ey)
 	nViewportY = nHeight - ey;
 	nViewportW = ex - sx;
 	nViewportH = ey - sy;
-	glViewport(nViewportX, nViewportY, nViewportW, nViewportH); ASSERT_OPENGL();
+
+	PRINT_DBG(sy << ' ' << ey);
+
+	//
+	GLint X = nViewportX;
+	GLint Y = nViewportY;
+	GLsizei W = nViewportW;
+	GLsizei H = nViewportH;
+
+	glViewport(X, Y, W, H); ASSERT_OPENGL();
+	glScissor(X, Y, W, H); ASSERT_OPENGL();
+	glEnable(GL_SCISSOR_TEST); ASSERT_OPENGL();
 }
 
 void gfx::gfx_global::restore_viewport()
 {
-	glViewport(0, 0, nWidth, nHeight); ASSERT_OPENGL();
+	GLsizei W = nWidth;
+	GLsizei H = nHeight;
+	glViewport(0, 0, W, H); ASSERT_OPENGL();
+	glScissor(0, 0, W, H); ASSERT_OPENGL();
+	glDisable(GL_SCISSOR_TEST); ASSERT_OPENGL();
+}
+
+void gfx::gfx_global::clear() {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); ASSERT_OPENGL();
+}
+
+void gfx::gfx_global::clear_color(float r, float g, float b) {
+	glClearColor(r, g, b, 1.0f);
 }
 
 int gfx_global::get_shader_program_index(const std::string & name)
@@ -260,7 +308,7 @@ uint32_t gfx::gfx_global::load_texture(const std::string & filename)
 	return iTex;
 }
 
-uint32_t gfx::gfx_global::load_model(const std::string & filename)
+gfx::model_id gfx::gfx_global::load_model(const std::string & filename)
 {
 	gfx::model mdl;
 	gfx::smd_loader parser_smd;
@@ -282,10 +330,10 @@ uint32_t gfx::gfx_global::load_model(const std::string & filename)
 	}
 	auto mid = load_model(mdl);
 	filename_model_map.emplace(filename, mid);
-	return mid;
+	return (gfx::model_id)mid;
 }
 
-uint32_t gfx::gfx_global::load_model(const gfx::model & mdl)
+gfx::model_id gfx::gfx_global::load_model(const gfx::model & mdl)
 {
 	GLuint iVAO;
 	GLuint aiVBO[MDL_VBO_MAX];
@@ -385,7 +433,7 @@ uint32_t gfx::gfx_global::load_model(const gfx::model & mdl)
 
 	model_collider_map.emplace((model_id)iVAO, mdl.collider);
 
-	return iVAO;
+	return (gfx::model_id)iVAO;
 }
 
 size_t gfx::gfx_global::load_material(const std::string & filename)
@@ -496,4 +544,99 @@ void gfx::gfx_global::load_default_shaders() {
 		if(line.size() > 1 && line[0] != '/' && line[1] != '/') // skip comment lines
 			load_shader(line);
 	}
+}
+
+model_id gfx::gfx_global::upload_terrain(const elf::terrain_chunk & chunk) {
+	GLuint iVAO;
+	// Used buffers:
+	// MDL_VBO_POSITION, MDL_VBO_NORMAL, MDL_VBO_UV, MDL_VBO_MAT
+	GLuint aiVBO[MDL_VBO_MAX];
+
+	glGenVertexArrays(1, &iVAO); ASSERT_OPENGL();
+	glBindVertexArray(iVAO); ASSERT_OPENGL();
+	glGenBuffers(MDL_VBO_MAX, aiVBO); ASSERT_OPENGL();
+
+	// Every tile is made out of two triangles; T = 2
+	// Every triangle is made out of 3 points; P = 3
+	// Those three points are made out of 3 floats; V = 3
+	// ((W-1) * (H-1)) * T * P * V * sizeof(float)
+	size_t nTriangles = ((chunk.width - 1) * (chunk.height - 1)) * 2;
+	size_t nSizPosition = nTriangles * 3 * 3 * sizeof(float);
+	size_t nSizNormal = nTriangles * 3 * 3 * sizeof(float);
+	size_t nSizUV = nTriangles * 3 * 2 * sizeof(float);
+	size_t nSizTex = nTriangles * sizeof(GLubyte);
+
+	std::unique_ptr<float[]> pBufPosition = std::make_unique<float[]>(nSizPosition);
+	std::unique_ptr<float[]> pBufNormal = std::make_unique<float[]>(nSizNormal);
+	std::unique_ptr<float[]> pBufUV = std::make_unique<float[]>(nSizUV);
+	std::unique_ptr<GLubyte[]> pBufTex = std::make_unique<GLubyte[]>(nSizTex);
+
+	for (int y = 0; y < chunk.height - 1; y++) {
+		for (int x = 0; x < chunk.width - 1; x++) {
+			size_t iBase = y * chunk.width + x;
+			
+			vec3 vtl(x + 0.f, y + 0.f, chunk.heightmap[iBase + 0]);
+			vec3 vtr(x + 1.f, y + 0.f, chunk.heightmap[iBase + 1]);
+			vec3 vbl(x + 0.f, y + 1.f, chunk.heightmap[iBase + chunk.width + 0]);
+			vec3 vbr(x + 1.f, y + 0.f, chunk.heightmap[iBase + chunk.width + 1]);
+
+			vec3 vertices1[3] = {
+				{ x + 0.f, y + 0.f, chunk.heightmap[iBase + 0] }, // TL
+				{ x + 0.f, y + 1.f, chunk.heightmap[iBase + chunk.width + 0] }, // BL
+				{ x + 1.f, y + 0.f, chunk.heightmap[iBase + chunk.width + 1] }, // BR
+			};
+			vec3 vertices2[3] = {
+				{ x + 0.f, y + 0.f, chunk.heightmap[iBase + 0] }, // TL
+				{ x + 1.f, y + 0.f, chunk.heightmap[iBase + chunk.width + 1] }, // BR
+				{ x + 1.f, y + 0.f, chunk.heightmap[iBase + 1] }, // TR
+			};
+
+			// Triangle 1
+
+			size_t iTriangleBase_V3 = (y * chunk.width + x) * (2 * (3 * 3 * sizeof(float)));
+			size_t iTriangleBase_V2 = (y * chunk.width + x) * (2 * (3 * 2 * sizeof(float)));
+			size_t iTriangleBase_V1u = (y * chunk.width + x) * (2 * (3 * sizeof(GLubyte)));
+
+			for (int v = 0; v < 3; v++) {
+				pBufPosition[iTriangleBase_V3 + v * 3 + 0] = vertices1[v].x();
+				pBufPosition[iTriangleBase_V3 + v * 3 + 1] = vertices1[v].y();
+				pBufPosition[iTriangleBase_V3 + v * 3 + 2] = vertices1[v].z();
+
+				pBufNormal[iTriangleBase_V3 + v * 3 + 0] = 0;
+				pBufNormal[iTriangleBase_V3 + v * 3 + 1] = 1;
+				pBufNormal[iTriangleBase_V3 + v * 3 + 2] = 0;
+
+				pBufUV[iTriangleBase_V2 + v * 2 + 0] = 0;
+				pBufUV[iTriangleBase_V2 + v * 2 + 1] = 0;
+
+				pBufTex[iTriangleBase_V1u + v] = 0;
+			}
+		}
+	}
+
+	// Upload vertex positions
+	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_POSITION]); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nSizPosition, pBufPosition.get(), GL_STATIC_DRAW); ASSERT_OPENGL();
+	glVertexAttribPointer(MDL_VBO_POSITION, 3, GL_FLOAT, GL_FALSE, 0, 0); ASSERT_OPENGL();
+	glEnableVertexAttribArray(MDL_VBO_POSITION);
+	// Upload vertex_normals
+	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_NORMAL]); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nSizNormal, pBufNormal.get(), GL_STATIC_DRAW); ASSERT_OPENGL();
+	glVertexAttribPointer(MDL_VBO_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, 0); ASSERT_OPENGL();
+	glEnableVertexAttribArray(MDL_VBO_NORMAL);
+	// Upload UVs
+	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_UV]); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nSizUV, pBufUV.get(), GL_STATIC_DRAW); ASSERT_OPENGL();
+	glVertexAttribPointer(MDL_VBO_UV, 2, GL_FLOAT, GL_FALSE, 0, 0); ASSERT_OPENGL();
+	glEnableVertexAttribArray(MDL_VBO_UV);
+	// Upload texture IDs
+	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_MAT]); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nSizTex, pBufTex.get(), GL_STATIC_DRAW); ASSERT_OPENGL();
+	glVertexAttribPointer(MDL_VBO_MAT, 3, GL_UNSIGNED_BYTE, GL_FALSE, 0, 0); ASSERT_OPENGL();
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+void gfx::gfx_global::draw_terrain(const model_id& id) {
 }

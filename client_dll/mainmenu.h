@@ -3,6 +3,7 @@
 #include <array>
 #include <net/networking.h>
 #include <net/client.h>
+#include <ifsys/ifsys.h>
 
 class mainmenu {
 public:
@@ -11,6 +12,7 @@ public:
 		EMMENU_START_LOCAL_GAME,
 		EMMENU_JOIN_REMOTE_GAME,
 		EMMENU_QUIT_GAME,
+		EMMENU_LEVEL_EDITOR,
 		EMMENU_MAX
 	};
 
@@ -29,6 +31,8 @@ public:
 
 	void set_message(const char* msg) { m_pMsg = msg; }
 
+	void set_ifsys(ifsys* is) { m_pIfSys = is; }
+
 protected:
 	size_t discover_servers();
 
@@ -41,4 +45,6 @@ private:
 	char m_szUsername[128];
 	char m_szAddressBuf[128];
 	const char* m_pMsg;
+
+	ifsys* m_pIfSys;
 };

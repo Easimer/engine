@@ -8,7 +8,7 @@ public:
 	virtual ~iclient() {}
 	virtual void init() override = 0;
 	// Free module
-	virtual void shutdown() = 0;
+	virtual bool shutdown() = 0;
 	// Does the module want to shut down
 	virtual bool is_shutdown() = 0;
 	// Request launcher to load server.dll

@@ -138,11 +138,14 @@ void server::init() {
 	});
 }
 
-void server::shutdown() {
+bool server::shutdown() {
 	m_shutdown = true;
-	if(m_thread_logic.joinable())
+	if (m_thread_logic.joinable()) {
 		m_thread_logic.join();
+		return false;
+	}
 	if (gpGlobals->pEntSys) delete gpGlobals->pEntSys;
+	return true;
 }
 
 const char * server::name() const {

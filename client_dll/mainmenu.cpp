@@ -2,6 +2,7 @@
 #include "mainmenu.h"
 #include <gui/imgui.h>
 #include <gfx/gfx.h>
+#include <elf/imapeditor.h>
 
 mainmenu::mainmenu() : m_pSelected(nullptr), m_pMsg(nullptr) {
 	m_szAddressBuf[0] = 0;
@@ -29,6 +30,16 @@ mainmenu::exitcode mainmenu::tick() {
 			strncpy(m_szAddressBuf, "127.0.0.1", 128);
 			strncpy(m_szUsername, "LOCALUSER", 128);
 		}
+#if defined(PLAT_WINDOWS) // For now
+		if (ImGui::Button("Level editor")) {
+			ret = EMMENU_LEVEL_EDITOR;
+			auto pElfFn = LINK_MODULE("bin/elf.dll");
+			pElfFn(m_pIfSys);
+			imapeditor* pMapEditor = (imapeditor*)m_pIfSys->query("EngineLevelEditor0001");
+			if (pMapEditor)
+				pMapEditor->init();
+		}
+#endif
 		if (ImGui::Button("Quit")) {
 			ret = EMMENU_QUIT_GAME;
 		}

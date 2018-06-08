@@ -9,5 +9,6 @@ public:
 	// Initialize interface
 	virtual void init() = 0;
 	// Shutdown interface
-	virtual void shutdown() = 0;
+	// Returns true when shutdown is complete
+	virtual bool shutdown() = 0;
 };
