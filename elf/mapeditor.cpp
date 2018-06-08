@@ -120,7 +120,7 @@ void mapeditor::draw_gui() {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("New", "Ctrl-N")) {
-
+				new_world();
 			}
 			if (ImGui::MenuItem("Open", "Ctrl-O")) {
 				m_bGUILevelSelectorOpen = true;
