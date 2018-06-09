@@ -58,8 +58,7 @@ void mapeditor::init() {
 	m_bShutdown = false;
 	m_bFreeCamera = false;
 	m_flGameViewX = m_flGameViewY = 0;
-	m_thread = m_pIfSys->make_thread();
-	std::thread t([&]() {
+	m_thread = std::thread([&]() {
 		PRINT_DBG("Level editor init!");
 		gpGfx->init("engine level editor", 1600, 900);
 		PRINT_DBG("gfx init");
@@ -87,14 +86,13 @@ void mapeditor::init() {
 		}
 		gpGfx->shutdown();
 	});
-	m_thread->swap(t);
 }
 
 bool mapeditor::shutdown() {
 	m_bShutdown = true;
 	PRINT_DBG("mapeditor::shutdown");
-	if (m_thread->joinable()) {
-		m_thread->join();
+	if (m_thread.joinable()) {
+		m_thread.join();
 		return false;
 	}
 	return true;

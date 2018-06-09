@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
 	ASSERT(elf);
 	elf->init();
 
-	while (true) {
+	while (!elf->is_shutdown()) {
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 

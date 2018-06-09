@@ -45,10 +45,14 @@ public:
 		std::string szModel;
 	};
 
+	virtual bool is_shutdown() override {
+		return m_bShutdown;
+	}
+
 private:
 	ifsys* m_pIfSys;
 	gfx::gfx_global* m_pGfx;
-	std::shared_ptr<std::thread> m_thread;
+	std::thread m_thread;
 	bool m_bShutdown;
 
 	input m_input;
