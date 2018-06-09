@@ -41,6 +41,7 @@ private:
 	net::server_entry* m_pSelected;
 	bool m_bShowServerBrowser = false;
 	std::shared_ptr<net::server_discovery> m_pSDClient;
+	bool m_bTool = false; // Tool (level editor, etc.) opened
 
 	char m_szUsername[128];
 	char m_szAddressBuf[128];

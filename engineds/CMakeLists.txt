@@ -21,7 +21,7 @@ add_executable(engineds
 	${SRC_PUBLIC}
 	CMakeLists.txt
 )
-
+builddir(engineds)
 vs_link_static(engineds)
 
 IF(UNIX AND NOT APPLE)

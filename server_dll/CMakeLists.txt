@@ -61,7 +61,7 @@ set_source_files_properties(${SRC_NOPCH}
 									PROPERTIES COMPILE_FLAGS "/Y-")
 ENDIF()
 
-add_library(server_dll SHARED
+add_library(server_dll MODULE
 	${SRC_CORE}
 	${SRC_ENTSYS}
 	${SRC_ENTSYS_PROP}
@@ -74,6 +74,8 @@ add_library(server_dll SHARED
 	${SRC_PUBLIC}
 	CMakeLists.txt
 )
+
+builddir(server_dll)
 
 vs_link_static(server_dll)
 

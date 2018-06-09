@@ -2,9 +2,11 @@
 #include <ifsys/ifsys.h>
 #include <elf/imapeditor.h>
 #include <gfx/gfx.h>
+#include <gfx/camera.h>
 #include <thread>
 #include <map>
 #include <array>
+#include "input.h"
 
 class mapeditor : public imapeditor {
 public:
@@ -12,8 +14,8 @@ public:
 	virtual const char * name() const override {
 		return "EngineLevelEditor0001";
 	}
-	virtual void init() override;
 	virtual bool shutdown() override;
+	virtual void init() override;
 
 	void set_ifsys(ifsys* pIfSys) { m_pIfSys = pIfSys; }
 
@@ -33,6 +35,8 @@ public:
 
 	void load_icon(mapeditor::tool id, const std::string& filename);
 
+	virtual void add_object(const char* szFilename) override;
+
 	struct world_object {
 		gfx::model_id iModel;
 		bool bStatic;
@@ -43,8 +47,12 @@ public:
 
 private:
 	ifsys* m_pIfSys;
-	std::thread m_thread;
+	gfx::gfx_global* m_pGfx;
+	std::shared_ptr<std::thread> m_thread;
 	bool m_bShutdown;
+
+	input m_input;
+	gfx::camera m_camera;
 
 	bool m_bFreeCamera;
 	float m_flGameViewX, m_flGameViewY;
@@ -56,7 +64,4 @@ private:
 	// GUI State
 	bool m_bGUILevelSelectorOpen = false;
 	std::array<char, 64> m_szGUILevelSelectorMap;
-
-	// Inherited via imapeditor
-	virtual void add_object(const char* szFilename) override;
 };

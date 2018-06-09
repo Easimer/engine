@@ -15,8 +15,8 @@ add_executable(elf_test
 	${SRC}
 	CMakeLists.txt
 )
-
-target_link_libraries(elf_test elf)
+builddir(elf_test)
+target_link_libraries(elf_test ifsys)
 
 IF(WIN32)
 # Create filters

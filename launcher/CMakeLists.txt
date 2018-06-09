@@ -22,7 +22,7 @@ add_executable(launcher
 	${SRC_PUBLIC}
 	CMakeLists.txt
 )
-
+builddir(launcher)
 vs_link_static(launcher)
 
 set(GAME_LIBRARIES ifsys)

@@ -36,6 +36,7 @@ namespace gfx {
 	public:
 		bool init(const char* szTitle = "engine", size_t width = 1280, size_t height = 720, size_t glVersionMajor = 3, size_t glVersionMinor = 3);
 		bool shutdown();
+		void init_glonly();
 
 		// Begin frame
 		// Call this before any draw command

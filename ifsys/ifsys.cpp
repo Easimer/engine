@@ -25,3 +25,19 @@ void ifsys::shutdown() {
 		}
 	}
 }
+
+std::shared_ptr<std::thread> ifsys::make_thread() {
+	auto t = std::make_shared<std::thread>();
+	m_threads.push_back(t);
+	return t;
+}
+
+std::string module_filename(const std::string& name) {
+#if defined(PLAT_WINDOWS)
+	return "bin/" + name + ".dll";
+#elif defined(PLAT_LINUX)
+	return "bin/lib" + name + ".so";
+#else
+#error Unsupported platform
+#endif
+}

@@ -23,6 +23,7 @@ public:
 	virtual float min_width() override { return gpGfx->width(); }
 	virtual float min_height() override { return 300; }
 	void set_is(ifsys* is);
+
 protected:
 	virtual void draw_content() override;
 

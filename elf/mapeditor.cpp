@@ -58,9 +58,11 @@ void mapeditor::init() {
 	m_bShutdown = false;
 	m_bFreeCamera = false;
 	m_flGameViewX = m_flGameViewY = 0;
-	m_thread = std::thread([&]() {
+	m_thread = m_pIfSys->make_thread();
+	std::thread t([&]() {
 		PRINT_DBG("Level editor init!");
 		gpGfx->init("engine level editor", 1600, 900);
+		PRINT_DBG("gfx init");
 		// Load GUI icons
 		load_icon(E_LED_TOOL_SELECT, "data/textures/gui/mapeditor/tool_select.png");
 		load_icon(E_LED_TOOL_TERRAIN_RAISE, "data/textures/gui/mapeditor/tool_terrain_raise.png");
@@ -73,6 +75,8 @@ void mapeditor::init() {
 		pWndObjects2->set_is(m_pIfSys);
 		gpGfx->add_window(pWndObjects);
 
+		m_input.assign_camera(&m_camera);
+		PRINT_DBG("leveleditor: entering loop");
 		while (!m_bShutdown) {
 			handle_events();
 			gpGfx->begin_frame();
@@ -83,13 +87,14 @@ void mapeditor::init() {
 		}
 		gpGfx->shutdown();
 	});
+	m_thread->swap(t);
 }
 
 bool mapeditor::shutdown() {
 	m_bShutdown = true;
 	PRINT_DBG("mapeditor::shutdown");
-	if (m_thread.joinable()) {
-		m_thread.join();
+	if (m_thread->joinable()) {
+		m_thread->join();
 		return false;
 	}
 	return true;
@@ -98,19 +103,45 @@ bool mapeditor::shutdown() {
 void mapeditor::handle_events() {
 	std::vector<SDL_Event> ev;
 	gpGfx->get_events(ev);
-
+	float delta = gpGfx->delta();
+	m_camera.update(delta);
+	m_input.update();
+	auto& io = ImGui::GetIO();
 	for (auto& e : ev) {
 		switch (e.type) {
+		case SDL_KEYDOWN:
+			//if (io.WantCaptureKeyboard)
+			//	gpGfx->gui_send_event(e);
+			break;
 		case SDL_KEYUP:
-			if (e.key.keysym.sym == SDLK_z) {
-				m_bFreeCamera = !m_bFreeCamera;
+			//if(io.WantCaptureKeyboard)
+			//	gpGfx->gui_send_event(e);
+			//else
+			{
+				if (e.key.keysym.sym == SDLK_z) {
+					m_bFreeCamera = !m_bFreeCamera;
+					gpGfx->capture_mouse(m_bFreeCamera);
+				}
 			}
 			break;
 		case SDL_QUIT:
 			m_bShutdown = true;
 			break;
+		case SDL_MOUSEMOTION:
+			if(m_bFreeCamera)
+				m_input.mouse_motion(e.motion.xrel, e.motion.yrel);
+			//else
+			//gpGfx->gui_send_event(e);
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+			if (!m_bFreeCamera && io.WantCaptureMouse) {
+				PRINT_DBG("Sending MB event: " << m_bFreeCamera << "&" << io.WantCaptureMouse);
+				//gpGfx->gui_send_event(e);
+			}
+			break;
 		default:
-			gpGfx->gui_send_event(e);
+			
 			break;
 		}
 	}
@@ -155,7 +186,10 @@ void mapeditor::draw_world() {
 	glm::mat4 proj = glm::perspective(glm::radians(110.f), (float)gpGfx->width() / (float)gpGfx->height(), 0.0f, 1000.0f);
 	//glm::mat4 proj = glm::perspective(glm::radians(120.f), 1.0f, 0.0f, 1000.0f);
 	//glm::mat4 proj = glm::ortho(0.0f, 512.f, 512.f, 0.0f, 0.0f, 1000.0f);
-	glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.5f, -0.75f));
+	vec3 campos = m_camera.get_pos();
+	glm::mat4 view = glm::translate(glm::mat4(1.0f), (glm::vec3)campos);
+	view = m_camera.get_rot() * view;
+	
 	for (const auto& object : m_objects) {
 		gfx::material pMaterial = gpGfx->model_material(object.iModel);
 		int iShader = pMaterial.get_shader();

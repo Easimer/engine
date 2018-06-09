@@ -13,7 +13,21 @@ mainmenu::exitcode mainmenu::tick() {
 	mainmenu::exitcode ret = EMMENU_OK;
 	char buf[128];
 
-	gpGfx->handle_events();
+	std::vector<SDL_Event> ev;
+	gpGfx->get_events(ev);
+	if (m_bTool) {
+		if (ImGui::Begin("")) {
+			ImGui::Text("Currently in-tool");
+			if (ImGui::Button("Exit")) {
+				m_bTool = false;
+			}
+			ImGui::End();
+		}
+		return ret;
+	}
+
+	for (auto& e : ev)
+		gpGfx->gui_send_event(e);
 
 	if (ImGui::Begin("")) {
 
@@ -30,16 +44,6 @@ mainmenu::exitcode mainmenu::tick() {
 			strncpy(m_szAddressBuf, "127.0.0.1", 128);
 			strncpy(m_szUsername, "LOCALUSER", 128);
 		}
-#if defined(PLAT_WINDOWS) // For now
-		if (ImGui::Button("Level editor")) {
-			ret = EMMENU_LEVEL_EDITOR;
-			auto pElfFn = LINK_MODULE("bin/elf.dll");
-			pElfFn(m_pIfSys);
-			imapeditor* pMapEditor = (imapeditor*)m_pIfSys->query("EngineLevelEditor0001");
-			if (pMapEditor)
-				pMapEditor->init();
-		}
-#endif
 		if (ImGui::Button("Quit")) {
 			ret = EMMENU_QUIT_GAME;
 		}

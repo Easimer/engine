@@ -8,6 +8,9 @@ set(SRC
 
 	gui_objects.cpp
 	gui_objects.h
+
+	input.cpp
+	input.h
 )
 
 set(SRC_PUBLIC
@@ -19,11 +22,13 @@ vs_pch(stdafx)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_library(elf SHARED
+add_library(elf MODULE
 	${SRC}
 	${SRC_PUBLIC}
 	CMakeLists.txt
 )
+
+builddir(elf)
 
 IF(UNIX AND NOT APPLE)
 target_link_libraries(elf dl pthread ifsys graphics imgui)

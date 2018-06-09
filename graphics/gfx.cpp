@@ -162,6 +162,10 @@ bool gfx::gfx_global::init(const char* szTitle, size_t width, size_t height, siz
 	return true;
 }
 
+void gfx::gfx_global::init_glonly() {
+	gladLoadGLLoader(SDL_GL_GetProcAddress);
+}
+
 bool gfx::gfx_global::shutdown()
 {
 	if (pDebugFont) {

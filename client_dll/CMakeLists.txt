@@ -54,7 +54,7 @@ set_source_files_properties(${SRC_NOPCH}
 									PROPERTIES COMPILE_FLAGS "/Y-")
 ENDIF()
 
-add_library(client_dll SHARED
+add_library(client_dll MODULE
 	${SRC_CORE}
 	${SRC_GFX}
 	${SRC_RES_SHADERS}
@@ -63,6 +63,8 @@ add_library(client_dll SHARED
 	${SRC_PUBLIC}
 	CMakeLists.txt
 )
+
+builddir(client_dll)
 
 vs_link_static(client_dll)
 
