@@ -1,5 +1,6 @@
 #pragma once
-#include <gfx/shared_resource.h>
+
+#include <memory>
 
 namespace gfx {
 

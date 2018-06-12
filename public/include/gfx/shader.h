@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 namespace gfx {
 
 	enum shader_type {
@@ -32,4 +34,5 @@ namespace gfx {
 		bool m_bBadShader;
 	};
 
+	using shared_shader = std::shared_ptr<shader>;
 }

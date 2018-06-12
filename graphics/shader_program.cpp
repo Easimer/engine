@@ -56,9 +56,9 @@ shader_program::shader_program(const char * szFilename) :
 	auto vert = parser.at<std::string>("vertex_shader");
 	auto frag = parser.at<std::string>("fragment_shader");
 
-	m_pShaderVert = new shader(vert.c_str(), SHADER_T_VERTEX);
+	m_pShaderVert = std::make_shared<shader>(vert.c_str(), SHADER_T_VERTEX);
 	ASSERT(m_pShaderVert);
-	m_pShaderFrag = new shader(frag.c_str(), SHADER_T_FRAGMENT);
+	m_pShaderFrag = std::make_shared<shader>(frag.c_str(), SHADER_T_FRAGMENT);
 	ASSERT(m_pShaderFrag);
 
 	glAttachShader(m_iID, m_pShaderVert->get_id());
@@ -197,6 +197,17 @@ shader_program::shader_program(const char * szFilename) :
 
 shader_program::~shader_program()
 {
+	// NOTE:
+	// Now that a shader program's shader objects
+	// are stored in shared_ptrs, we cannot 
+	// detach them. We'd need their handle to do
+	// that, but since the shared_ptr destructor is called
+	// before this destructor, we cannot retrieve
+	// that ID.
+	// However according to the OpenGL spec, if a shader
+	// program is deleted, all of it's attached shaders
+	// are automatically detached.
+	/*
 	if (m_pShaderVert)
 	{
 		glDetachShader(m_iID, m_pShaderVert->get_id());
@@ -207,6 +218,9 @@ shader_program::~shader_program()
 		glDetachShader(m_iID, m_pShaderFrag->get_id());
 		delete m_pShaderFrag;
 	}
+	*/
+	if(m_iID)
+		glDeleteProgram(m_iID);
 }
 
 bool shader_program::link()
@@ -249,7 +263,7 @@ void shader_program::validate()
 	}
 }
 
-void gfx::shader_program::attach_shader(shader * pShader)
+void gfx::shader_program::attach_shader(gfx::shared_shader pShader)
 {
 	switch (pShader->get_type()) {
 	case shader_type::SHADER_T_VERTEX:

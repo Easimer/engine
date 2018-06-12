@@ -5,6 +5,7 @@
 #include <gfx/material.h>
 #include <qc.h>
 #include <gfx/light.h>
+#include <memory>
 #include <watchdog.h>
 
 namespace gfx {
@@ -33,7 +34,7 @@ namespace gfx {
 		void use();
 		void validate();
 
-		void attach_shader(shader* pShader);
+		void attach_shader(gfx::shared_shader pShader);
 
 		void print_err();
 
@@ -69,9 +70,12 @@ namespace gfx {
 	private:
 		uint32_t m_iID;
 
-		shader* m_pShaderVert;
-		shader* m_pShaderFrag;
-		shader* m_pShaderGeom;
+		//shader* m_pShaderVert;
+		//shader* m_pShaderFrag;
+		//shader* m_pShaderGeom;
+		std::shared_ptr<shader> m_pShaderVert;
+		std::shared_ptr<shader> m_pShaderFrag;
+		std::shared_ptr<shader> m_pShaderGeom;
 
 		int m_iUniformMatTrans;
 		int m_iUniformMatView;
@@ -98,4 +102,5 @@ namespace gfx {
 		std::map<shader_tex_type, std::string> m_mapTexDefault;
 	};
 
+	using shared_shader_program = std::shared_ptr<shader_program>;
 }
