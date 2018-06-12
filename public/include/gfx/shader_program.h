@@ -34,6 +34,10 @@ namespace gfx {
 		void use();
 		void validate();
 
+		// Check if shader sources have been modified
+		// and reload them
+		void reload();
+
 		void attach_shader(gfx::shared_shader pShader);
 
 		void print_err();
@@ -70,9 +74,6 @@ namespace gfx {
 	private:
 		uint32_t m_iID;
 
-		//shader* m_pShaderVert;
-		//shader* m_pShaderFrag;
-		//shader* m_pShaderGeom;
 		std::shared_ptr<shader> m_pShaderVert;
 		std::shared_ptr<shader> m_pShaderFrag;
 		std::shared_ptr<shader> m_pShaderGeom;
@@ -100,6 +101,10 @@ namespace gfx {
 		std::map<shader_tex_type, std::string> m_mapTexKey;
 		// Default value for key in .mat file
 		std::map<shader_tex_type, std::string> m_mapTexDefault;
+
+		watchdog m_watchdog_vert;
+		watchdog m_watchdog_frag;
+		watchdog m_watchdog_geom;
 	};
 
 	using shared_shader_program = std::shared_ptr<shader_program>;

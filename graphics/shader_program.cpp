@@ -11,23 +11,17 @@
 
 using namespace gfx;
 
-gfx::shader_program::shader_program() :
-	m_pShaderVert(nullptr),
-	m_pShaderFrag(nullptr),
-	m_pShaderGeom(nullptr)
+gfx::shader_program::shader_program()
 {
 	m_iID = glCreateProgram(); ASSERT_OPENGL();
 }
 
-shader_program::shader_program(const char * szFilename) :
-	m_pShaderVert(nullptr),
-	m_pShaderFrag(nullptr),
-	m_pShaderGeom(nullptr)
+shader_program::shader_program(const char * szFilename)
 {
 	mdlc::qc parser = mdlc::qc(std::ifstream(szFilename));
 	
 	
-	if (parser.is_cmd("vertex_shader") && parser.is_cmd("fragment_shader"))
+	if (parser.count("vertex_shader") && parser.count("fragment_shader"))
 	{
 		PRINT_DBG("vertex and frag shader defined");
 	}
@@ -37,7 +31,7 @@ shader_program::shader_program(const char * szFilename) :
 		return;
 	}
 
-	if (parser.is_cmd("name"))
+	if (parser.count("name"))
 	{
 		strncpy(m_szName, parser.at<std::string>("name").c_str(), 64);
 	}
@@ -46,7 +40,7 @@ shader_program::shader_program(const char * szFilename) :
 		PRINT_ERR("Shader has no name!");
 		return;
 	}
-	if (parser.is_cmd("description"))
+	if (parser.count("description"))
 	{
 		strncpy(m_szDescription, parser.at<std::string>("description").c_str(), 128);
 	}
@@ -89,27 +83,27 @@ shader_program::shader_program(const char * szFilename) :
 	glUniform1i(m_iUniformTex4, 3); ASSERT_OPENGL();
 	glUniform1i(m_iUniformTex5, 4); ASSERT_OPENGL();
 
-	if (parser.is_cmd("diffuse_key"))
+	if (parser.count("diffuse_key"))
 		m_mapTexKey.emplace(SHADERTEX_DIFFUSE, parser.at<std::string>("diffuse_key"));
-	if (parser.is_cmd("normal_key"))
+	if (parser.count("normal_key"))
 		m_mapTexKey.emplace(SHADERTEX_NORMAL, parser.at<std::string>("normal_key"));
-	if (parser.is_cmd("specular_key"))
+	if (parser.count("specular_key"))
 		m_mapTexKey.emplace(SHADERTEX_SPECULAR, parser.at<std::string>("specular_key"));
-	if (parser.is_cmd("opacity_key"))
+	if (parser.count("opacity_key"))
 		m_mapTexKey.emplace(SHADERTEX_OPACITY, parser.at<std::string>("opacity_key"));
 
-	if (parser.is_cmd("diffuse_default"))
+	if (parser.count("diffuse_default"))
 		m_mapTexDefault.emplace(SHADERTEX_DIFFUSE, parser.at<std::string>("diffuse_default"));
-	if (parser.is_cmd("normal_default"))
+	if (parser.count("normal_default"))
 		m_mapTexDefault.emplace(SHADERTEX_NORMAL, parser.at<std::string>("normal_default"));
-	if (parser.is_cmd("specular_default"))
+	if (parser.count("specular_default"))
 		m_mapTexDefault.emplace(SHADERTEX_SPECULAR, parser.at<std::string>("specular_default"));
-	if (parser.is_cmd("opacity_default"))
+	if (parser.count("opacity_default"))
 		m_mapTexDefault.emplace(SHADERTEX_OPACITY, parser.at<std::string>("opacity_default"));
 
 	set_bool("bDebugDrawNormalsOnly", false);
 
-	m_bLit = parser.is_cmd("lit") && parser.at<int>("lit") == 1;
+	m_bLit = parser.count("lit") && parser.at<int>("lit") == 1;
 	if (m_bLit) {
 		std::vector<std::string> all_parameters = {
 			"light_no_global",
@@ -123,7 +117,7 @@ shader_program::shader_program(const char * szFilename) :
 		bool bAllParametersSpecified = true;
 
 		for (auto& param : all_parameters) {
-			if (!parser.is_cmd(param.c_str())) {
+			if (!parser.count(param.c_str())) {
 				bAllParametersSpecified = false;
 				missing_parameters.push_back(param);
 			}
@@ -185,7 +179,7 @@ shader_program::shader_program(const char * szFilename) :
 		}
 	}
 
-	if (parser.is_cmd("depth_texture")) {
+	if (parser.count("depth_texture")) {
 		get_uniform_location(parser, "depth_texture", &m_iUniformDepthTexture);
 		glUniform1i(m_iUniformDepthTexture, 5); ASSERT_OPENGL();
 	} else {
@@ -261,6 +255,9 @@ void shader_program::validate()
 		PRINT_ERR("Shader program validation failed: " << szMsg);
 		ASSERT(0);
 	}
+}
+
+void gfx::shader_program::reload() {
 }
 
 void gfx::shader_program::attach_shader(gfx::shared_shader pShader)

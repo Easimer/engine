@@ -5,6 +5,8 @@
 
 class watchdog {
 public:
+	watchdog() : m_bBad(true) {}
+
 	watchdog(const std::string& path) : m_path(path), m_bBad(false) {
 		std::error_code ec;
 		m_path = path;
