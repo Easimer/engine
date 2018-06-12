@@ -7,6 +7,7 @@
 #include <gfx/light.h>
 #include <memory>
 #include <watchdog.h>
+#include <qc.h>
 
 namespace gfx {
 
@@ -34,8 +35,13 @@ namespace gfx {
 		void use();
 		void validate();
 
+		// Caches uniform IDs, loads parameters
+		void setup();
+
 		// Check if shader sources have been modified
 		// and reload them
+		// NOTE: This doesn't watch modifications made
+		// to the QC script linking the shaders
 		void reload();
 
 		void attach_shader(gfx::shared_shader pShader);
@@ -74,9 +80,14 @@ namespace gfx {
 	private:
 		uint32_t m_iID;
 
+		mdlc::qc m_qc;
 		std::shared_ptr<shader> m_pShaderVert;
 		std::shared_ptr<shader> m_pShaderFrag;
 		std::shared_ptr<shader> m_pShaderGeom;
+
+		std::string m_sPathVert;
+		std::string m_sPathFrag;
+		std::string m_sPathGeom;
 
 		int m_iUniformMatTrans;
 		int m_iUniformMatView;

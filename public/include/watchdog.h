@@ -15,9 +15,12 @@ public:
 			m_bBad = true;
 	}
 	bool modified() noexcept {
+		std::error_code ec;
 		if (m_bBad)
 			return false;
-		auto last_write_time = std::filesystem::last_write_time(m_path);
+		auto last_write_time = std::filesystem::last_write_time(m_path, ec);
+		if (ec)
+			return false;
 		bool bRet = (last_write_time != m_last_write_time);
 		m_last_write_time = last_write_time;
 

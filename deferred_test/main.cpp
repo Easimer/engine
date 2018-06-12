@@ -20,6 +20,7 @@ void draw_model(const gfx::framebuffer& fb, gfx::model_id id) {
 	int iShader = pMaterial.get_shader();
 	if (iShader != -1) {
 		gfx::shader_program* pShader = gpGfx->get_shader(iShader);
+		pShader->reload();
 		pShader->set_int("fb_diffuse", fb.diffuse()->handle());
 		pShader->set_int("fb_normal", fb.normal()->handle());
 		gpGfx->bind_model(id);

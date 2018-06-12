@@ -48,6 +48,7 @@ shader::shader(const char * szFilename, shader_type iType)
 
 shader::~shader()
 {
+	PRINT_DBG("gfx::shader: " << m_iID << " deleted");
 	glDeleteShader(m_iID); //ASSERT_OPENGL();
 }
 
