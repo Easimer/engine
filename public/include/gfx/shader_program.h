@@ -5,6 +5,7 @@
 #include <gfx/material.h>
 #include <qc.h>
 #include <gfx/light.h>
+#include <watchdog.h>
 
 namespace gfx {
 
@@ -60,6 +61,7 @@ namespace gfx {
 		void set_global_light(const shader_light& l);
 
 		void set_float(const std::string& name, float v);
+		void set_int(const std::string& name, int v);
 
 	protected:
 		int get_uniform_location(const mdlc::qc& qcp, const std::string& name, int* pLocation);

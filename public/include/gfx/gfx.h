@@ -136,16 +136,28 @@ namespace gfx {
 
 		void capture_mouse(bool b);
 
+		// Uploads all shaders specified in the
+		// data/shaders/shader_manifest.txt file
 		void load_default_shaders();
 
 		model_id upload_terrain(const elf::terrain_chunk& chunk);
 		void draw_terrain(const model_id& id);
 
-		void draw_framebuffer(gfx::framebuffer& fb);
+		void draw_framebuffer(gfx::shared_fb& fb);
 
 		void delete_texture(uint32_t iTex) {
 			m_vec_texgc.push_back(iTex);
 		}
+
+		void depth_test(bool bEnable);
+
+		void* window_handle() const { return pWindow; }
+
+		const std::vector<shader_program*>& shader_list() const {
+			return shaders;
+		}
+
+		void wireframe(bool bEnable);
 
 	private:
 		SDL_Window* pWindow;

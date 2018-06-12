@@ -1,5 +1,8 @@
 #pragma once
 
+#include <gfx/shared_resource.h>
+#include <gfx/texture.h>
+
 namespace gfx {
 
 class framebuffer {
@@ -8,31 +11,28 @@ public:
 	~framebuffer();
 	framebuffer(framebuffer& f);
 
+	void size(size_t nWidth, size_t nHeight);
+
 	void bind();
+	void bindr();
+	void bindw();
 	void unbind();
 
 	uint32_t name() const { return m_iFramebuffer; }
-	const uint32_t diffuse() const { return m_iTexDiffuse; }
-	const uint32_t depth() const { return m_iTexDepth; }
-
-	// Return texture ID and release ownership
-	uint32_t release_diffuse() {
-		auto ret = m_iTexDiffuse;
-		m_iTexDiffuse = 0;
-		return ret;
-	}
-
-	// Return texture ID and release ownership
-	uint32_t release_depth() {
-		auto ret = m_iTexDepth;
-		m_iTexDepth = 0;
-		return ret;
-	}
+	gfx::shared_tex2d diffuse() const { return m_iTexDiffuse; }
+	gfx::shared_tex2d normal() const { return m_iTexNormal; }
+	uint32_t depth() const { return m_iTexDepth; }
 private:
 	uint32_t m_iFramebuffer;
-	uint32_t m_iTexDiffuse;
-	uint32_t m_iTexNormal;
+	gfx::shared_tex2d m_iTexDiffuse;
+	gfx::shared_tex2d m_iTexNormal;
 	uint32_t m_iTexDepth;
+	//uint32_t m_iTexDiffuse;
+	//uint32_t m_iTexNormal;
+	//uint32_t m_iTexDepth;
+	size_t m_nWidth, m_nHeight;
 };
+
+using shared_fb = std::shared_ptr<framebuffer>;
 
 }

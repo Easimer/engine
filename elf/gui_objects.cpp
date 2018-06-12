@@ -112,9 +112,9 @@ void gui_objects::draw_content() {
 			// Retrieve preview texture
 			uint64_t iTex;
 			if (m_preview_cache.count(id)) {
-				iTex = m_preview_cache[id];
+				iTex = m_preview_cache[id]->handle();
 			} else {
-				iTex = generate_preview(id);
+				iTex = generate_preview(id)->handle();
 			}
 			if (ImGui::ObjectButton((ImTextureID)iTex, e.filename.c_str(), button_size)) {
 				PRINT_DBG("Selected object " << filename);
@@ -172,7 +172,7 @@ std::vector<gui_objects::dir_entry> gui_objects::list_files() const {
 	return ret;
 }
 
-uint32_t gui_objects::generate_preview(gfx::model_id id) {
+gfx::shared_tex2d gui_objects::generate_preview(gfx::model_id id) {
 	PRINT_DBG("gui_objects: generating preview for model " << id);
 	// Render model
 	// Get the model's material
@@ -196,18 +196,19 @@ uint32_t gui_objects::generate_preview(gfx::model_id id) {
 		pShader->set_mat_view(glm::value_ptr(view));
 		pShader->set_mat_proj(glm::value_ptr(proj));
 		pShader->set_mat_trans(glm::value_ptr(trans));
-		gfx::framebuffer fb(1600, 900);
-		fb.bind();
+		gfx::shared_fb fb = std::make_shared<gfx::framebuffer>();
+		fb->bind();
 		gpGfx->clear();
 		gpGfx->draw_model();
-		fb.unbind();
+		fb->unbind();
 		
-		uint32_t iTex = fb.release_diffuse();
-		m_preview_cache[id] = iTex;
+		auto texDiffuse = fb->diffuse();
+
+		m_preview_cache[id] = texDiffuse;
 		PRINT_DBG("Generated!");
-		return iTex;
+		return texDiffuse;
 	}
-	return 0;
+	return gfx::shared_tex2d();
 }
 
 REGISTER_WINDOW(gui_objects, "GUIObjects");

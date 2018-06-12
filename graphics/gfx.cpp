@@ -29,8 +29,10 @@ static void gfx_debug_callback(GLenum source, GLenum type, GLuint id,
 		PRINT_DBG("ID: " << id);
 		PRINT_DBG("==============");
 		ASSERT(0);
-	}
-	if (type == GL_DEBUG_TYPE_PERFORMANCE) {
+	} else if (type == GL_DEBUG_TYPE_PERFORMANCE) {
+		PRINT_DBG("OpenGL Performance Warning:");
+		PRINT_DBG(message);
+	} else {
 		PRINT_DBG("OpenGL Warning:");
 		PRINT_DBG(message);
 	}
@@ -682,18 +684,32 @@ model_id gfx::gfx_global::upload_terrain(const elf::terrain_chunk & chunk) {
 void gfx::gfx_global::draw_terrain(const model_id& id) {
 }
 
-void gfx::gfx_global::draw_framebuffer(gfx::framebuffer & fb) {
+void gfx::gfx_global::draw_framebuffer(gfx::shared_fb& fb) {
 	gfx::shader_program* pShader = shaders[get_shader_program_index("framebuffer")];
 	ASSERT(pShader);
 	if (!pShader)
 		return;
 	gfx::material m;
-	m.set_texture(gfx::mat_tex_index::MAT_TEX_DIFFUSE, fb.diffuse());
-	m.set_texture(gfx::mat_tex_index::MAT_TEX_NORMAL, fb.diffuse());
-	m.set_texture(gfx::mat_tex_index::MAT_TEX_OPACITY, fb.diffuse());
-	m.set_texture(gfx::mat_tex_index::MAT_TEX_SPECULAR, fb.diffuse());
+	m.set_texture(gfx::mat_tex_index::MAT_TEX_DIFFUSE, fb->diffuse()->handle());
+	m.set_texture(gfx::mat_tex_index::MAT_TEX_NORMAL, fb->normal()->handle());
+	m.set_texture(gfx::mat_tex_index::MAT_TEX_OPACITY, 0);
+	m.set_texture(gfx::mat_tex_index::MAT_TEX_SPECULAR, 0);
 	//m.set_texture(gfx::mat_tex_index::MAT_TEX_DEPTH, fb.diffuse());
 	pShader->use_material(m);
 	glBindVertexArray(m_iModelQuadVAO);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void gfx::gfx_global::depth_test(bool bEnable) {
+	if (bEnable)
+		glEnable(GL_DEPTH_TEST);
+	else
+		glDisable(GL_DEPTH_TEST);
+}
+
+void gfx::gfx_global::wireframe(bool bEnable) {
+	if(bEnable)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }

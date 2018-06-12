@@ -409,6 +409,12 @@ void gfx::shader_program::set_float(const std::string & name, float v)
 		glUniform1f(iLoc, (GLfloat)v); ASSERT_OPENGL();
 }
 
+void gfx::shader_program::set_int(const std::string & name, int v) {
+	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
+	if (iLoc != -1)
+		glUniform1i(iLoc, (GLint)v); ASSERT_OPENGL();
+}
+
 int shader_program::get_uniform_location(const mdlc::qc& qcp, const std::string& name, int* pLocation)
 {
 	const char* pszCmd = name.c_str();

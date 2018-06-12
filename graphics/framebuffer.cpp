@@ -6,66 +6,75 @@
 
 using namespace gfx;
 
-gfx::framebuffer::framebuffer(size_t nWidth, size_t nHeight) {	
+gfx::framebuffer::framebuffer(size_t nWidth, size_t nHeight) {
 	if (nWidth == 0)
-		nWidth = gpGfx->width();
+		m_nWidth = gpGfx->width();
+	else
+		m_nWidth = nWidth;
 	if (nHeight == 0)
-		nHeight = gpGfx->height();
-	
+		m_nHeight = gpGfx->height();
+	else
+		m_nHeight = nHeight;
+
 	glGenFramebuffers(1, &m_iFramebuffer); ASSERT_OPENGL();
+	PRINT_DBG("Generated framebuffer " << m_iFramebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_iFramebuffer); ASSERT_OPENGL();
 
-	glGenTextures(1, &m_iTexDiffuse); ASSERT_OPENGL();
-	glBindTexture(GL_TEXTURE_2D, m_iTexDiffuse); ASSERT_OPENGL();
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, nWidth, nHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0); ASSERT_OPENGL();
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); ASSERT_OPENGL();
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); ASSERT_OPENGL();
+	m_iTexDiffuse = std::make_shared<gfx::texture2d>();
+	m_iTexDiffuse->bind();
+	m_iTexDiffuse->upload(nullptr, texfmt_rgb, m_nWidth, m_nHeight);
+	m_iTexDiffuse->filtering(texfilt_nearest);
 
-	/*glGenTextures(1, &m_iTexNormal);
-	PRINT_DBG("Normal: " << m_iTexNormal);
-	glBindTexture(GL_TEXTURE_2D, m_iTexNormal);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, gpGfx->width(), gpGfx->height(), 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);*/
-	
+	m_iTexNormal = std::make_shared<gfx::texture2d>();
+	m_iTexNormal->bind();
+	m_iTexNormal->upload(nullptr, texfmt_rgb, m_nWidth, m_nHeight);
+	m_iTexNormal->filtering(texfilt_nearest);
+
 	glGenRenderbuffers(1, &m_iTexDepth); ASSERT_OPENGL();
 	glBindRenderbuffer(GL_RENDERBUFFER, m_iTexDepth); ASSERT_OPENGL();
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, nWidth, nHeight); ASSERT_OPENGL();
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_nWidth, m_nHeight); ASSERT_OPENGL();
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_iTexDepth); ASSERT_OPENGL();
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_iTexDiffuse, 0); ASSERT_OPENGL();
-	GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-	glDrawBuffers(1, DrawBuffers); ASSERT_OPENGL();
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_iTexDiffuse->handle(), 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, m_iTexNormal->handle(), 0);
+	GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, DrawBuffers); ASSERT_OPENGL();
 
 	ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 gfx::framebuffer::~framebuffer() {
-	if (m_iTexDiffuse) {
-		PRINT_DBG("framebuffer diffuse " << m_iTexDiffuse << " DELETED!");
-		glDeleteTextures(1, &m_iTexDiffuse);
-	}
-	if (m_iTexDepth) {
-		glDeleteRenderbuffers(1, &m_iTexDepth);
-	}
-	//if (m_iTexNormal) {
-	//	glDeleteTextures(1, &m_iTexNormal);
-	//}
-	if (m_iFramebuffer)
+	if (m_iFramebuffer) {
 		glDeleteFramebuffers(1, &m_iFramebuffer);
+	}
 }
 
 gfx::framebuffer::framebuffer(framebuffer& f) {
-	m_iTexDiffuse = f.m_iTexDiffuse;
+	/*m_iTexDiffuse = f.m_iTexDiffuse;
 	m_iTexNormal = f.m_iTexNormal;
 	m_iTexDepth = f.m_iTexDepth;
 	m_iFramebuffer = f.m_iFramebuffer;
-	f.m_iFramebuffer = f.m_iTexDiffuse = f.m_iTexNormal = f.m_iTexDepth = 0;
+	f.m_iFramebuffer = f.m_iTexDiffuse = f.m_iTexNormal = f.m_iTexDepth = 0;*/
+	f.m_iFramebuffer = 0;
 }
 
 void gfx::framebuffer::bind() {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_iFramebuffer); ASSERT_OPENGL();
 }
 
+void gfx::framebuffer::bindr() {
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_iFramebuffer); ASSERT_OPENGL();
+}
+
+void gfx::framebuffer::bindw() {
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_iFramebuffer); ASSERT_OPENGL();
+}
+
 void gfx::framebuffer::unbind() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); ASSERT_OPENGL();
+}
+
+void gfx::framebuffer::size(size_t nWidth, size_t nHeight) {
+	m_iTexDiffuse->upload(nullptr, texfmt_rgb, m_nWidth, m_nHeight);
+	m_iTexNormal->upload(nullptr, texfmt_rgb, m_nWidth, m_nHeight);
 }

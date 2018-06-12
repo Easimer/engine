@@ -14,6 +14,8 @@ set(SRC
 	
 	emf_loader.cpp
 	smd_loader.cpp
+
+	texture.cpp
 )
 
 set(SRC_NOPCH
@@ -37,6 +39,7 @@ set(SRC_PUBLIC
 	../public/include/gfx/textures.h
 	../public/include/gfx/window.h
 	../public/include/gfx/window_register.h
+	../public/include/gfx/texture.h
 )
 
 vs_pch(stdafx)

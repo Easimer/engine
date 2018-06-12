@@ -15,9 +15,6 @@
 class gui_objects : public gfx::window {
 public:
 	virtual ~gui_objects() {
-		for (auto& kv : m_preview_cache) {
-			gpGfx->delete_texture(kv.second);
-		}
 	}
 	virtual const char* get_title() override { return "Objects"; }
 	virtual float min_width() override { return gpGfx->width(); }
@@ -45,13 +42,13 @@ protected:
 		return path;
 	}
 
-	uint32_t generate_preview(gfx::model_id id);
+	gfx::shared_tex2d generate_preview(gfx::model_id id);
 private:
 	std::vector<std::string> m_stack_path;
 	std::vector<dir_entry> m_cur_entries;
 
 	std::map<std::string, gfx::model_id> m_object_cache;
-	std::map<gfx::model_id, uint32_t> m_preview_cache;
+	std::map<gfx::model_id, gfx::shared_tex2d> m_preview_cache;
 
 	ifsys* m_pISys;
 	imapeditor* m_pMapEditor = nullptr;
