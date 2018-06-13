@@ -59,19 +59,22 @@ gfx::framebuffer::framebuffer(framebuffer& f) {
 }
 
 void gfx::framebuffer::bind() {
-	glBindFramebuffer(GL_FRAMEBUFFER, m_iFramebuffer); ASSERT_OPENGL();
+	if (m_iFramebuffer)
+		glBindFramebuffer(GL_FRAMEBUFFER, m_iFramebuffer);
 }
 
 void gfx::framebuffer::bindr() {
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_iFramebuffer); ASSERT_OPENGL();
+	if (m_iFramebuffer)
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_iFramebuffer);
 }
 
 void gfx::framebuffer::bindw() {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_iFramebuffer); ASSERT_OPENGL();
+	if(m_iFramebuffer)
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_iFramebuffer);
 }
 
 void gfx::framebuffer::unbind() {
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); ASSERT_OPENGL();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void gfx::framebuffer::size(size_t nWidth, size_t nHeight) {

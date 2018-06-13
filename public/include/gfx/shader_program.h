@@ -8,6 +8,7 @@
 #include <memory>
 #include <watchdog.h>
 #include <qc.h>
+#include <unordered_map>
 
 namespace gfx {
 
@@ -112,6 +113,8 @@ namespace gfx {
 		std::map<shader_tex_type, std::string> m_mapTexKey;
 		// Default value for key in .mat file
 		std::map<shader_tex_type, std::string> m_mapTexDefault;
+		// Uniform name->location cache
+		std::unordered_map<std::string, int32_t> m_mapUniforms;
 
 		watchdog m_watchdog_vert;
 		watchdog m_watchdog_frag;

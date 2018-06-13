@@ -25,7 +25,14 @@ static void gfx_debug_callback(GLenum source, GLenum type, GLuint id,
 		PRINT_DBG("==============");
 		PRINT_DBG("OpenGL Error:");
 		PRINT_DBG(message);
-		PRINT_DBG("Source: " << source);
+		switch (source) {
+		case GL_DEBUG_SOURCE_API: PRINT_DBG("Source: API"); break;
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM: PRINT_DBG("Source: Window system"); break;
+		case GL_DEBUG_SOURCE_SHADER_COMPILER: PRINT_DBG("Source: Shader compiler"); break;
+		case GL_DEBUG_SOURCE_THIRD_PARTY: PRINT_DBG("Source: Third party"); break;
+		case GL_DEBUG_SOURCE_APPLICATION: PRINT_DBG("Source: Application"); break;
+		case GL_DEBUG_SOURCE_OTHER: PRINT_DBG("Source: Other"); break;
+		}
 		PRINT_DBG("ID: " << id);
 		PRINT_DBG("==============");
 		ASSERT(0);
@@ -254,22 +261,30 @@ void gfx::gfx_global::set_viewport(int sx, int sy, int ex, int ey)
 	nViewportW = ex - sx;
 	nViewportH = ey - sy;
 
-	glViewport(nViewportX, nViewportY, nViewportW, nViewportH); ASSERT_OPENGL();
-	glScissor(nViewportX, nViewportY, nViewportW, nViewportH); ASSERT_OPENGL();
-	glEnable(GL_SCISSOR_TEST); ASSERT_OPENGL();
+	// We could allow zero size here, but that is nonsensical
+	if (nViewportW > 0 && nViewportH > 0) {
+		glViewport(nViewportX, nViewportY, nViewportW, nViewportH);
+		glScissor(nViewportX, nViewportY, nViewportW, nViewportH);
+		glEnable(GL_SCISSOR_TEST);
+	}
+}
+
+void gfx::gfx_global::set_viewport(int w, int h) {
+	if(w > 0 && h > 0)
+		glViewport(0, 0, w, h);
 }
 
 void gfx::gfx_global::restore_viewport()
 {
 	GLsizei W = nWidth;
 	GLsizei H = nHeight;
-	glViewport(0, 0, W, H); ASSERT_OPENGL();
-	glScissor(0, 0, W, H); ASSERT_OPENGL();
-	glDisable(GL_SCISSOR_TEST); ASSERT_OPENGL();
+	glViewport(0, 0, W, H);
+	glScissor(0, 0, W, H);
+	glDisable(GL_SCISSOR_TEST);
 }
 
 void gfx::gfx_global::clear() {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); ASSERT_OPENGL();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void gfx::gfx_global::clear_color(float r, float g, float b) {
@@ -511,19 +526,31 @@ void gfx::gfx_global::unload_model(model_id mdl)
 
 void gfx::gfx_global::bind_model(model_id mdl)
 {
-	glBindVertexArray(mdl); ASSERT_OPENGL();
-	current_model = mdl;
+	if (mdl) {
+		glBindVertexArray(mdl);
+		current_model = mdl;
+	} else {
+		ASSERT(0);
+	}
 }
 
 void gfx::gfx_global::unbind_model()
 {
-	glBindVertexArray(0); ASSERT_OPENGL();
+	glBindVertexArray(0);
 	current_model = 0;
 }
 
 void gfx::gfx_global::draw_model()
 {
-	glDrawArrays(GL_TRIANGLES, 0, model_vertexcount_map[current_model]); ASSERT_OPENGL();
+	if (current_model) {
+		if (model_vertexcount_map.count(current_model)) {
+			glDrawArrays(GL_TRIANGLES, 0, model_vertexcount_map[current_model]);
+		} else {
+			ASSERT(0);
+		}
+	} else {
+		ASSERT(0);
+	}
 }
 
 long long int gfx::gfx_global::use_shader(long long int shader)

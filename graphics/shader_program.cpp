@@ -116,7 +116,7 @@ bool shader_program::link()
 
 void shader_program::use()
 {
-	glUseProgram(m_iID); ASSERT_OPENGL();
+	glUseProgram(m_iID);
 }
 
 void shader_program::validate()
@@ -309,20 +309,26 @@ void shader_program::print_err()
 
 void shader_program::set_mat_trans(void * pMat)
 {
-	glUseProgram(m_iID); ASSERT_OPENGL();
-	glUniformMatrix4fv(m_iUniformMatTrans, 1, GL_FALSE, (const GLfloat*)pMat); ASSERT_OPENGL();
+	if (m_iID && pMat) {
+		glUseProgram(m_iID);
+		glUniformMatrix4fv(m_iUniformMatTrans, 1, GL_FALSE, (const GLfloat*)pMat);
+	}
 }
 
 void shader_program::set_mat_view(void * pMat)
 {
-	glUseProgram(m_iID); ASSERT_OPENGL();
-	glUniformMatrix4fv(m_iUniformMatView, 1, GL_FALSE, (const GLfloat*)pMat); ASSERT_OPENGL();
+	if (m_iID && pMat) {
+		glUseProgram(m_iID);
+		glUniformMatrix4fv(m_iUniformMatView, 1, GL_FALSE, (const GLfloat*)pMat);
+	}
 }
 
 void shader_program::set_mat_proj(void * pMat)
 {
-	glUseProgram(m_iID); ASSERT_OPENGL();
-	glUniformMatrix4fv(m_iUniformMatProj, 1, GL_FALSE, (const GLfloat*)pMat); ASSERT_OPENGL();
+	if (m_iID && pMat) {
+		glUseProgram(m_iID);
+		glUniformMatrix4fv(m_iUniformMatProj, 1, GL_FALSE, (const GLfloat*)pMat);
+	}
 }
 
 bool shader_program::load_material(material & mat)
@@ -354,39 +360,58 @@ bool shader_program::load_material(material & mat)
 void shader_program::use_material(const material & mat)
 {
 	for (size_t i = 0; i < SHADERTEX_MAX; i++) {
-		glActiveTexture(GL_TEXTURE0 + i); ASSERT_OPENGL();
+		glActiveTexture(GL_TEXTURE0 + i);
 		uint32_t iTex = mat.get_texture((mat_tex_index)i);
-		glBindTexture(GL_TEXTURE_2D, iTex); ASSERT_OPENGL();
+		glBindTexture(GL_TEXTURE_2D, iTex);
 	}
 }
 
 void shader_program::set_vec3(const std::string & name, const math::vector3<float>& v)
 {
-	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
-	if(iLoc != -1)
-		glUniform3fv(iLoc, 1, v.ptr()); ASSERT_OPENGL();
-	
+	int32_t iLoc = 0;
+	if (m_mapUniforms.count(name)) {
+		iLoc = m_mapUniforms.at(name);
+	} else {
+		iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
+		m_mapUniforms[name] = iLoc;
+	}
+	glUniform3fv(iLoc, 1, v.ptr()); ASSERT_OPENGL();
 }
 
 void shader_program::set_vec4(const std::string & name, const float * v)
 {
-	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
-	if (iLoc != -1)
-		glUniform4fv(iLoc, 1, v); ASSERT_OPENGL();
+	int32_t iLoc = 0;
+	if (m_mapUniforms.count(name)) {
+		iLoc = m_mapUniforms.at(name);
+	} else {
+		iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
+		m_mapUniforms[name] = iLoc;
+	}
+	glUniform4fv(iLoc, 1, v); ASSERT_OPENGL();
 }
 
 void shader_program::set_mat4(const std::string & name, const void * m)
 {
-	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
-	if (iLoc != -1)
-		glUniformMatrix4fv(iLoc, 1, GL_FALSE, (const GLfloat*)m); ASSERT_OPENGL();
+	int32_t iLoc = 0;
+	if (m_mapUniforms.count(name)) {
+		iLoc = m_mapUniforms.at(name);
+	} else {
+		iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
+		m_mapUniforms[name] = iLoc;
+	}
+	glUniformMatrix4fv(iLoc, 1, GL_FALSE, (const GLfloat*)m);
 }
 
 void shader_program::set_bool(const std::string & name, bool v)
 {
-	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
-	if (iLoc != -1)
-		glUniform1i(iLoc, (v ? 1 : 0)); ASSERT_OPENGL();
+	int32_t iLoc = 0;
+	if (m_mapUniforms.count(name)) {
+		iLoc = m_mapUniforms.at(name);
+	} else {
+		iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
+		m_mapUniforms[name] = iLoc;
+	}
+	glUniform1i(iLoc, v ? 1 : 0);
 }
 
 void shader_program::set_local_light(const shader_light & l)
@@ -439,15 +464,25 @@ void shader_program::set_global_light(const shader_light & l)
 
 void gfx::shader_program::set_float(const std::string & name, float v)
 {
-	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
-	if (iLoc != -1)
-		glUniform1f(iLoc, (GLfloat)v); ASSERT_OPENGL();
+	int32_t iLoc = 0;
+	if (m_mapUniforms.count(name)) {
+		iLoc = m_mapUniforms.at(name);
+	} else {
+		iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
+		m_mapUniforms[name] = iLoc;
+	}
+	glUniform1f(iLoc, (GLfloat)v);
 }
 
 void gfx::shader_program::set_int(const std::string & name, int v) {
-	auto iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
-	if (iLoc != -1)
-		glUniform1i(iLoc, (GLint)v); ASSERT_OPENGL();
+	int32_t iLoc = 0;
+	if (m_mapUniforms.count(name)) {
+		iLoc = m_mapUniforms.at(name);
+	} else {
+		iLoc = glGetUniformLocation(m_iID, name.c_str()); ASSERT_OPENGL();
+		m_mapUniforms[name] = iLoc;
+	}
+	glUniform1i(iLoc, (GLint)v);
 }
 
 int shader_program::get_uniform_location(const mdlc::qc& qcp, const std::string& name, int* pLocation)

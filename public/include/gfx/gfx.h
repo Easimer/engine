@@ -59,6 +59,8 @@ namespace gfx {
 		// glViewport wrapper
 		// Start and end coordinates relative to the UPPER-LEFT CORNER of the screen
 		void set_viewport(int sx, int sy, int ex, int ey);
+		// glViewport(0, 0, w, h)
+		void set_viewport(int w, int h);
 		// Restore viewport to fullscreen
 		void restore_viewport();
 		// Clears the screen
