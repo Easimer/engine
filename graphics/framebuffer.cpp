@@ -35,6 +35,11 @@ gfx::framebuffer::framebuffer(size_t nWidth, size_t nHeight) {
 	m_iTexWorldPos->upload(nullptr, texfmt_rgb, m_nWidth, m_nHeight);
 	m_iTexWorldPos->filtering(texfilt_nearest);
 
+	m_iTexSpecular = std::make_shared<gfx::texture2d>();
+	m_iTexSpecular->bind();
+	m_iTexSpecular->upload(nullptr, texfmt_rgb, m_nWidth, m_nHeight);
+	m_iTexSpecular->filtering(texfilt_nearest);
+
 	glGenRenderbuffers(1, &m_iTexDepth); ASSERT_OPENGL();
 	glBindRenderbuffer(GL_RENDERBUFFER, m_iTexDepth); ASSERT_OPENGL();
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_nWidth, m_nHeight); ASSERT_OPENGL();
@@ -42,8 +47,9 @@ gfx::framebuffer::framebuffer(size_t nWidth, size_t nHeight) {
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_iTexDiffuse->handle(), 0);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, m_iTexNormal->handle(), 0);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, m_iTexWorldPos->handle(), 0);
-	GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-	glDrawBuffers(3, DrawBuffers); ASSERT_OPENGL();
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, m_iTexSpecular->handle(), 0);
+	GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+	glDrawBuffers(4, DrawBuffers); ASSERT_OPENGL();
 
 	ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -86,4 +92,6 @@ void gfx::framebuffer::unbind() {
 void gfx::framebuffer::size(size_t nWidth, size_t nHeight) {
 	m_iTexDiffuse->upload(nullptr, texfmt_rgb, m_nWidth, m_nHeight);
 	m_iTexNormal->upload(nullptr, texfmt_rgb, m_nWidth, m_nHeight);
+	m_iTexWorldPos->upload(nullptr, texfmt_rgb, m_nWidth, m_nHeight);
+	m_iTexSpecular->upload(nullptr, texfmt_rgb, m_nWidth, m_nHeight);
 }

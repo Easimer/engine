@@ -728,9 +728,12 @@ void gfx::gfx_global::draw_framebuffer(gfx::shared_fb& fb) {
 	glBindTexture(GL_TEXTURE_2D, fb->normal()->handle());
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, fb->worldpos()->handle());
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, fb->specular()->handle());
 	pShader->set_int("tex_diffuse", 0);
 	pShader->set_int("tex_normal", 1);
 	pShader->set_int("tex_worldpos", 2);
+	pShader->set_int("tex_specular", 3);
 	
 	glBindVertexArray(m_iModelQuadVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);

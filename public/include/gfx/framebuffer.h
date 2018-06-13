@@ -22,12 +22,14 @@ public:
 	gfx::shared_tex2d diffuse() const { return m_iTexDiffuse; }
 	gfx::shared_tex2d normal() const { return m_iTexNormal; }
 	gfx::shared_tex2d worldpos() const { return m_iTexWorldPos; }
+	gfx::shared_tex2d specular() const { return m_iTexSpecular; }
 	uint32_t depth() const { return m_iTexDepth; }
 private:
 	uint32_t m_iFramebuffer;
 	gfx::shared_tex2d m_iTexDiffuse;
 	gfx::shared_tex2d m_iTexNormal;
 	gfx::shared_tex2d m_iTexWorldPos;
+	gfx::shared_tex2d m_iTexSpecular;
 	uint32_t m_iTexDepth;
 	//uint32_t m_iTexDiffuse;
 	//uint32_t m_iTexNormal;

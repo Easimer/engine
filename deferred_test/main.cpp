@@ -97,6 +97,11 @@ int main() {
 			ImGui::Text("World position");
 			ImGui::Image((ImTextureID)fb->worldpos()->handle(), fbsiz, uv0, uv1);
 			ImGui::EndGroup();
+			ImGui::SameLine();
+			ImGui::BeginGroup();
+			ImGui::Text("Specular");
+			ImGui::Image((ImTextureID)fb->specular()->handle(), fbsiz, uv0, uv1);
+			ImGui::EndGroup();
 		}
 		ImGui::End();
 		gpGfx->end_frame();
