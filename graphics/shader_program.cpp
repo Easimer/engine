@@ -143,11 +143,11 @@ void gfx::shader_program::setup() {
 	get_uniform_location(m_qc, "uniform_view", &m_iUniformMatView);
 	get_uniform_location(m_qc, "uniform_proj", &m_iUniformMatProj);
 
-	m_iUniformTex1 = glGetUniformLocation(m_iID, "tex_tex1"); ASSERT_OPENGL();
-	m_iUniformTex2 = glGetUniformLocation(m_iID, "tex_tex2"); ASSERT_OPENGL();
-	m_iUniformTex3 = glGetUniformLocation(m_iID, "tex_tex3"); ASSERT_OPENGL();
-	m_iUniformTex4 = glGetUniformLocation(m_iID, "tex_tex4"); ASSERT_OPENGL();
-	m_iUniformTex5 = glGetUniformLocation(m_iID, "tex_tex5"); ASSERT_OPENGL();
+	m_iUniformTex1 = glGetUniformLocation(m_iID, "tex_diffuse"); ASSERT_OPENGL();
+	m_iUniformTex2 = glGetUniformLocation(m_iID, "tex_normal"); ASSERT_OPENGL();
+	m_iUniformTex3 = glGetUniformLocation(m_iID, "tex_specular"); ASSERT_OPENGL();
+	m_iUniformTex4 = glGetUniformLocation(m_iID, "tex_opacity"); ASSERT_OPENGL();
+	m_iUniformTex5 = glGetUniformLocation(m_iID, "tex_UNUSED"); ASSERT_OPENGL();
 	m_iUniformTime = glGetUniformLocation(m_iID, "game_time"); ASSERT_OPENGL();
 
 	glUniform1i(m_iUniformTex1, 0); ASSERT_OPENGL();

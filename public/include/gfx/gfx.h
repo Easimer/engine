@@ -66,7 +66,7 @@ namespace gfx {
 		// Clears the screen
 		void clear();
 		// Set the clear color
-		void clear_color(float r, float g, float b);
+		void clear_color(float r = -1.0f, float g = -1.0f, float b = -1.0f);
 
 		// Get shader program index by name
 		int get_shader_program_index(const std::string& name);
@@ -160,6 +160,7 @@ namespace gfx {
 		}
 
 		void wireframe(bool bEnable);
+		void blend(bool bEnable);
 
 	private:
 		SDL_Window* pWindow;

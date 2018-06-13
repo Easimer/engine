@@ -94,7 +94,7 @@ bool gfx::gfx_global::init(const char* szTitle, size_t width, size_t height, siz
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); ASSERT_OPENGL();
 
 	glEnable(GL_CULL_FACE); ASSERT_OPENGL();
-	glCullFace(GL_BACK); ASSERT_OPENGL();
+	//glCullFace(GL_BACK); ASSERT_OPENGL();
 	glFrontFace(GL_CCW); ASSERT_OPENGL();
 
 	glEnable(GL_DEPTH_TEST); ASSERT_OPENGL();
@@ -288,7 +288,11 @@ void gfx::gfx_global::clear() {
 }
 
 void gfx::gfx_global::clear_color(float r, float g, float b) {
-	glClearColor(r, g, b, 1.0f);
+	if (r < 0 || g < 0 || b < 0) {
+		glClearColor(0.39215686274f, 0.58431372549f, 0.9294117647f, 1.0f);
+	} else {
+		glClearColor(r, g, b, 1.0f);
+	}
 }
 
 int gfx_global::get_shader_program_index(const std::string & name)
@@ -712,17 +716,22 @@ void gfx::gfx_global::draw_terrain(const model_id& id) {
 }
 
 void gfx::gfx_global::draw_framebuffer(gfx::shared_fb& fb) {
-	gfx::shader_program* pShader = shaders[get_shader_program_index("framebuffer")];
+	gfx::shader_program* pShader = shaders[get_shader_program_index("framebuffer_deferred")];
 	ASSERT(pShader);
 	if (!pShader)
 		return;
-	gfx::material m;
-	m.set_texture(gfx::mat_tex_index::MAT_TEX_DIFFUSE, fb->diffuse()->handle());
-	m.set_texture(gfx::mat_tex_index::MAT_TEX_NORMAL, fb->normal()->handle());
-	m.set_texture(gfx::mat_tex_index::MAT_TEX_OPACITY, 0);
-	m.set_texture(gfx::mat_tex_index::MAT_TEX_SPECULAR, 0);
-	//m.set_texture(gfx::mat_tex_index::MAT_TEX_DEPTH, fb.diffuse());
-	pShader->use_material(m);
+	pShader->reload();
+	pShader->use();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, fb->diffuse()->handle());
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, fb->normal()->handle());
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, fb->worldpos()->handle());
+	pShader->set_int("tex_diffuse", 0);
+	pShader->set_int("tex_normal", 1);
+	pShader->set_int("tex_worldpos", 2);
+	
 	glBindVertexArray(m_iModelQuadVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
@@ -739,4 +748,11 @@ void gfx::gfx_global::wireframe(bool bEnable) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+void gfx::gfx_global::blend(bool bEnable) {
+	if (bEnable)
+		glEnable(GL_BLEND);
+	else
+		glDisable(GL_BLEND);
 }
