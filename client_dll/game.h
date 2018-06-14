@@ -30,4 +30,5 @@ private:
 	glm::mat4 m_proj;
 	input m_input;
 	event_handler m_evhandler;
+	gfx::shared_fb m_fb;
 };

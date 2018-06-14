@@ -44,6 +44,7 @@ int main() {
 	gpGfx->load_default_shaders();
 
 	auto mdl1 = gpGfx->load_model("data/models/csoldier.emf");
+	auto mdl2 = gpGfx->load_model("data/models/wolf.emf");
 	gfx::shared_fb fb = std::make_shared<gfx::framebuffer>(640, 360);
 	ImVec2 uv0(0, 1); 
 	ImVec2 uv1(1, 0);
@@ -72,6 +73,7 @@ int main() {
 		gpGfx->clear();
 		//gpGfx->wireframe(true);
 		draw_model(*fb, mdl1);
+		draw_model(*fb, mdl2);
 		//gpGfx->wireframe(false);
 		gpGfx->restore_viewport();
 		fb->unbind();

@@ -40,8 +40,8 @@ static void gfx_debug_callback(GLenum source, GLenum type, GLuint id,
 		PRINT_DBG("OpenGL Performance Warning:");
 		PRINT_DBG(message);
 	} else {
-		PRINT_DBG("OpenGL Warning:");
-		PRINT_DBG(message);
+		//PRINT_DBG("OpenGL Warning:");
+		//PRINT_DBG(message);
 	}
 }
 
@@ -740,10 +740,12 @@ void gfx::gfx_global::draw_framebuffer(gfx::shared_fb& fb) {
 }
 
 void gfx::gfx_global::depth_test(bool bEnable) {
-	if (bEnable)
+	if (bEnable) {
 		glEnable(GL_DEPTH_TEST);
-	else
+		glDepthFunc(GL_LESS);
+	} else {
 		glDisable(GL_DEPTH_TEST);
+	}
 }
 
 void gfx::gfx_global::wireframe(bool bEnable) {

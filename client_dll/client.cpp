@@ -80,7 +80,7 @@ private:
 };
 
 void client_main(client* cli) {
-	if (!gpGfx->init("game")) {
+	if (!gpGfx->init("game", 1600, 900)) {
 		PRINT_ERR("client::init: couldn't initialize graphics subsystem!!!!");
 		cli->m_bShutdown = true;
 		return;
