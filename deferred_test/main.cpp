@@ -50,7 +50,13 @@ int main() {
 	ImVec2 uv1(1, 0);
 	ImVec2 fbsiz(640, 360);
 	gpGfx->depth_test(true);
+	const int base_width = 640;
+	const int base_height = 360;
+	float flFBLambdaCur = 1.0f;
+	int cur_width = base_width;
+	int cur_height = base_height;
 	while (1) {
+		float flFBLambda = flFBLambdaCur;
 		if (gpGfx->handle_events())
 			break;
 
@@ -68,7 +74,7 @@ int main() {
 		gpGfx->blend(false);
 		// Render to G-Buffer
 		fb->bind();	
-		gpGfx->set_viewport(640, 360);
+		gpGfx->set_viewport(cur_width, cur_height);
 		gpGfx->clear_color(0, 0, 0);
 		gpGfx->clear();
 		//gpGfx->wireframe(true);
@@ -104,9 +110,17 @@ int main() {
 			ImGui::Text("Specular");
 			ImGui::Image((ImTextureID)fb->specular()->handle(), fbsiz, uv0, uv1);
 			ImGui::EndGroup();
+			ImGui::SliderFloat("##empty", &flFBLambda, 0.0f, 16.0f);
+			ImGui::Text("Internal resolution: %fx%f\n", base_width * flFBLambdaCur, base_width * flFBLambdaCur);
 		}
 		ImGui::End();
 		gpGfx->end_frame();
+		if (flFBLambda != flFBLambdaCur) {
+			fb = std::make_shared<gfx::framebuffer>(base_width * flFBLambda, base_height * flFBLambda);
+			flFBLambdaCur = flFBLambda;
+			cur_width = flFBLambdaCur * base_width;
+			cur_height = flFBLambdaCur * base_height;
+		}
 	}
 
 	gpGfx->shutdown();
