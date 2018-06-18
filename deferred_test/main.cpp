@@ -68,20 +68,16 @@ int main() {
 
 		gfx::pipeline::draw_order cmd1 = { mdl1, shader1, mat_trans, view, mat_proj };
 		gfx::pipeline::draw_order cmd2 = { mdl2, shader2, mat_trans, view, mat_proj };
-		PRINT_DBG("BEGIN");
+		
 		pipeline.begin();
 
 		if (ImGui::Begin("Pipeline Test")) {
 
 		}
 		ImGui::End();
-		PRINT_DBG("DRAW1");
 		pipeline.draw(cmd1);
-		PRINT_DBG("DRAW2");
 		pipeline.draw(cmd2);
-		PRINT_DBG("FINALIZE");
 		pipeline.finalize();
-		PRINT_DBG("OVER");
 		//draw_model(*fb, mdl1);
 		//draw_model(*fb, mdl2);
 	}
