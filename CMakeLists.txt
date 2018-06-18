@@ -87,9 +87,6 @@ SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=add
 ENDIF()
 SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-IF(MSVC)
-	add_subdirectory(game) # Soon to be deleted, only need the project file in VS
-ENDIF()
 #add_subdirectory(smd_parser)
 add_subdirectory(phys)
 add_subdirectory(mathlib)

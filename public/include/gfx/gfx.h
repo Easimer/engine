@@ -7,21 +7,19 @@
 #include <functional>
 #include <memory>
 
+#include <gfx/defs.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <gfx/window.h>
 #include <gfx/model.h>
 #include <gfx/material.h>
 #include <gfx/framebuffer.h>
-
 #include <elf/elf.h>
 
 namespace gfx {
 	class shader;
 	class shader_program;
 	class material;
-
-	typedef uint32_t model_id;
 
 	enum mdl_vertexattrib {
 		MDL_VBO_POSITION = 0, // contains vertex position (3 GLfloats)

@@ -16,6 +16,7 @@ set(SRC
 	smd_loader.cpp
 
 	texture.cpp
+	pipeline.cpp
 )
 
 set(SRC_NOPCH
@@ -27,6 +28,7 @@ set(SRC_PUBLIC
 	../public/include/gfx/smd_loader.h
 	../public/include/gfx/emf_loader.h
 
+	../public/include/gfx/defs.h
 	../public/include/gfx/camera.h
 	../public/include/gfx/framebuffer.h
 	../public/include/gfx/gfx.h
@@ -42,6 +44,14 @@ set(SRC_PUBLIC
 	../public/include/gfx/texture.h
 )
 
+set(SRC_PUBLIC_PIPELINE
+	../public/include/gfx/pipeline/pipeline.h
+	../public/include/gfx/pipeline/stage.h
+	../public/include/gfx/pipeline/intake.h
+	../public/include/gfx/pipeline/delivery.h
+	../public/include/gfx/pipeline/intermediate.h
+)
+
 vs_pch(stdafx)
 
 IF(WIN32)
@@ -55,6 +65,7 @@ add_library(graphics STATIC
 	${SRC}
 	${SRC_NOPCH}
 	${SRC_PUBLIC}
+	${SRC_PUBLIC_PIPELINE}
 	CMakeLists.txt
 )
 IF(WIN32)
@@ -67,6 +78,7 @@ IF(WIN32)
 # Create filters
 source_group("Source Files" FILES ${SRC})
 source_group("Public Headers" FILES ${SRC_PUBLIC})
+source_group("Public Headers\\Pipeline" FILES ${SRC_PUBLIC_PIPELINE})
 ENDIF()
 
 vs_link_no(graphics)

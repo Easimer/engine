@@ -392,7 +392,7 @@ gfx::model_id gfx::gfx_global::load_model(const std::string & filename)
 	}
 	auto mid = load_model(mdl);
 	filename_model_map.emplace(filename, mid);
-	return (gfx::model_id)mid;
+	return mid;
 }
 
 gfx::model_id gfx::gfx_global::load_model(const gfx::model & mdl)
@@ -430,11 +430,16 @@ gfx::model_id gfx::gfx_global::load_model(const gfx::model & mdl)
 	size_t nUVsSiz = mdl.triangles.size() * 6;
 	size_t nBoneIDsSiz = mdl.triangles.size() * 3;
 	size_t nMatIDsSiz = mdl.triangles.size() * 3;
-	float* aflPositions = new float[nPositionsSiz];
-	float* aflNormals = new float[nNormalsSiz];
-	float* aflUVs = new float[nUVsSiz];
-	uint32_t* anBoneIDs = new uint32_t[nBoneIDsSiz];
-	uint8_t* anMatIDs = new uint8_t[nMatIDsSiz * 3];
+	std::unique_ptr<float[]> aflPositions = std::make_unique<float[]>(nPositionsSiz);
+	std::unique_ptr<float[]> aflNormals = std::make_unique<float[]>(nNormalsSiz);
+	std::unique_ptr<float[]> aflUVs = std::make_unique<float[]>(nUVsSiz);
+	std::unique_ptr<uint32_t[]> anBoneIDs = std::make_unique<uint32_t[]>(nBoneIDsSiz);
+	std::unique_ptr<uint8_t[]> anMatIDs = std::make_unique<uint8_t[]>(nMatIDsSiz);
+	//float* aflPositions = new float[nPositionsSiz];
+	//float* aflNormals = new float[nNormalsSiz];
+	//float* aflUVs = new float[nUVsSiz];
+	//uint32_t* anBoneIDs = new uint32_t[nBoneIDsSiz];
+	//uint8_t* anMatIDs = new uint8_t[nMatIDsSiz * 3];
 
 	for (size_t iTriangle = 0; iTriangle < mdl.triangles.size(); iTriangle++)
 	{
@@ -457,45 +462,46 @@ gfx::model_id gfx::gfx_global::load_model(const gfx::model & mdl)
 	}
 	// Upload vertex positions
 	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_POSITION]); ASSERT_OPENGL();
-	glBufferData(GL_ARRAY_BUFFER, nPositionsSiz * sizeof(float), aflPositions, GL_STATIC_DRAW); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nPositionsSiz * sizeof(float), aflPositions.get(), GL_STATIC_DRAW); ASSERT_OPENGL();
 	glVertexAttribPointer(MDL_VBO_POSITION, 3, GL_FLOAT, GL_FALSE, 0, 0); ASSERT_OPENGL();
 	glEnableVertexAttribArray(MDL_VBO_POSITION);
 	// Upload vertex_normals
 	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_NORMAL]); ASSERT_OPENGL();
-	glBufferData(GL_ARRAY_BUFFER, nNormalsSiz * sizeof(float), aflNormals, GL_STATIC_DRAW); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nNormalsSiz * sizeof(float), aflNormals.get(), GL_STATIC_DRAW); ASSERT_OPENGL();
 	glVertexAttribPointer(MDL_VBO_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, 0); ASSERT_OPENGL();
 	glEnableVertexAttribArray(MDL_VBO_NORMAL);
 	// Upload UVs
 	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_UV]); ASSERT_OPENGL();
-	glBufferData(GL_ARRAY_BUFFER, nUVsSiz * sizeof(float), aflUVs, GL_STATIC_DRAW); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nUVsSiz * sizeof(float), aflUVs.get(), GL_STATIC_DRAW); ASSERT_OPENGL();
 	glVertexAttribPointer(MDL_VBO_UV, 2, GL_FLOAT, GL_FALSE, 0, 0); ASSERT_OPENGL();
 	glEnableVertexAttribArray(MDL_VBO_UV);
 	// Upload bones
 	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_BONE]); ASSERT_OPENGL();
-	glBufferData(GL_ARRAY_BUFFER, nBoneIDsSiz * sizeof(uint32_t), anBoneIDs, GL_STATIC_DRAW); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nBoneIDsSiz * sizeof(uint32_t), anBoneIDs.get(), GL_STATIC_DRAW); ASSERT_OPENGL();
 	glVertexAttribPointer(MDL_VBO_BONE, 1, GL_UNSIGNED_INT, GL_FALSE, 0, 0); ASSERT_OPENGL();
 	glEnableVertexAttribArray(MDL_VBO_BONE);
 	// Upload material IDs
 	glBindBuffer(GL_ARRAY_BUFFER, aiVBO[MDL_VBO_MAT]); ASSERT_OPENGL();
-	glBufferData(GL_ARRAY_BUFFER, nMatIDsSiz * sizeof(uint8_t), anMatIDs, GL_STATIC_DRAW); ASSERT_OPENGL();
+	glBufferData(GL_ARRAY_BUFFER, nMatIDsSiz * sizeof(uint8_t), anMatIDs.get(), GL_STATIC_DRAW); ASSERT_OPENGL();
 	glVertexAttribPointer(MDL_VBO_MAT, 3, GL_UNSIGNED_BYTE, GL_FALSE, 0, 0); ASSERT_OPENGL();
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	delete[] aflPositions;
-	delete[] aflNormals;
-	delete[] aflUVs;
-	delete[] anBoneIDs;
-	delete[] anMatIDs;
+	//delete[] aflPositions;
+	//delete[] aflNormals;
+	//delete[] aflUVs;
+	//delete[] anBoneIDs;
+	//delete[] anMatIDs;
 
-	model_vertexcount_map.emplace((model_id)iVAO, mdl.triangles.size() * 3);
+	model_vertexcount_map.emplace(iVAO, mdl.triangles.size() * 3);
 
 	//gpGlobals->pStatistics->get_stat_u(ESTAT_C_RENDERER, "models_loaded") += 1;
 
-	model_collider_map.emplace((model_id)iVAO, mdl.collider);
+	model_collider_map.emplace(iVAO, mdl.collider);
 
-	return (gfx::model_id)iVAO;
+	gfx::model_id ret(iVAO);
+	return ret;
 }
 
 size_t gfx::gfx_global::load_material(const std::string & filename)

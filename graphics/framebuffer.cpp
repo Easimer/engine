@@ -87,6 +87,8 @@ void gfx::framebuffer::bindw() {
 
 void gfx::framebuffer::unbind() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
 void gfx::framebuffer::size(size_t nWidth, size_t nHeight) {
