@@ -160,6 +160,8 @@ namespace gfx {
 		void wireframe(bool bEnable);
 		void blend(bool bEnable);
 
+		inline gfx::model_id quad() const noexcept { return m_iModelQuadVAO; }
+
 	private:
 		SDL_Window* pWindow;
 		SDL_GLContext pGLContext;

@@ -19,7 +19,6 @@ shader_program::shader_program(const char * szFilename)
 {
 	m_qc = mdlc::qc(std::ifstream(szFilename));
 	
-	
 	if (m_qc.count("vertex_shader") && m_qc.count("fragment_shader"))
 	{
 		PRINT_DBG("vertex and frag shader defined");

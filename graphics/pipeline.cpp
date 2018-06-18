@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <fstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <gfx/pipeline/pipeline.h>
@@ -7,6 +8,20 @@
 #include <gfx/pipeline/intermediate.h>
 #include <gfx/shader_program.h>
 #include <gfx/framebuffer.h>
+#include <qc.h>
+#include "../graphics/glad/glad.h"
+
+gfx::pipeline::pipeline::pipeline(const std::string & filename) {
+	std::ifstream f(filename);
+	if (!f) return;
+	std::string line;
+	PRINT_DBG("Loading pipeline " << filename);
+	while (std::getline(f, line)) {
+		gfx::pipeline::intermediate s(line);
+		PRINT_DBG("Loaded stage: " << s.name());
+		m_stages.push_back(s);
+	}
+}
 
 void gfx::pipeline::pipeline::set_intake(const intake& arg) {
 	m_intake = arg;
@@ -22,26 +37,28 @@ void gfx::pipeline::pipeline::push_stage(const intermediate& arg) {
 
 void gfx::pipeline::pipeline::begin() {
 	if (m_intake) {
-		PRINT_DBG(__func__);
 		m_intake.begin();
 	}
 }
 
 void gfx::pipeline::pipeline::draw(const draw_order& cmd) {
 	if (m_intake) {
-		PRINT_DBG(__func__);
 		m_intake.draw(cmd);
 	}
 }
 
 void gfx::pipeline::pipeline::finalize() {
 	if (m_intake) {
-		PRINT_DBG(__func__);
 		m_intake.finalize();
 		auto fb = m_intake.framebuffer();
 		// Iterate through intermediate stages, if any
+		bool bFirst = true;
 		for (gfx::pipeline::intermediate& stage : m_stages) {
 			if (stage) {
+				if (bFirst && !stage.intake_post()) {
+					PRINT_ERR("First intermediate stage \"" << stage.name() << "\" in pipeline should not follow the intake stage! Pipeline is incomplete!");
+					break;
+				}
 				fb = stage.process(fb);
 			}
 		}
@@ -51,18 +68,21 @@ void gfx::pipeline::pipeline::finalize() {
 
 gfx::pipeline::intake::intake() {
 	m_framebuffer = std::make_shared<gfx::framebuffer>();
+	m_ready = true;
 }
 
 void gfx::pipeline::intake::begin() {
-	PRINT_DBG(__func__);
 	m_framebuffer->unbind();
 
+	gpGfx->begin_frame();
 	m_framebuffer->bindw();
+	gpGfx->clear_color(0, 0, 0);
 	gpGfx->clear();
+	gpGfx->blend(false);
+	gpGfx->depth_test(true);
 }
 
 void gfx::pipeline::intake::draw(const draw_order& cmd) {
-	PRINT_DBG(__func__);
 	auto material = gpGfx->model_material(cmd.model);
 	gfx::shader_id shader_id = cmd.shader;
 	if (shader_id != -1) {
@@ -84,22 +104,55 @@ void gfx::pipeline::intake::draw(const draw_order& cmd) {
 }
 
 void gfx::pipeline::intake::finalize() {
-	PRINT_DBG(__func__);
 	m_framebuffer->unbind();
+	gpGfx->clear_color();
+	gpGfx->blend(true);
+	gpGfx->depth_test(false);
 }
 
 void gfx::pipeline::delivery::process(gfx::shared_fb input) {
-	PRINT_DBG(__func__);
 	gpGfx->draw_framebuffer(input);
+	gpGfx->end_frame();
+}
+
+gfx::pipeline::intermediate::intermediate(const std::string& filename) : stage(false) {
+	mdlc::qc stage_qc;
+	stage_qc = mdlc::qc(std::ifstream(filename));
+	if (stage_qc.count("name") && stage_qc.count("intake_post") && stage_qc.count("shader")) {
+		m_name = stage_qc.at<std::string>("name");
+		size_t iShader = gpGfx->get_shader_program_index(stage_qc.at<std::string>("shader"));
+		m_shader = gpGfx->get_shader(iShader);
+		m_intake_post = stage_qc.at<bool>("intake_post");
+		m_framebuffer = std::make_shared<gfx::framebuffer>();
+		m_ready = true;
+	} else {
+		ASSERT(0);
+	}
 }
 
 gfx::shared_fb gfx::pipeline::intermediate::process(gfx::shared_fb input) {
-	PRINT_DBG(__func__);
-	gfx::shared_fb ret = std::make_shared<gfx::framebuffer>();
 	input->bindr();
-	ret->bindw();
+	m_framebuffer->bindw();
+	m_shader->use();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, input->diffuse()->handle());
+	m_shader->set_int("tex_diffuse", 0);
+	if (m_intake_post) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, input->normal()->handle());
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, input->worldpos()->handle());
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, input->specular()->handle());
+		m_shader->set_int("tex_normal", 1);
+		m_shader->set_int("tex_worldpos", 2);
+		m_shader->set_int("tex_specular", 3);
+	}
 
-	ret->unbind();
+	glBindVertexArray(gpGfx->quad());
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 
-	return ret;
+	m_framebuffer->unbind();
+
+	return m_framebuffer;
 }

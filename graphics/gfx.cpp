@@ -722,7 +722,7 @@ void gfx::gfx_global::draw_terrain(const model_id& id) {
 }
 
 void gfx::gfx_global::draw_framebuffer(gfx::shared_fb& fb) {
-	gfx::shader_program* pShader = shaders[get_shader_program_index("framebuffer_deferred")];
+	gfx::shader_program* pShader = shaders[get_shader_program_index("delivery_fb")];
 	ASSERT(pShader);
 	if (!pShader)
 		return;
