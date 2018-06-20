@@ -82,14 +82,6 @@ int main(int argc, char** argv) {
 
 	float rot = 0.0f;
 
-	gfx::shader_light l;
-	l.color.r = 1;
-	l.color.g = 1;
-	l.color.b = 1;
-	l.color.a = 1;
-	l.pos = math::vector3<float>(0, 0, 4);
-	l.iType = gfx::shader_light_type::SLT_POINT;
-
 	while (true) {
 		gpGfx->begin_frame();
 		gpGfx->draw_windows();
@@ -103,8 +95,6 @@ int main(int argc, char** argv) {
 
 			glm::mat4 trans(1.0);
 			trans = glm::rotate(trans, rot, glm::vec3(0, 1, 0));
-			
-			pShader->set_local_light(l);
 
 			pShader->set_mat_proj(glm::value_ptr(proj));
 			pShader->set_mat_view(glm::value_ptr(view));

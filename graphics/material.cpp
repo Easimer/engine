@@ -15,6 +15,10 @@ material::material(const mdlc::qc& qcp)
 	m_qcp = qcp;
 
 	m_iszShader = qcp.at<std::string>("shader");
+	if (qcp.count("normal_is_relative"))
+		m_bNormalIsRelative = qcp.at<bool>("normal_is_relative");
+	else
+		m_bNormalIsRelative = false;
 	m_iShader = -1;
 }
 
@@ -23,6 +27,7 @@ material::material(const material & other)
 	m_qcp = other.m_qcp;
 	m_iShader = other.m_iShader;
 	m_iszShader = other.m_iszShader;
+	m_bNormalIsRelative = other.m_bNormalIsRelative;
 	memcpy(m_aiTextures, other.m_aiTextures, sizeof(uint32_t) * MAT_TEX_MAX);
 }
 

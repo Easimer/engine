@@ -7,6 +7,8 @@
 #include "input.h"
 #include "events.h"
 
+#include <gfx/pipeline/pipeline.h>
+
 class game {
 public:
 	game();
@@ -31,4 +33,5 @@ private:
 	input m_input;
 	event_handler m_evhandler;
 	gfx::shared_fb m_fb;
+	gfx::pipeline::pipeline m_pipeline;
 };

@@ -767,3 +767,23 @@ void gfx::gfx_global::blend(bool bEnable) {
 	else
 		glDisable(GL_BLEND);
 }
+
+gfx::debug_marker::debug_marker(const std::string & str) {
+#if defined(PLAT_DEBUG)
+	if (glad_glPushDebugGroup) {
+		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 10, str.size() + 1, str.c_str());
+	} else if (glad_glPushGroupMarkerEXT) {
+		glPushGroupMarkerEXT(str.size() + 1, str.c_str());
+	} 
+#endif
+}
+
+gfx::debug_marker::~debug_marker() {
+#if defined(PLAT_DEBUG)
+	if (glad_glPopDebugGroup) {
+		glPopDebugGroup();
+	} else if (glad_glPopGroupMarkerEXT) {
+		glPopGroupMarkerEXT();
+	}
+#endif
+}

@@ -93,6 +93,17 @@ namespace mdlc {
 			return value;
 		}
 
+		template<typename T, T default_value>
+		T at(const std::string& key) const {
+			T value = default_value;
+			if (m_map.count(key)) {
+				std::stringstream ss(m_map.at(key));
+				if (ss >> value)
+					return value;
+			}
+			return value;
+		}
+
 	private:
 		std::unordered_map<std::string, std::string> m_map;
 	};

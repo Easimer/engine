@@ -6,14 +6,14 @@ using namespace gfx;
 
 gfx::texture2d::texture2d() {
 	glGenTextures(1, &m_hTexture);
-	PRINT_DBG("gfx: created texture " << m_hTexture);
+	//PRINT_DBG("gfx: created texture " << m_hTexture);
 	m_bMipmap = false;
 }
 
 gfx::texture2d::~texture2d() {
 	if (m_hTexture) {
 		glDeleteTextures(1, &m_hTexture);
-		PRINT_DBG("gfx: deleted texture " << m_hTexture);
+		//PRINT_DBG("gfx: deleted texture " << m_hTexture);
 	}
 }
 
@@ -92,19 +92,26 @@ void gfx::texture2d::generate_mipmap() {
 
 void gfx::texture2d::upload(const void * pImageData, texture_format iFormat, size_t nWidth, size_t nHeight) {
 	GLuint iFmt = 0;
+	GLuint iIFmt = 0;
 	switch (iFormat) {
 	case texfmt_rgb:
 		iFmt = GL_RGB;
+		iIFmt = GL_RGB;
 		break;
 	case texfmt_rgba:
 		iFmt = GL_RGBA;
+		iIFmt = GL_RGBA;
 		break;
 	case texfmt_depthc:
 		iFmt = GL_DEPTH_COMPONENT;
 		break;
+	case texfmt_rgb16f:
+		iFmt = GL_RGB16F;
+		iIFmt = GL_RGB;
+		break;
 	}
 	if (iFmt) {
 		bind();
-		glTexImage2D(GL_TEXTURE_2D, 0, iFmt, nWidth, nHeight, 0, iFmt, GL_FLOAT, pImageData);
+		glTexImage2D(GL_TEXTURE_2D, 0, iFmt, nWidth, nHeight, 0, iIFmt, GL_FLOAT, pImageData);
 	}
 }

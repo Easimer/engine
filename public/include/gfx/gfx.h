@@ -207,6 +207,13 @@ namespace gfx {
 		// These textures get deleted at the end of the frame
 		std::vector<uint32_t> m_vec_texgc;
 	};
+
+	struct debug_marker {
+		debug_marker(const std::string& str);
+		~debug_marker();
+		debug_marker(const debug_marker&) = delete;
+		debug_marker& operator=(const debug_marker&) = delete;
+	};
 }
 
 extern gfx::gfx_global* gpGfx;

@@ -113,9 +113,13 @@ bool shader_program::link()
 	return true;
 }
 
-void shader_program::use()
+bool shader_program::use()
 {
+	if (!m_pShaderVert || !m_pShaderFrag || !(m_pShaderVert->operator bool() && m_pShaderFrag->operator bool())) {
+		return false;
+	}
 	glUseProgram(m_iID);
+	return true;
 }
 
 void shader_program::validate()
@@ -137,7 +141,8 @@ void shader_program::validate()
 }
 
 void gfx::shader_program::setup() {
-	glUseProgram(m_iID); ASSERT_OPENGL();
+	if (!use())
+		return;
 	get_uniform_location(m_qc, "uniform_trans", &m_iUniformMatTrans);
 	get_uniform_location(m_qc, "uniform_view", &m_iUniformMatView);
 	get_uniform_location(m_qc, "uniform_proj", &m_iUniformMatProj);
@@ -145,15 +150,13 @@ void gfx::shader_program::setup() {
 	m_iUniformTex1 = glGetUniformLocation(m_iID, "tex_diffuse"); ASSERT_OPENGL();
 	m_iUniformTex2 = glGetUniformLocation(m_iID, "tex_normal"); ASSERT_OPENGL();
 	m_iUniformTex3 = glGetUniformLocation(m_iID, "tex_specular"); ASSERT_OPENGL();
-	m_iUniformTex4 = glGetUniformLocation(m_iID, "tex_opacity"); ASSERT_OPENGL();
-	m_iUniformTex5 = glGetUniformLocation(m_iID, "tex_UNUSED"); ASSERT_OPENGL();
+	m_iUniformTex4 = glGetUniformLocation(m_iID, "tex_selfillum"); ASSERT_OPENGL();
 	m_iUniformTime = glGetUniformLocation(m_iID, "game_time"); ASSERT_OPENGL();
 
 	glUniform1i(m_iUniformTex1, 0); ASSERT_OPENGL();
 	glUniform1i(m_iUniformTex2, 1); ASSERT_OPENGL();
 	glUniform1i(m_iUniformTex3, 2); ASSERT_OPENGL();
 	glUniform1i(m_iUniformTex4, 3); ASSERT_OPENGL();
-	glUniform1i(m_iUniformTex5, 4); ASSERT_OPENGL();
 
 	if (m_qc.count("diffuse_key"))
 		m_mapTexKey.emplace(SHADERTEX_DIFFUSE, m_qc.at<std::string>("diffuse_key"));
@@ -161,8 +164,8 @@ void gfx::shader_program::setup() {
 		m_mapTexKey.emplace(SHADERTEX_NORMAL, m_qc.at<std::string>("normal_key"));
 	if (m_qc.count("specular_key"))
 		m_mapTexKey.emplace(SHADERTEX_SPECULAR, m_qc.at<std::string>("specular_key"));
-	if (m_qc.count("opacity_key"))
-		m_mapTexKey.emplace(SHADERTEX_OPACITY, m_qc.at<std::string>("opacity_key"));
+	if (m_qc.count("selfillum_key"))
+		m_mapTexKey.emplace(SHADERTEX_SELFILLUM, m_qc.at<std::string>("selfillum_key"));
 
 	if (m_qc.count("diffuse_default"))
 		m_mapTexDefault.emplace(SHADERTEX_DIFFUSE, m_qc.at<std::string>("diffuse_default"));
@@ -170,85 +173,10 @@ void gfx::shader_program::setup() {
 		m_mapTexDefault.emplace(SHADERTEX_NORMAL, m_qc.at<std::string>("normal_default"));
 	if (m_qc.count("specular_default"))
 		m_mapTexDefault.emplace(SHADERTEX_SPECULAR, m_qc.at<std::string>("specular_default"));
-	if (m_qc.count("opacity_default"))
-		m_mapTexDefault.emplace(SHADERTEX_OPACITY, m_qc.at<std::string>("opacity_default"));
+	if (m_qc.count("selfillum_default"))
+		m_mapTexDefault.emplace(SHADERTEX_SELFILLUM, m_qc.at<std::string>("selfillum_default"));
 
 	set_bool("bDebugDrawNormalsOnly", false);
-
-	m_bLit = m_qc.count("lit") && m_qc.at<int>("lit") == 1;
-	if (m_bLit) {
-		std::vector<std::string> all_parameters = {
-			"light_no_global",
-			"lightl_pos_x", "lightl_pos_y","lightl_pos_z",
-			"lightg_rot_x", "lightg_rot_y","lightg_rot_z",
-			"lightl_color_r", "lightl_color_g","lightl_color_b","lightl_color_a",
-			"lightg_color_r", "lightg_color_g","lightg_color_b","lightg_color_a",
-		};
-		std::vector<std::string> missing_parameters;
-
-		bool bAllParametersSpecified = true;
-
-		for (auto& param : all_parameters) {
-			if (!m_qc.count(param.c_str())) {
-				bAllParametersSpecified = false;
-				missing_parameters.push_back(param);
-			}
-		}
-
-		if (!bAllParametersSpecified) {
-			m_bLit = false;
-			PRINT_ERR("Shader " << m_szName << " is marked as 'lit' but one or more lighting parameters are missing: ");
-			for (auto& param : missing_parameters) {
-				PRINT_ERR(param);
-			}
-			PRINT_ERR("======= End of missing parameters, cut here =======");
-		} else {
-			// Local color position
-			auto iszPosLX = m_qc.at<std::string>("lightl_pos_x");
-			auto iszPosLY = m_qc.at<std::string>("lightl_pos_y");
-			auto iszPosLZ = m_qc.at<std::string>("lightl_pos_z");
-
-			// Global light rotation
-			auto iszRotGX = m_qc.at<std::string>("lightg_rot_x");
-			auto iszRotGY = m_qc.at<std::string>("lightg_rot_y");
-			auto iszRotGZ = m_qc.at<std::string>("lightg_rot_z");
-
-			// Local light color
-			auto iszColorLR = m_qc.at<std::string>("lightl_color_r");
-			auto iszColorLG = m_qc.at<std::string>("lightl_color_g");
-			auto iszColorLB = m_qc.at<std::string>("lightl_color_b");
-			auto iszColorLA = m_qc.at<std::string>("lightl_color_a");
-
-			// Global light color
-			auto iszColorGR = m_qc.at<std::string>("lightg_color_r");
-			auto iszColorGG = m_qc.at<std::string>("lightg_color_g");
-			auto iszColorGB = m_qc.at<std::string>("lightg_color_b");
-			auto iszColorGA = m_qc.at<std::string>("lightg_color_a");
-
-			auto iszDisabledL = m_qc.at<std::string>("lightl_disabled");
-			auto iszDisabledG = m_qc.at<std::string>("lightg_disabled");
-
-#define GET_LIGHT_UNILOC(type, tar, id) m_aiUniformLight##type .tar = glGetUniformLocation(m_iID, isz##id.c_str()); ASSERT_OPENGL(); if(m_aiUniformLight##type .tar == -1) PRINT_ERR("Failed getting uniform: " << isz##id);
-
-			GET_LIGHT_UNILOC(Local, flPosX, PosLX);
-			GET_LIGHT_UNILOC(Local, flPosY, PosLY);
-			GET_LIGHT_UNILOC(Local, flPosZ, PosLZ);
-			GET_LIGHT_UNILOC(Local, flColorR, ColorLR);
-			GET_LIGHT_UNILOC(Local, flColorG, ColorLG);
-			GET_LIGHT_UNILOC(Local, flColorB, ColorLB);
-			GET_LIGHT_UNILOC(Local, flColorA, ColorLA);
-			GET_LIGHT_UNILOC(Local, bLight, DisabledL);
-
-			GET_LIGHT_UNILOC(Global, flPosX, RotGX);
-			GET_LIGHT_UNILOC(Global, flPosY, RotGY);
-			GET_LIGHT_UNILOC(Global, flPosZ, RotGZ);
-			GET_LIGHT_UNILOC(Global, flColorR, ColorGR);
-			GET_LIGHT_UNILOC(Global, flColorG, ColorGG);
-			GET_LIGHT_UNILOC(Global, flColorB, ColorGB);
-			GET_LIGHT_UNILOC(Global, flColorA, ColorGA);
-			GET_LIGHT_UNILOC(Global, bLight, DisabledG);
-		}
-	}
 
 	if (m_qc.count("depth_texture")) {
 		get_uniform_location(m_qc, "depth_texture", &m_iUniformDepthTexture);
@@ -278,6 +206,7 @@ void gfx::shader_program::reload() {
 	}
 
 	if (bModified) {
+		m_mapUniforms.clear();
 		link();
 		setup();
 	}
@@ -363,6 +292,7 @@ void shader_program::use_material(const material & mat)
 		uint32_t iTex = mat.get_texture((mat_tex_index)i);
 		glBindTexture(GL_TEXTURE_2D, iTex);
 	}
+	set_bool("bNormalIsRelative", mat.normal_is_relative());
 }
 
 void shader_program::set_vec3(const std::string & name, const math::vector3<float>& v)
@@ -411,54 +341,6 @@ void shader_program::set_bool(const std::string & name, bool v)
 		m_mapUniforms[name] = iLoc;
 	}
 	glUniform1i(iLoc, v ? 1 : 0);
-}
-
-void shader_program::set_local_light(const shader_light & l)
-{
-
-	if (l.iType == shader_light_type::SLT_GLOBAL) {
-		PRINT_DBG("shader_program::set_local_light: shader_light passed to me describes a global light, redirected!");
-		set_global_light(l);
-		return;
-	}
-
-	glUseProgram(m_iID);
-	if (l.iType == shader_light_type::SLT_DISABLED) {
-		glUniform1i(m_aiUniformLightLocal.bLight, 1);
-		return;
-	}
-	glUniform1i(m_aiUniformLightLocal.bLight, 0);
-	glUniform1f(m_aiUniformLightLocal.flPosX, l.pos[0]);
-	glUniform1f(m_aiUniformLightLocal.flPosY, l.pos[1]);
-	glUniform1f(m_aiUniformLightLocal.flPosZ, l.pos[2]);
-	glUniform1f(m_aiUniformLightLocal.flColorR, l.color.r);
-	glUniform1f(m_aiUniformLightLocal.flColorG, l.color.g);
-	glUniform1f(m_aiUniformLightLocal.flColorB, l.color.b);
-	glUniform1f(m_aiUniformLightLocal.flColorA, l.color.a);
-}
-
-void shader_program::set_global_light(const shader_light & l)
-{
-
-	if (l.iType == shader_light_type::SLT_POINT) {
-		PRINT_DBG("shader_program::set_global_light: shader_light passed to me describes a local light, redirected!");
-		set_local_light(l);
-		return;
-	}
-
-	glUseProgram(m_iID);
-	if (l.iType == shader_light_type::SLT_DISABLED) {
-		glUniform1i(m_aiUniformLightGlobal.bLight, 1);
-		return;
-	}
-	glUniform1i(m_aiUniformLightGlobal.bLight, 0);
-	glUniform1f(m_aiUniformLightGlobal.flPosX, l.pos[0]);
-	glUniform1f(m_aiUniformLightGlobal.flPosY, l.pos[1]);
-	glUniform1f(m_aiUniformLightGlobal.flPosZ, l.pos[2]);
-	glUniform1f(m_aiUniformLightGlobal.flColorR, l.color.r);
-	glUniform1f(m_aiUniformLightGlobal.flColorG, l.color.g);
-	glUniform1f(m_aiUniformLightGlobal.flColorB, l.color.b);
-	glUniform1f(m_aiUniformLightGlobal.flColorA, l.color.a);
 }
 
 void gfx::shader_program::set_float(const std::string & name, float v)

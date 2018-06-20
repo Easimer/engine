@@ -10,14 +10,14 @@ namespace gfx {
 		MAT_TEX_DIFFUSE = 0,
 		MAT_TEX_NORMAL = 1,
 		MAT_TEX_SPECULAR = 2,
-		MAT_TEX_OPACITY = 3,
+		MAT_TEX_SELFILLUM = 3,
 		MAT_TEX_MAX = 4
 	};
 
 	class material {
 	public:
 		material() :
-		m_iShader(-1) {}
+		m_iShader(-1), m_bNormalIsRelative(false) {}
 
 		material(const mdlc::qc& qcp);
 		material(const material& other);
@@ -31,6 +31,7 @@ namespace gfx {
 		void set_texture(mat_tex_index iType, uint32_t iTex);
 
 		uint32_t get_texture(mat_tex_index iType) const { return m_aiTextures[iType]; }
+		bool normal_is_relative() const noexcept { return m_bNormalIsRelative; }
 
 	private:
 		mdlc::qc m_qcp;
@@ -39,6 +40,7 @@ namespace gfx {
 		int m_iShader;
 
 		uint32_t m_aiTextures[MAT_TEX_MAX];
+		bool m_bNormalIsRelative;
 	};
 
 }

@@ -16,7 +16,7 @@ namespace gfx {
 		SHADERTEX_DIFFUSE = 0,
 		SHADERTEX_NORMAL = 1,
 		SHADERTEX_SPECULAR = 2,
-		SHADERTEX_OPACITY = 3,
+		SHADERTEX_SELFILLUM = 3,
 		SHADERTEX_MAX = 4,
 		SHADERTEX_DEPTH = 5,
 	};
@@ -33,7 +33,7 @@ namespace gfx {
 		shader_program(const char* szFilename);
 		~shader_program();
 		bool link();
-		void use();
+		bool use();
 		void validate();
 
 		// Caches uniform IDs, loads parameters

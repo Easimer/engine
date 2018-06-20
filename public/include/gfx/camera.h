@@ -12,7 +12,8 @@ namespace gfx {
 			m_flTurnSpeed(3.3),
 			m_flYaw(0.0),
 			m_flPitch(0.0),
-			m_bSprinting(false) {}
+			m_bSprinting(false),
+			m_flFov(90.0f) {}
 
 		virtual void forward(float delta) override;
 		virtual void backward(float delta) override;
@@ -26,6 +27,8 @@ namespace gfx {
 		virtual void update(float delta) override;
 		virtual float yaw() const override;
 		virtual float pitch() const override;
+		float fov() const noexcept { return m_flFov; }
+		float fov(float flValue) noexcept { return (m_flFov = flValue); }
 
 		virtual void set_speed(float speed) {
 			m_flSpeed = speed;
@@ -35,7 +38,7 @@ namespace gfx {
 		glm::vec3 m_vecPos;
 		glm::mat4 m_matRot = glm::mat4(1.0);
 		float m_flSpeed = 0.8, m_flTurnSpeed = 3.3;
-		float m_flFov;
+		float m_flFov; // DEGREES!
 
 		float m_flYaw = 0.0;
 		float m_flPitch = 0.0;

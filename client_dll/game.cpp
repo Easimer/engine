@@ -16,11 +16,10 @@
 #define GBUF_WIDTH (640)
 #define GBUF_HEIGHT (360)
 
-game::game() : m_bPaused(true), m_model_cache({ 0 }) {
+game::game() : m_bPaused(true), m_model_cache({ 0 }), m_pipeline("data/shaders/pipeline/default_pipeline.txt") {
 	m_proj = glm::perspective(glm::radians(90.f), (float)gpGfx->width() / (float)gpGfx->height(), 0.1f, 1000.0f);
 	m_input.assign_camera(&m_camera);
 	m_evhandler.assign_input_handler(&m_input);
-	m_fb = std::make_shared<gfx::framebuffer>(GBUF_WIDTH, GBUF_HEIGHT);
 }
 
 void game::connect(const char * pszHostname, const char * pszUsername) {
@@ -74,18 +73,12 @@ bool game::tick() {
 	//ImGui::NetGraph(m_pNetClient->get_packet_stats());
 	net::edict_t* edicts = m_pNetClient->get_edicts();
 
-	gfx::shader_program* pPrevShader = nullptr;
 	glm::mat4 mat_view = m_camera.get_rot();
 	mat_view = glm::translate(mat_view, glm::vec3(m_camera.get_pos()));
 	float flAspect = ((float)GBUF_WIDTH) / ((float)GBUF_HEIGHT);
-	m_proj = glm::perspective(glm::radians(90.f), flAspect, 0.00001f, 1000.0f);
+	m_proj = glm::perspective(glm::radians(m_camera.fov()), flAspect, 0.00001f, 1000.0f);
 
-	m_fb->bind();
-	gpGfx->blend(false);
-	gpGfx->set_viewport(GBUF_WIDTH, GBUF_HEIGHT);
-	gpGfx->clear_color(0, 0, 0);
-	gpGfx->clear();
-	//gpGfx->wireframe(true);
+	m_pipeline.begin();
 
 	for (size_t i = 1; i < net::max_edicts; i++) {
 		if (edicts[i].active) {
@@ -95,12 +88,13 @@ bool game::tick() {
 				int iShader;
 				gfx::shader_program* pShader;
 				glm::mat4 mat_trans(1.0);
+				gfx::model_id mdl;
 
 				if (m_model_cache[i] == 0) {
 					m_model_cache[i] = gpGfx->load_model(e.modelname);
 				}
-
-				gfx::model_id mdl = m_model_cache[i];
+				
+				mdl = m_model_cache[i];
 				if (mdl == 0)
 					continue;
 
@@ -108,27 +102,13 @@ bool game::tick() {
 				iShader = mat.get_shader();
 				if (iShader == -1)
 					continue;
-				pShader = gpGfx->get_shader(iShader);
-
-				pShader->reload();
-				if (pShader != pPrevShader)
-					pShader->use();
-				pShader->set_int("fb_diffuse", m_fb->diffuse()->handle());
-				pShader->set_int("fb_normal", m_fb->normal()->handle());
-				pShader->set_int("fb_worldpos", m_fb->worldpos()->handle());
-				pShader->set_int("fb_specular", m_fb->specular()->handle());
+				
 
 				mat_trans = glm::translate(mat_trans, (glm::vec3)(e.iposition));
 				mat_trans = mat_trans * glm::make_mat4(e.irotation);
 
-				pPrevShader = pShader;
-				pShader->set_mat_proj(glm::value_ptr(m_proj));
-				pShader->set_mat_view(glm::value_ptr(mat_view));
-				pShader->set_mat_trans(glm::value_ptr(mat_trans));
-				gpGfx->bind_model(mdl);
-				pShader->use_material(mat);
-				gpGfx->depth_test(true);
-				gpGfx->draw_model();
+				gfx::pipeline::draw_order cmd( mdl, iShader, mat_trans, mat_view, m_proj);
+				m_pipeline.draw(cmd);
 			}
 			// Interpolate position
 			float dt = gpGfx->delta();
@@ -145,14 +125,7 @@ bool game::tick() {
 		}
 	}
 
-	gpGfx->restore_viewport();
-	m_fb->unbind();
-	gpGfx->blend(true);
-	gpGfx->depth_test(false);
-	gpGfx->clear_color(-1);
-	gpGfx->clear();
-	gpGfx->draw_framebuffer(m_fb);
-	gpGfx->draw_framebuffer(m_fb);
+	m_pipeline.finalize(glm::value_ptr(mat_view));
 
 	ImVec2 fbsiz(640, 360);
 	ImVec2 uv0(0, 1);

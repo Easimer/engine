@@ -7,6 +7,8 @@
 #include "../graphics/gui/imgui_impl_sdl_gl3.h"
 
 #include <gfx/pipeline/pipeline.h>
+#include <glm/gtc/random.hpp>
+#include <array>
 
 #undef main
 
@@ -49,37 +51,78 @@ int main() {
 	auto mdl2 = gpGfx->load_model("data/models/wolf.emf");
 	
 	gfx::pipeline::pipeline pipeline("data/shaders/pipeline/default_pipeline.txt");
-	
+
+	std::array<gfx::shader_light, 4> lights;
+
+	float lposstep = glm::golden_ratio<float>() * 64.0f;
+	float nextdeg = 0.0;
+
+	for (size_t i = 0; i < 4; i++) {
+		lights[i].color.r = glm::linearRand(0.0, 1.0);
+		lights[i].color.g = glm::linearRand(0.0, 1.0);
+		lights[i].color.b = glm::linearRand(0.0, 1.0);
+		lights[i].color.a = 4.0;
+
+		float x = 4.0f * glm::cos(nextdeg);
+		float z = 4.0f * glm::sin(nextdeg);
+		lights[i].pos = vec3(x, 0.5f, z);
+		nextdeg += lposstep;
+	}
+
 	while (1) {
 		
 		if (gpGfx->handle_events())
 			break;
 
-		deg += gpGfx->delta() * 45.f;
-		if (deg > 360)
+		deg += gpGfx->delta() * glm::radians(45.f);
+		if (deg > glm::radians(360.0f))
 			deg = 0;
-
-		glm::mat4 view = glm::rotate(mat_view, glm::radians(deg), glm::vec3(0, 1, 0));
 
 		auto mat1 = gpGfx->model_material(mdl1);
 		auto mat2 = gpGfx->model_material(mdl2);
 		int shader1 = mat1.get_shader();
 		int shader2 = mat1.get_shader();
 
+		glm::mat4 view = glm::rotate(mat_view, deg, glm::vec3(0, 1, 0));
+
 		gfx::pipeline::draw_order cmd1 = { mdl1, shader1, mat_trans, view, mat_proj };
-		gfx::pipeline::draw_order cmd2 = { mdl2, shader2, mat_trans, view, mat_proj };
 		
+		gfx::debug_marker mrk("Pipeline");
 		pipeline.begin();
+		
+		if (ImGui::Begin("##empty")) {
+			float d = deg;
+			ImGui::SliderFloat("Degrees", &d, 0, glm::radians(360.0f));
 
-		if (ImGui::Begin("Pipeline Test")) {
-
+			ImGui::Separator();
+			ImGui::Text("Pipeline state");
+			auto state = pipeline.debug_info();
+			for (const auto& stage : state) {
+				bool ready = stage.ready;
+				bool lit = stage.lit;
+				ImGui::BeginGroup();
+				ImGui::Text(stage.name.c_str());
+				ImGui::Checkbox("Ready", &ready);
+				ImGui::Checkbox("Lit", &lit);
+				ImGui::Text("State: %s", gfx::pipeline::strerror(stage.state));
+				ImVec2 s(128, 72);
+				ImGui::Image((ImTextureID)stage.texture_color, s, ImVec2(0, 1), ImVec2(1, 0)); ImGui::SameLine();
+				ImGui::Image((ImTextureID)stage.texture_normal, s, ImVec2(0, 1), ImVec2(1, 0)); ImGui::NewLine();
+				ImGui::Image((ImTextureID)stage.texture_worldpos, s, ImVec2(0, 1), ImVec2(1, 0)); ImGui::SameLine();
+				ImGui::Image((ImTextureID)stage.texture_specular, s, ImVec2(0, 1), ImVec2(1, 0)); ImGui::NewLine();
+				ImGui::Image((ImTextureID)stage.texture_selfillum, s, ImVec2(0, 1), ImVec2(1, 0)); ImGui::NewLine();
+				ImGui::EndGroup();
+				ImGui::SameLine();
+			}
 		}
 		ImGui::End();
 		pipeline.draw(cmd1);
-		pipeline.draw(cmd2);
-		pipeline.finalize();
-		//draw_model(*fb, mdl1);
-		//draw_model(*fb, mdl2);
+
+		for (size_t i = 0; i < 4; i++) {
+			pipeline.light(i, lights[i]);
+		}
+
+		pipeline.finalize((void*)glm::value_ptr(mat_view));
 	}
 
 	gpGfx->shutdown();

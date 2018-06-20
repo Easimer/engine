@@ -86,14 +86,12 @@ void client_main(client* cli) {
 		return;
 	}
 
+	gpGfx->load_default_shaders();
+
 	mainmenu mm;
 	game g;
 
 	mm.set_ifsys(cli->m_pIfSys);
-
-	gpGfx->load_default_shaders();
-	gpGfx->load_shader("data/shaders/model_dynamic.qc");
-	//gpGfx->load_shader("data/shaders/wireframe.qc");
 
 	std::shared_ptr<window_debug_entities> pEntDbg;
 	std::shared_ptr<window_loading> pWndLoad = std::make_shared<window_loading>();
@@ -113,6 +111,14 @@ void client_main(client* cli) {
 	std::chrono::time_point<std::chrono::high_resolution_clock> t;
 
 	while (!cli->m_bShutdown) {
+		if (state == E_CLIENT_STATE_GAME) {
+			if (!g.tick()) {
+				g.disconnect();
+				cli->m_bShutdown = true;
+			}
+			continue;
+		}
+
 		gpGfx->begin_frame();
 		gpGfx->draw_windows();
 
@@ -137,12 +143,6 @@ void client_main(client* cli) {
 					cli->m_bShutdown = true;
 					break;
 				}
-			}
-		}
-		else if (state == E_CLIENT_STATE_GAME) {
-			if (!g.tick()) {
-				g.disconnect();
-				cli->m_bShutdown = true;
 			}
 		}
 		else if (state >= E_CLIENT_STATE_CONNECTING && state <= E_CLIENT_STATE_CONNECTING_MAX) {

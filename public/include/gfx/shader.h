@@ -23,6 +23,10 @@ namespace gfx {
 
 		void set_code(const char* szCode, shader_type iType);
 
+		operator bool() {
+			return !m_bBadShader;
+		}
+
 	private:
 		void print_err();
 

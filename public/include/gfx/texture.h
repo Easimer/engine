@@ -16,7 +16,8 @@ enum texture_filtering {
 enum texture_format {
 	texfmt_rgb,
 	texfmt_rgba,
-	texfmt_depthc
+	texfmt_depthc,
+	texfmt_rgb16f
 };
 
 enum texture_wrap {
