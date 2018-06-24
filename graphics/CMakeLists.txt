@@ -33,6 +33,7 @@ set(SRC_PUBLIC
 	../public/include/gfx/framebuffer.h
 	../public/include/gfx/gfx.h
 	../public/include/gfx/icamera.h
+	../public/include/gfx/image_buf.h
 	../public/include/gfx/light.h
 	../public/include/gfx/material.h
 	../public/include/gfx/model.h

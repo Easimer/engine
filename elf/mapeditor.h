@@ -10,7 +10,10 @@
 
 class mapeditor : public imapeditor {
 public:
-	virtual ~mapeditor() {}
+	virtual ~mapeditor() {
+		while (m_thread.joinable())
+			m_thread.join();
+	}
 	virtual const char * name() const override {
 		return "EngineLevelEditor0001";
 	}
@@ -60,7 +63,7 @@ private:
 
 	bool m_bFreeCamera;
 	float m_flGameViewX, m_flGameViewY;
-	std::map<mapeditor::tool, void*> m_icons;
+	std::map<mapeditor::tool, gfx::shared_tex2d> m_icons;
 
 	// Editor world state
 	std::vector<world_object> m_objects;

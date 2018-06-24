@@ -17,7 +17,8 @@ enum texture_format {
 	texfmt_rgb,
 	texfmt_rgba,
 	texfmt_depthc,
-	texfmt_rgb16f
+	texfmt_rgb16f,
+	texfmt_rgb32f
 };
 
 enum texture_wrap {
@@ -36,7 +37,7 @@ public:
 		return m_hTexture;
 	}
 
-	void bind();
+	void bind(size_t texture_unit = 0);
 	void unbind();
 
 	void wrap(texture_wrap wrap);

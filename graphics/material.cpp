@@ -1,8 +1,12 @@
 #include "stdafx.h"
+#include <fstream>
 #include <gfx/material.h>
 #include <gfx/gfx.h>
 
 using namespace gfx;
+
+gfx::material::material(const std::string & path) : material(mdlc::qc(std::ifstream(path))) {
+}
 
 material::material(const mdlc::qc& qcp)
 {
@@ -19,27 +23,29 @@ material::material(const mdlc::qc& qcp)
 		m_bNormalIsRelative = qcp.at<bool>("normal_is_relative");
 	else
 		m_bNormalIsRelative = false;
-	m_iShader = -1;
-}
 
-material::material(const material & other)
-{
-	m_qcp = other.m_qcp;
-	m_iShader = other.m_iShader;
-	m_iszShader = other.m_iszShader;
-	m_bNormalIsRelative = other.m_bNormalIsRelative;
-	memcpy(m_aiTextures, other.m_aiTextures, sizeof(uint32_t) * MAT_TEX_MAX);
-}
+	auto iShader = gpGfx->get_shader_program_index(m_iszShader);
+	auto pShader = gpGfx->get_shader(iShader);
+	m_shader = pShader;
 
-int material::get_shader()
-{
-	if (m_iShader == -1) {
-		m_iShader = gpGfx->get_shader_program_index(m_iszShader);
+	for (size_t i = 0; i < (size_t)TEX_MAX; i++) {
+		// Key for the texture
+		auto key = pShader->material_key((texture_type)i);
+		std::string path;
+		if (qcp.count(key)) {
+			path = qcp.at<std::string>(key);
+		} else {
+			path = pShader->material_default((texture_type)i);
+		}
+		m_aiTextures[i] = gpGfx->load_texture(path);
 	}
-	return m_iShader;
 }
 
-void material::set_texture(mat_tex_index iType, uint32_t iTex)
-{
-	m_aiTextures[iType] = iTex;
+void material::use() {
+	for (size_t i = 0; i < (size_t)TEX_MAX; i++) {
+		if (m_aiTextures[i]) {
+			m_aiTextures[i]->bind(i);
+		}
+	}
+	m_shader->set_bool("bNormalIsRelative", m_bNormalIsRelative);
 }

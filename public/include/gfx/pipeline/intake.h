@@ -8,13 +8,13 @@
 
 namespace gfx::pipeline {
 
-struct draw_order;
+class idraw_order;
 
 class intake : public stage {
 public:
 	intake();
-	void begin();
-	void draw(const draw_order& cmd);
+	void begin(bool bGUI);
+	void draw(const gfx::pipeline::idraw_order& cmd);
 	void finalize();
 	gfx::shared_fb framebuffer() const { return m_framebuffer; }
 

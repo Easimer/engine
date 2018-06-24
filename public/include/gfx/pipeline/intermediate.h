@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include <gfx/pipeline/stage.h>
 #include <gfx/light.h>
 
@@ -14,6 +15,10 @@ public:
 	gfx::shared_fb process(gfx::shared_fb input);
 	gfx::shared_fb process(const std::array<gfx::shader_light, lights_limit>&, gfx::shared_fb input);
 
+	void set_view_matrix(const glm::mat4& mat) noexcept {
+		m_mat_view = mat;
+	}
+
 	const std::string& name() const noexcept { return m_name; }
 	bool lit() const noexcept { return m_lit; }
 
@@ -24,8 +29,9 @@ public:
 	size_t selfillum() const noexcept override { return m_framebuffer1->selfillum()->handle(); }
 private:
 	std::string m_name;
-	gfx::shader_program* m_shader;
+	gfx::shared_shader_program m_shader;
 	gfx::shared_fb m_framebuffer1, m_framebuffer2;
 	bool m_lit;
+	glm::mat4 m_mat_view;
 };
 }

@@ -24,25 +24,26 @@ gfx::pipeline::pipeline::pipeline(const std::string & filename) {
 	}
 }
 
-void gfx::pipeline::pipeline::set_intake(const intake& arg) {
+void gfx::pipeline::pipeline::set_intake(const gfx::pipeline::intake& arg) {
 	m_intake = arg;
 }
 
-void gfx::pipeline::pipeline::set_delivery(const delivery& arg) {
+void gfx::pipeline::pipeline::set_delivery(const gfx::pipeline::delivery& arg) {
 	m_delivery = arg;
 }
 
-void gfx::pipeline::pipeline::set_intermediate(const intermediate& arg) {
+void gfx::pipeline::pipeline::set_intermediate(const gfx::pipeline::intermediate& arg) {
 	m_intermediate = arg;
 }
 
-void gfx::pipeline::pipeline::begin() {
+void gfx::pipeline::pipeline::begin(bool bGUI) {
 	if (m_intake) {
-		m_intake.begin();
+		m_intake.begin(bGUI);
 	}
+	m_bGUI = bGUI;
 }
 
-void gfx::pipeline::pipeline::draw(const draw_order& cmd) {
+void gfx::pipeline::pipeline::draw(const idraw_order& cmd) {
 	if (m_intake) {
 		m_intake.draw(cmd);
 	}
@@ -55,7 +56,7 @@ void gfx::pipeline::pipeline::light(size_t iIndex, const gfx::shader_light& l) {
 	}
 }
 
-void gfx::pipeline::pipeline::finalize(void* pMatProj) {
+void gfx::pipeline::pipeline::finalize(void* pMatView) {
 	if (m_intake) {
 		{
 			gfx::debug_marker mrk("Intake");
@@ -63,13 +64,14 @@ void gfx::pipeline::pipeline::finalize(void* pMatProj) {
 		}
 		auto fb = m_intake.framebuffer();
 		if (m_intermediate) {
+			m_intermediate.set_view_matrix(m_mat_view);
 			if (m_intermediate.lit()) {
 				fb = m_intermediate.process(m_lights, fb);
 			} else {
 				fb = m_intermediate.process(fb);
 			}
 		}
-		m_delivery.process(fb, pMatProj);
+		m_delivery.process(fb, pMatView, m_bGUI);
 	}
 }
 
@@ -121,10 +123,10 @@ gfx::pipeline::intake::intake() {
 	m_ready = true;
 }
 
-void gfx::pipeline::intake::begin() {
+void gfx::pipeline::intake::begin(bool bGUI) {
 	m_framebuffer->unbind();
 
-	gpGfx->begin_frame();
+	gpGfx->begin_frame(bGUI);
 	//PRINT_DBG("Intake");
 	m_framebuffer->bindw();
 	gpGfx->clear_color(0, 0, 0);
@@ -133,18 +135,17 @@ void gfx::pipeline::intake::begin() {
 	gpGfx->depth_test(true);
 }
 
-void gfx::pipeline::intake::draw(const draw_order& cmd) {
+void gfx::pipeline::intake::draw(const gfx::pipeline::idraw_order& cmd) {
 	auto material = gpGfx->model_material(cmd.model());
-	gfx::shader_id shader_id = cmd.shader();
-	if (shader_id != -1) {
-		gfx::shader_program* shader = gpGfx->get_shader(shader_id);
+	gfx::shared_shader_program shader = cmd.shader();
+	if (shader) {
 		if (!shader)
 			return;
 		shader->reload();
 		if (!shader->use()) {
 			return;
 		}
-		shader->use_material(material);
+		material.use();
 		shader->set_int("fb_diffuse", m_framebuffer->diffuse()->handle());
 		shader->set_int("fb_normal", m_framebuffer->normal()->handle());
 		shader->set_int("fb_worldpos", m_framebuffer->worldpos()->handle());
@@ -166,7 +167,7 @@ gfx::pipeline::delivery::delivery() : stage(true) {
 	m_shader = gpGfx->get_shader(gpGfx->get_shader_program_index("delivery_fb"));
 }
 
-void gfx::pipeline::delivery::process(gfx::shared_fb input, void* pMatProj) {
+void gfx::pipeline::delivery::process(gfx::shared_fb input, void* pMatProj, bool bGUI) {
 	gfx::debug_marker mrk("Delivery");
 	ASSERT(m_shader);
 	if (!m_shader)
@@ -189,7 +190,7 @@ void gfx::pipeline::delivery::process(gfx::shared_fb input, void* pMatProj) {
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	//input->unbind();
-	gpGfx->end_frame();
+	gpGfx->end_frame(bGUI);
 }
 
 gfx::pipeline::intermediate::intermediate(const std::string& filename) : stage(false), m_lit(false) {
@@ -228,16 +229,11 @@ gfx::shared_fb gfx::pipeline::intermediate::process(gfx::shared_fb input) {
 		m_state = stage_err_bad_shader;
 		return output;
 	}
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, input->diffuse()->handle());
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, input->normal()->handle());
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, input->worldpos()->handle());
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, input->specular()->handle());
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, input->selfillum()->handle());
+	input->diffuse()->bind(0);
+	input->normal()->bind(1);
+	input->worldpos()->bind(2);
+	input->specular()->bind(3);
+	input->selfillum()->bind(4);
 	m_shader->set_int("tex_diffuse", 0);
 	m_shader->set_int("tex_normal", 1);
 	m_shader->set_int("tex_worldpos", 2);
@@ -277,16 +273,12 @@ gfx::shared_fb gfx::pipeline::intermediate::process(const std::array<gfx::shader
 		m_state = stage_err_bad_shader;
 		return output;
 	}
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, input->diffuse()->handle());
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, input->normal()->handle());
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, input->worldpos()->handle());
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, input->specular()->handle());
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, input->selfillum()->handle());
+	input->diffuse()->bind(0);
+	input->normal()->bind(1);
+	input->worldpos()->bind(2);
+	input->specular()->bind(3);
+	input->selfillum()->bind(4);
+	m_shader->set_mat_view(glm::value_ptr(m_mat_view));
 	m_shader->set_int("tex_diffuse", 0);
 	m_shader->set_int("tex_normal", 1);
 	m_shader->set_int("tex_worldpos", 2);

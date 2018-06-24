@@ -21,23 +21,23 @@ static float deg = 0.0f;
 void draw_model(const gfx::framebuffer& fb, gfx::model_id id) {
 	gfx::material pMaterial = gpGfx->model_material(id);
 	// Get the material's shader index
-	int iShader = pMaterial.get_shader();
-	if (iShader != -1) {
-		gfx::shader_program* pShader = gpGfx->get_shader(iShader);
-		pShader->reload();
-		pShader->use();
-		pShader->set_int("fb_diffuse", fb.diffuse()->handle());
-		pShader->set_int("fb_normal", fb.normal()->handle());
-		pShader->set_int("fb_worldpos", fb.worldpos()->handle());
+	auto shader = pMaterial.get_shader();
+	if (shader) {
+		shader->reload();
+		shader->use();
+		shader->set_int("fb_diffuse", fb.diffuse()->handle());
+		shader->set_int("fb_normal", fb.normal()->handle());
+		shader->set_int("fb_worldpos", fb.worldpos()->handle());
 		gpGfx->bind_model(id);
-		pShader->use_material(pMaterial);
+		//pShader->use_material(pMaterial);
+		pMaterial.use();
 		//view = glm::rotate(view, glm::radians(180.f), glm::vec3(0, 0, 1));
 		glm::mat4 view = glm::rotate(mat_view, glm::radians(deg), glm::vec3(0, 1, 0));
 		glm::mat4 trans(1.0f);
 
-		pShader->set_mat_view((void*)glm::value_ptr(view));
-		pShader->set_mat_proj((void*)glm::value_ptr(mat_proj));
-		pShader->set_mat_trans((void*)glm::value_ptr(mat_trans));
+		shader->set_mat_view((void*)glm::value_ptr(view));
+		shader->set_mat_proj((void*)glm::value_ptr(mat_proj));
+		shader->set_mat_trans((void*)glm::value_ptr(mat_trans));
 		gpGfx->draw_model();
 	}
 }
@@ -80,8 +80,8 @@ int main() {
 
 		auto mat1 = gpGfx->model_material(mdl1);
 		auto mat2 = gpGfx->model_material(mdl2);
-		int shader1 = mat1.get_shader();
-		int shader2 = mat1.get_shader();
+		auto shader1 = mat1.get_shader();
+		auto shader2 = mat1.get_shader();
 
 		glm::mat4 view = glm::rotate(mat_view, deg, glm::vec3(0, 1, 0));
 

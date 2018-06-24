@@ -76,14 +76,28 @@ void mapeditor::init() {
 
 		m_input.assign_camera(&m_camera);
 		PRINT_DBG("leveleditor: entering loop");
+		gfx::pipeline::pipeline pipeline("data/shaders/pipeline/default_pipeline.txt");
+		glm::mat4 proj = glm::perspective(glm::radians(110.f), (float)gpGfx->width() / (float)gpGfx->height(), 0.0f, 1000.0f);
 		while (!m_bShutdown) {
 			handle_events();
-			gpGfx->begin_frame();
-			draw_world();
+			pipeline.begin();
+			vec3 campos = m_camera.get_pos();
+			glm::mat4 view = glm::translate(glm::mat4(1.0f), (glm::vec3)campos);
+			view = m_camera.get_rot() * view;
+
+			for (const auto& object : m_objects) {
+				gfx::material material = gpGfx->model_material(object.iModel);
+				auto shader = material.get_shader();
+				glm::mat4 trans = glm::translate(glm::mat4(1.0f), (glm::vec3)object.vecPos) * glm::eulerAngleXYZ(object.vecRot.x(), object.vecRot.y(), object.vecRot.z());
+				gfx::pipeline::draw_order cmd = { object.iModel, shader, trans, view, proj };
+				pipeline.draw(cmd);
+			}
 			draw_gui();
 			gpGfx->draw_windows();
-			gpGfx->end_frame();
+			pipeline.finalize(glm::value_ptr(view));
 		}
+		for (auto& icon : m_icons)
+			icon.second.reset();
 		gpGfx->shutdown();
 	});
 }
@@ -167,7 +181,7 @@ void mapeditor::draw_gui() {
 
 	if (ImGui::Begin("Tools")) {
 		for (size_t i = (size_t)E_LED_TOOL_MIN; i < (size_t)E_LED_TOOL_MAX; i++) {
-			ImGui::ImageButton((ImTextureID)m_icons[(mapeditor::tool)i], ImVec2(64, 64));
+			ImGui::ImageButton((ImTextureID)m_icons[(mapeditor::tool)i]->handle(), ImVec2(64, 64));
 		}
 	}
 	ImGui::End();
@@ -189,18 +203,17 @@ void mapeditor::draw_world() {
 	view = m_camera.get_rot() * view;
 	
 	for (const auto& object : m_objects) {
-		gfx::material pMaterial = gpGfx->model_material(object.iModel);
-		int iShader = pMaterial.get_shader();
-		if (iShader != -1) {
-			gfx::shader_program* pShader = gpGfx->get_shader(iShader);
+		gfx::material material = gpGfx->model_material(object.iModel);
+		auto shader = material.get_shader();
+		if (shader) {
 			glm::mat4 trans = glm::translate(glm::mat4(1.0f), (glm::vec3)object.vecPos) * glm::eulerAngleXYZ(object.vecRot.x(), object.vecRot.y(), object.vecRot.z());
 			gpGfx->bind_model(object.iModel);
-			pShader->use();
-			pShader->use_material(pMaterial);
+			shader->use();
+			material.use();
 
-			pShader->set_mat_view(glm::value_ptr(view));
-			pShader->set_mat_proj(glm::value_ptr(proj));
-			pShader->set_mat_trans(glm::value_ptr(trans));
+			shader->set_mat_view(glm::value_ptr(view));
+			shader->set_mat_proj(glm::value_ptr(proj));
+			shader->set_mat_trans(glm::value_ptr(trans));
 
 			gpGfx->draw_model();
 		}
@@ -212,9 +225,7 @@ void mapeditor::new_world() {
 }
 
 void mapeditor::load_icon(mapeditor::tool id, const std::string & filename) {
-	uint32_t iTex = gpGfx->load_texture(filename);
-	void* tex = (void*)(((uint64_t)0) | iTex);
-	m_icons.emplace(id, tex);
+	m_icons.emplace(id, gpGfx->load_texture(filename));
 }
 
 void mapeditor::add_object(const char* szFilename) {

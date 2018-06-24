@@ -94,7 +94,7 @@ bool gfx::gfx_global::init(const char* szTitle, size_t width, size_t height, siz
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); ASSERT_OPENGL();
 
 	glEnable(GL_CULL_FACE); ASSERT_OPENGL();
-	//glCullFace(GL_BACK); ASSERT_OPENGL();
+	glCullFace(GL_BACK); ASSERT_OPENGL();
 	glFrontFace(GL_CCW); ASSERT_OPENGL();
 
 	glEnable(GL_DEPTH_TEST); ASSERT_OPENGL();
@@ -177,25 +177,36 @@ void gfx::gfx_global::init_glonly() {
 
 bool gfx::gfx_global::shutdown()
 {
+	for (auto& shader : shaders)
+		shader.reset();
+	for (auto& kv : filename_texture_map)
+		kv.second.reset();
 	if (pDebugFont) {
 		TTF_CloseFont(pDebugFont);
 	}
 	ImGui_ImplSdlGL3_Shutdown();
 	ImGui::DestroyContext();
-	if (pGLContext)
+	if (pGLContext) {
 		SDL_GL_DeleteContext(pGLContext);
-	if (pRenderer)
+		pGLContext = nullptr;
+	}
+	if (pRenderer) {
 		SDL_DestroyRenderer(pRenderer);
-	if (pWindow)
+		pRenderer = nullptr;
+	}
+	if (pWindow) {
 		SDL_DestroyWindow(pWindow);
+		pWindow = nullptr;
+	}
 	SDL_Quit();
 	return true;
 }
 
-void gfx::gfx_global::begin_frame()
+void gfx::gfx_global::begin_frame(bool bGUI)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	ImGui_ImplSdlGL3_NewFrame(pWindow);
+	if(bGUI)
+		ImGui_ImplSdlGL3_NewFrame(pWindow);
 	
 	nTimePrev = nTimeNow;
 	nTimeNow = SDL_GetPerformanceCounter();
@@ -216,10 +227,12 @@ void gfx::gfx_global::draw_windows()
 	}
 }
 
-void gfx::gfx_global::end_frame()
+void gfx::gfx_global::end_frame(bool bGUI)
 {
-	ImGui::Render();
-	ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());	
+	if (bGUI) {
+		ImGui::Render();
+		ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());
+	}
 	SDL_GL_SwapWindow(pWindow);
 	if (m_event_handler) {
 		SDL_Event e;
@@ -227,11 +240,6 @@ void gfx::gfx_global::end_frame()
 			m_event_handler(e);
 		}
 	}
-	for (auto& iTex : m_vec_texgc) {
-		glDeleteTextures(1, &iTex);
-		PRINT_DBG("gfx::texgc: " << iTex << " deleted");
-	}
-	m_vec_texgc.clear();
 }
 
 bool gfx::gfx_global::handle_events()
@@ -306,7 +314,7 @@ int gfx_global::get_shader_program_index(const std::string & name)
 	return -1;
 }
 
-size_t gfx::gfx_global::load_shader(shader_program * pShaderProgram)
+size_t gfx::gfx_global::load_shader(gfx::shared_shader_program pShaderProgram)
 {
 	if (pShaderProgram) {
 		PRINT_DBG("gfx: loaded shader " << pShaderProgram->get_name());
@@ -320,54 +328,49 @@ size_t gfx::gfx_global::load_shader(shader_program * pShaderProgram)
 
 size_t gfx::gfx_global::load_shader(const std::string & filename)
 {
-	shader_program* pShaderProgram = new shader_program(filename.c_str());
+	gfx::shared_shader_program pShaderProgram = std::make_shared<gfx::shader_program>(filename.c_str());
 	PRINT_ERR("gfx: attempting to load shader " << filename);
 	return load_shader(pShaderProgram);
 }
 
-uint32_t gfx::gfx_global::load_texture(const std::string & filename)
+gfx::shared_tex2d gfx::gfx_global::load_texture(const std::string& filename)
 {
-	SDL_Surface* pSurf;
-	uint32_t iTex;
-	int iTexFmt = GL_RGB;
-
 	// is the texture already loaded?
-	if (filename_texture_map.count(filename))
-	{
+	if (filename_texture_map.count(filename)) {
 		return filename_texture_map[filename];
 	}
 
-	pSurf = IMG_Load(filename.c_str());
+	SDL_Surface* pSurf;
+	gfx::texture_format iTexFmt = texfmt_rgb;
 
-	PRINT_DBG("gfx::load_texture: loading " << filename);
+	pSurf = IMG_Load(filename.c_str());
 
 	if (!pSurf) {
 		PRINT_ERR("gfx: failed to load texture: " << filename);
 		ASSERT_IMAGE(pSurf);
-		return 0;
+		return nullptr;
 	}
 
 	ASSERT(pSurf->format);
 
 	if (pSurf->format->BytesPerPixel == 4)
-		iTexFmt = GL_RGBA;
-
-	glGenTextures(1, &iTex); ASSERT_OPENGL();
-	glBindTexture(GL_TEXTURE_2D, iTex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		iTexFmt = texfmt_rgba;
 
 	ASSERT(pSurf->pixels);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, iTexFmt, pSurf->w, pSurf->h, 0, iTexFmt, GL_UNSIGNED_BYTE, pSurf->pixels);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	filename_texture_map.emplace(filename, iTex);
+	gfx::shared_tex2d tex = std::make_shared<gfx::texture2d>();
+	tex->bind();
+	tex->wrap(texw_repeat);
+	tex->filtering(texfilt_linear);
+	tex->upload(pSurf->pixels, iTexFmt, pSurf->w, pSurf->h);
+	tex->generate_mipmap();
+	filename_texture_map.emplace(filename, tex);
 
 	SDL_FreeSurface(pSurf);
 
-	return iTex;
+	PRINT_DBG("gfx: loaded texture " << filename);
+
+	return tex;
 }
 
 gfx::model_id gfx::gfx_global::load_model(const std::string & filename)
@@ -515,7 +518,7 @@ size_t gfx::gfx_global::load_material(const std::string & filename)
 	for (auto& pShader : shaders) {
 		if (pShader) {
 			if (iszShader == pShader->get_name()) {
-				pShader->load_material(mat);
+				//pShader->load_material(mat);
 				break;
 			}
 		}
@@ -562,7 +565,7 @@ void gfx::gfx_global::draw_model()
 		ASSERT(0);
 	}
 }
-
+/*
 long long int gfx::gfx_global::use_shader(long long int shader)
 {
 	if (shader == -1) {
@@ -576,7 +579,7 @@ long long int gfx::gfx_global::use_shader(long long int shader)
 	glUseProgram(shader); ASSERT_OPENGL();
 	return shader;
 }
-
+*/
 void gfx::gfx_global::remove_window(std::shared_ptr<gfx::window> w)
 {
 	for (auto& pWnd : windows) {
@@ -722,7 +725,7 @@ void gfx::gfx_global::draw_terrain(const model_id& id) {
 }
 
 void gfx::gfx_global::draw_framebuffer(gfx::shared_fb& fb) {
-	gfx::shader_program* pShader = shaders[get_shader_program_index("delivery_fb")];
+	gfx::shared_shader_program pShader = shaders[get_shader_program_index("delivery_fb")];
 	ASSERT(pShader);
 	if (!pShader)
 		return;

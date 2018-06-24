@@ -1,45 +1,46 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <qc.h>
+#include <gfx/texture.h>
+#include <gfx/shader_program.h>
 
 namespace gfx {
-
-	// HACKHACKHACK: keep this in sync with shader_tex_type
-	enum mat_tex_index {
-		MAT_TEX_DIFFUSE = 0,
-		MAT_TEX_NORMAL = 1,
-		MAT_TEX_SPECULAR = 2,
-		MAT_TEX_SELFILLUM = 3,
-		MAT_TEX_MAX = 4
-	};
 
 	class material {
 	public:
 		material() :
-		m_iShader(-1), m_bNormalIsRelative(false) {}
+		m_bNormalIsRelative(false) {}
 
+		material(const std::string& path);
 		material(const mdlc::qc& qcp);
-		material(const material& other);
 
 		const mdlc::qc& get_parser() const { return m_qcp; }
 
-		int get_shader();
+		[[deprecated]]
+		gfx::shared_shader_program get_shader() {
+			return m_shader;
+		}
+
+		gfx::shared_shader_program shader() const {
+			return m_shader;
+		}
 
 		const std::string& get_shader_name() const { return m_iszShader; }
 
-		void set_texture(mat_tex_index iType, uint32_t iTex);
-
-		uint32_t get_texture(mat_tex_index iType) const { return m_aiTextures[iType]; }
+		gfx::shared_tex2d get_texture(texture_type iType) const { return m_aiTextures[iType]; }
 		bool normal_is_relative() const noexcept { return m_bNormalIsRelative; }
+
+		void use();
 
 	private:
 		mdlc::qc m_qcp;
 		std::string m_iszShader;
 
-		int m_iShader;
+		gfx::shared_shader_program m_shader;
 
-		uint32_t m_aiTextures[MAT_TEX_MAX];
+		std::array<gfx::shared_tex2d, TEX_MAX> m_aiTextures;
 		bool m_bNormalIsRelative;
 	};
 

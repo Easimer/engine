@@ -12,15 +12,6 @@
 
 namespace gfx {
 
-	enum shader_tex_type {
-		SHADERTEX_DIFFUSE = 0,
-		SHADERTEX_NORMAL = 1,
-		SHADERTEX_SPECULAR = 2,
-		SHADERTEX_SELFILLUM = 3,
-		SHADERTEX_MAX = 4,
-		SHADERTEX_DEPTH = 5,
-	};
-
 	struct shader_program_light_uniform {
 		int flPosX, flPosY, flPosZ;
 		int flColorR, flColorG, flColorB, flColorA;
@@ -59,9 +50,10 @@ namespace gfx {
 		uint32_t get_id() const { return m_iID; }
 
 		// 
-		bool load_material(material& mat);
+		//bool load_material(gfx::material& mat);
 		// Set as current material
-		void use_material(const material& mat);
+		//[[deprecated]]
+		//void use_material(const material& mat);
 
 		void set_vec3(const std::string& name, const math::vector3<float>& v);
 		void set_vec4(const std::string& name, const float* v);
@@ -74,6 +66,14 @@ namespace gfx {
 
 		void set_float(const std::string& name, float v);
 		void set_int(const std::string& name, int v);
+
+		const std::string& material_key(texture_type t) const noexcept {
+			return m_mapTexKey.at(t);
+		}
+
+		const std::string& material_default(texture_type t) const noexcept {
+			return m_mapTexDefault.at(t);
+		}
 
 	protected:
 		int get_uniform_location(const mdlc::qc& qcp, const std::string& name, int* pLocation);
@@ -110,9 +110,9 @@ namespace gfx {
 		char m_szDescription[128] = { 0 };
 
 		// Key in .mat file mapped to texture type
-		std::map<shader_tex_type, std::string> m_mapTexKey;
+		std::map<texture_type, std::string> m_mapTexKey;
 		// Default value for key in .mat file
-		std::map<shader_tex_type, std::string> m_mapTexDefault;
+		std::map<texture_type, std::string> m_mapTexDefault;
 		// Uniform name->location cache
 		std::unordered_map<std::string, int32_t> m_mapUniforms;
 

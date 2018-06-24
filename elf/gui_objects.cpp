@@ -176,39 +176,37 @@ gfx::shared_tex2d gui_objects::generate_preview(gfx::model_id id) {
 	PRINT_DBG("gui_objects: generating preview for model " << id);
 	// Render model
 	// Get the model's material
-	gfx::material pMaterial = gpGfx->model_material(id);
+	auto material = gpGfx->model_material(id);
 	// Get the material's shader index
-	int iShader = pMaterial.get_shader();
-	if (iShader != -1) {
-		gfx::shader_program* pShader = gpGfx->get_shader(iShader);
-		gpGfx->clear();
-		gpGfx->bind_model(id);
-		pShader->use();
-		pShader->use_material(pMaterial);
-
-		glm::mat4 proj = glm::perspective(glm::radians(110.f), (float)gpGfx->width() / (float)gpGfx->height(), 0.0f, 1000.0f);
+	auto shader = material.get_shader();
+	if (shader) {
+		constexpr int fb_width = 640;
+		constexpr int fb_height = 480;
+		glm::mat4 proj = glm::perspective(glm::radians(110.f), (float)fb_width / (float)fb_height, 0.0f, 1000.0f);
 		//glm::mat4 proj = glm::perspective(glm::radians(120.f), 1.0f, 0.0f, 1000.0f);
 		//glm::mat4 proj = glm::ortho(0.0f, 512.f, 512.f, 0.0f, 0.0f, 1000.0f);
 		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.5f, -0.75f));
 		view = glm::rotate(view, glm::radians(180.f), glm::vec3(0, 0, 1));
 		glm::mat4 trans(1.0f);
-
-		pShader->set_mat_view(glm::value_ptr(view));
-		pShader->set_mat_proj(glm::value_ptr(proj));
-		pShader->set_mat_trans(glm::value_ptr(trans));
-		gfx::shared_fb fb = std::make_shared<gfx::framebuffer>();
-		fb->bind();
+		shader->use();
+		shader->set_mat_view(glm::value_ptr(view));
+		shader->set_mat_proj(glm::value_ptr(proj));
+		shader->set_mat_trans(glm::value_ptr(trans));
+		gfx::framebuffer fb(fb_width, fb_height);
+		fb.bind();
 		gpGfx->clear();
+		material.use();
+		gpGfx->bind_model(id);
 		gpGfx->draw_model();
-		fb->unbind();
+		fb.unbind();
 		
-		auto texDiffuse = fb->diffuse();
+		auto texDiffuse = fb.diffuse();
 
 		m_preview_cache[id] = texDiffuse;
 		PRINT_DBG("Generated!");
 		return texDiffuse;
 	}
-	return gfx::shared_tex2d();
+	return nullptr;
 }
 
 REGISTER_WINDOW(gui_objects, "GUIObjects");

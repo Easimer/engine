@@ -95,7 +95,8 @@ shader_program::~shader_program()
 	}
 	*/
 	if(m_iID)
-		glDeleteProgram(m_iID);
+		if (gpGfx->api_alive())
+			glDeleteProgram(m_iID);
 }
 
 bool shader_program::link()
@@ -159,22 +160,22 @@ void gfx::shader_program::setup() {
 	glUniform1i(m_iUniformTex4, 3); ASSERT_OPENGL();
 
 	if (m_qc.count("diffuse_key"))
-		m_mapTexKey.emplace(SHADERTEX_DIFFUSE, m_qc.at<std::string>("diffuse_key"));
+		m_mapTexKey.emplace(TEX_DIFFUSE, m_qc.at<std::string>("diffuse_key"));
 	if (m_qc.count("normal_key"))
-		m_mapTexKey.emplace(SHADERTEX_NORMAL, m_qc.at<std::string>("normal_key"));
+		m_mapTexKey.emplace(TEX_NORMAL, m_qc.at<std::string>("normal_key"));
 	if (m_qc.count("specular_key"))
-		m_mapTexKey.emplace(SHADERTEX_SPECULAR, m_qc.at<std::string>("specular_key"));
+		m_mapTexKey.emplace(TEX_SPECULAR, m_qc.at<std::string>("specular_key"));
 	if (m_qc.count("selfillum_key"))
-		m_mapTexKey.emplace(SHADERTEX_SELFILLUM, m_qc.at<std::string>("selfillum_key"));
+		m_mapTexKey.emplace(TEX_SELFILLUM, m_qc.at<std::string>("selfillum_key"));
 
 	if (m_qc.count("diffuse_default"))
-		m_mapTexDefault.emplace(SHADERTEX_DIFFUSE, m_qc.at<std::string>("diffuse_default"));
+		m_mapTexDefault.emplace(TEX_DIFFUSE, m_qc.at<std::string>("diffuse_default"));
 	if (m_qc.count("normal_default"))
-		m_mapTexDefault.emplace(SHADERTEX_NORMAL, m_qc.at<std::string>("normal_default"));
+		m_mapTexDefault.emplace(TEX_NORMAL, m_qc.at<std::string>("normal_default"));
 	if (m_qc.count("specular_default"))
-		m_mapTexDefault.emplace(SHADERTEX_SPECULAR, m_qc.at<std::string>("specular_default"));
+		m_mapTexDefault.emplace(TEX_SPECULAR, m_qc.at<std::string>("specular_default"));
 	if (m_qc.count("selfillum_default"))
-		m_mapTexDefault.emplace(SHADERTEX_SELFILLUM, m_qc.at<std::string>("selfillum_default"));
+		m_mapTexDefault.emplace(TEX_SELFILLUM, m_qc.at<std::string>("selfillum_default"));
 
 	set_bool("bDebugDrawNormalsOnly", false);
 
@@ -258,14 +259,14 @@ void shader_program::set_mat_proj(void * pMat)
 		glUniformMatrix4fv(m_iUniformMatProj, 1, GL_FALSE, (const GLfloat*)pMat);
 	}
 }
-
+/*
 bool shader_program::load_material(material & mat)
 {
 	const mdlc::qc& qcp = mat.get_parser();
 
 	for (size_t iTex = 0; iTex < SHADERTEX_MAX; iTex++) {
 		auto iszKey = m_mapTexKey[(shader_tex_type)iTex];
-		uint32_t iTexObj = 0;
+		gfx::shared_tex2d iTexObj = 0;
 		if (qcp.is_cmd(iszKey.c_str())) {
 			iTexObj = gpGfx->load_texture(qcp.at<std::string>(iszKey.c_str()));
 			ASSERT(iTexObj);
@@ -289,11 +290,12 @@ void shader_program::use_material(const material & mat)
 {
 	for (size_t i = 0; i < SHADERTEX_MAX; i++) {
 		glActiveTexture(GL_TEXTURE0 + i);
-		uint32_t iTex = mat.get_texture((mat_tex_index)i);
-		glBindTexture(GL_TEXTURE_2D, iTex);
+		auto iTex = mat.get_texture((mat_tex_index)i);
+		iTex->bind();
 	}
 	set_bool("bNormalIsRelative", mat.normal_is_relative());
 }
+*/
 
 void shader_program::set_vec3(const std::string & name, const math::vector3<float>& v)
 {

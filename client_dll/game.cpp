@@ -79,13 +79,13 @@ bool game::tick() {
 	m_proj = glm::perspective(glm::radians(m_camera.fov()), flAspect, 0.00001f, 1000.0f);
 
 	m_pipeline.begin();
+	m_pipeline.set_view_matrix(mat_view);
 
 	for (size_t i = 1; i < net::max_edicts; i++) {
 		if (edicts[i].active) {
 			net::edict_t e = edicts[i];
 			if (e.modelname[0] != '\0') {
 				gfx::material mat;
-				int iShader;
 				gfx::shader_program* pShader;
 				glm::mat4 mat_trans(1.0);
 				gfx::model_id mdl;
@@ -99,15 +99,14 @@ bool game::tick() {
 					continue;
 
 				mat = gpGfx->model_material(mdl);
-				iShader = mat.get_shader();
-				if (iShader == -1)
+				auto shader = mat.get_shader();
+				if (!shader)
 					continue;
-				
 
 				mat_trans = glm::translate(mat_trans, (glm::vec3)(e.iposition));
 				mat_trans = mat_trans * glm::make_mat4(e.irotation);
 
-				gfx::pipeline::draw_order cmd( mdl, iShader, mat_trans, mat_view, m_proj);
+				gfx::pipeline::draw_order cmd( mdl, shader, mat_trans, mat_view, m_proj);
 				m_pipeline.draw(cmd);
 			}
 			// Interpolate position

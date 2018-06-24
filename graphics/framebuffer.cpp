@@ -27,12 +27,12 @@ gfx::framebuffer::framebuffer(size_t nWidth, size_t nHeight) {
 
 	m_iTexNormal = std::make_shared<gfx::texture2d>();
 	m_iTexNormal->bind();
-	m_iTexNormal->upload(nullptr, texfmt_rgb16f, m_nWidth, m_nHeight);
+	m_iTexNormal->upload(nullptr, texfmt_rgb32f, m_nWidth, m_nHeight);
 	m_iTexNormal->filtering(texfilt_nearest);
 
 	m_iTexWorldPos = std::make_shared<gfx::texture2d>();
 	m_iTexWorldPos->bind();
-	m_iTexWorldPos->upload(nullptr, texfmt_rgb16f, m_nWidth, m_nHeight);
+	m_iTexWorldPos->upload(nullptr, texfmt_rgb32f, m_nWidth, m_nHeight);
 	m_iTexWorldPos->filtering(texfilt_nearest);
 
 	m_iTexSpecular = std::make_shared<gfx::texture2d>();

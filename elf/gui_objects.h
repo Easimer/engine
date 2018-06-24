@@ -4,6 +4,7 @@
 #include <elf/imapeditor.h>
 #include <gfx/gfx.h>
 #include <gfx/window.h>
+#include <gfx/pipeline/pipeline.h>
 #include <vector>
 #include <string>
 #include <map>

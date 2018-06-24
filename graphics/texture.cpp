@@ -12,12 +12,17 @@ gfx::texture2d::texture2d() {
 
 gfx::texture2d::~texture2d() {
 	if (m_hTexture) {
+		if (!gpGfx->api_alive()) {
+			// Don't try to call glDeleteTextures if the GL context doesn't exist anymore
+			return;
+		}
 		glDeleteTextures(1, &m_hTexture);
 		//PRINT_DBG("gfx: deleted texture " << m_hTexture);
 	}
 }
 
-void gfx::texture2d::bind() {
+void gfx::texture2d::bind(size_t texture_unit) {
+	glActiveTexture(GL_TEXTURE0 + texture_unit);
 	glBindTexture(GL_TEXTURE_2D, m_hTexture);
 }
 
@@ -93,25 +98,36 @@ void gfx::texture2d::generate_mipmap() {
 void gfx::texture2d::upload(const void * pImageData, texture_format iFormat, size_t nWidth, size_t nHeight) {
 	GLuint iFmt = 0;
 	GLuint iIFmt = 0;
+	GLenum iType = 0;
 	switch (iFormat) {
 	case texfmt_rgb:
 		iFmt = GL_RGB;
 		iIFmt = GL_RGB;
+		iType = GL_UNSIGNED_BYTE;
 		break;
 	case texfmt_rgba:
 		iFmt = GL_RGBA;
 		iIFmt = GL_RGBA;
+		iType = GL_UNSIGNED_BYTE;
 		break;
 	case texfmt_depthc:
 		iFmt = GL_DEPTH_COMPONENT;
+		iType = GL_UNSIGNED_SHORT;
 		break;
 	case texfmt_rgb16f:
 		iFmt = GL_RGB16F;
-		iIFmt = GL_RGB;
+		iIFmt = GL_RGBA;
+		iType = GL_HALF_FLOAT;
+		break;
+	case texfmt_rgb32f:
+		iFmt = GL_RGB32F;
+		iIFmt = GL_RGBA;
+		iType = GL_FLOAT;
 		break;
 	}
-	if (iFmt) {
+	ASSERT(iFmt && iIFmt && iType);
+	if (iFmt && iIFmt && iType) {
 		bind();
-		glTexImage2D(GL_TEXTURE_2D, 0, iFmt, nWidth, nHeight, 0, iIFmt, GL_FLOAT, pImageData);
+		glTexImage2D(GL_TEXTURE_2D, 0, iFmt, nWidth, nHeight, 0, iIFmt, iType, pImageData);
 	}
 }

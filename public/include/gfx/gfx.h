@@ -38,12 +38,12 @@ namespace gfx {
 
 		// Begin frame
 		// Call this before any draw command
-		void begin_frame();
+		void begin_frame(bool bGUI = true);
 		// Draw windows accounted by the window manager
 		void draw_windows();
 		// End frame
 		// Call this after all drawing is done
-		void end_frame();
+		void end_frame(bool bGUI = true);
 		// Handle SDL2 events
 		// Do NOT use if you want to handle events
 		// yourself. This method forwards all
@@ -70,11 +70,11 @@ namespace gfx {
 		int get_shader_program_index(const std::string& name);
 
 		// Store shader program
-		size_t load_shader(shader_program* pShaderProgram);
+		size_t load_shader(gfx::shared_shader_program pShaderProgram);
 		// Load shader from .qc file
 		size_t load_shader(const std::string& filename);
 		// Load texture from file
-		uint32_t load_texture(const std::string& filename);
+		gfx::shared_tex2d load_texture(const std::string& filename);
 		// Load model from file
 		gfx::model_id load_model(const std::string& filename);
 		// Load model from model container
@@ -105,7 +105,7 @@ namespace gfx {
 		void remove_window(std::shared_ptr<gfx::window> w);
 
 		// Get shader with ID
-		shader_program* get_shader(size_t i) { return shaders[i]; }
+		gfx::shared_shader_program get_shader(size_t i) { return shaders[i]; }
 
 		// Get time elapsed since last and current frame
 		float& delta() { return flDeltaTime; }
@@ -145,15 +145,11 @@ namespace gfx {
 
 		void draw_framebuffer(gfx::shared_fb& fb);
 
-		void delete_texture(uint32_t iTex) {
-			m_vec_texgc.push_back(iTex);
-		}
-
 		void depth_test(bool bEnable);
 
 		void* window_handle() const { return pWindow; }
 
-		const std::vector<shader_program*>& shader_list() const {
+		const std::vector<gfx::shared_shader_program>& shader_list() const {
 			return shaders;
 		}
 
@@ -161,6 +157,10 @@ namespace gfx {
 		void blend(bool bEnable);
 
 		inline gfx::model_id quad() const noexcept { return m_iModelQuadVAO; }
+
+		bool api_alive() const noexcept {
+			return pGLContext;
+		}
 
 	private:
 		SDL_Window* pWindow;
@@ -179,7 +179,7 @@ namespace gfx {
 
 		int nViewportX = -1, nViewportY = -1, nViewportW = -1, nViewportH = -1;
 
-		std::vector<shader_program*> shaders;
+		std::vector<gfx::shared_shader_program> shaders;
 		std::map<std::string, size_t> shader_name_map;
 
 		std::vector<std::shared_ptr<gfx::window>> windows;
@@ -190,7 +190,7 @@ namespace gfx {
 		std::map<std::string, model_id> filename_model_map;
 		std::map<model_id, std::vector<triangle>> model_collider_map;
 
-		std::map<std::string, uint32_t> filename_texture_map;
+		std::map<std::string, gfx::shared_tex2d> filename_texture_map;
 
 		std::vector<gfx::material> materials;
 		std::map<std::string, size_t> filename_material_map;
@@ -202,10 +202,6 @@ namespace gfx {
 		uint32_t m_iModelQuadVAO;
 		uint32_t m_iModelQuadVBOPos;
 		uint32_t m_iModelQuadVBOUV;
-
-		// Texture GC
-		// These textures get deleted at the end of the frame
-		std::vector<uint32_t> m_vec_texgc;
 	};
 
 	struct debug_marker {
