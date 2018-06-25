@@ -5,6 +5,7 @@ set(SRC
 
 set(SRC_PUBLIC
 	../public/include/math/vector.h
+	../public/include/octree.h
 )
 
 vs_pch(stdafx)
