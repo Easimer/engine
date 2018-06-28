@@ -171,7 +171,6 @@ void tree<T>::repair(size_t n) {
 		auto g = grandparent(n);
 
 		if (p == invalid_index() || g == invalid_index()) {
-			printf("no parent\n");
 			break;
 		}
 
