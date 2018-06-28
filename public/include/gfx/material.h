@@ -3,6 +3,7 @@
 #include <array>
 #include <string>
 #include <qc.h>
+#include <gfx/defs.h>
 #include <gfx/texture.h>
 #include <gfx/shader_program.h>
 

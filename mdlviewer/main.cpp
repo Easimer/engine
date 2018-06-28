@@ -61,14 +61,14 @@ bool set_workdir()
 
 int main(int argc, char** argv) {
 
-	if (!set_workdir()) {
+	/*if (!set_workdir()) {
 		PRINT_ERR("set_workdir failure");
 	}
 
 	if (!gpGfx->init("mdlviewer", 800, 600))
 		return -1;
 
-	gpGfx->load_shader("data/shaders/model_dynamic.qc");
+	
 
 	std::shared_ptr<window_model> w_model = std::make_shared<window_model>();
 	std::shared_ptr<window_properties> w_props = std::make_shared<window_properties>();
@@ -90,8 +90,9 @@ int main(int argc, char** argv) {
 			gpGfx->bind_model(giCurrentModel);
 
 			rot += 3.1415926f / 4.0f * gpGfx->delta();
-			gfx::shader_program* pShader = gpGfx->get_shader(gpGfx->use_shader());
-			pShader->use_material(gpGfx->model_material(giCurrentModel));
+			auto pShader = gpGfx->get_shader(gpGfx->use_shader());
+			auto material = gpGfx->model_material(giCurrentModel);
+			material.use();
 
 			glm::mat4 trans(1.0);
 			trans = glm::rotate(trans, rot, glm::vec3(0, 1, 0));
@@ -110,6 +111,6 @@ int main(int argc, char** argv) {
 	}
 
 	if (!gpGfx->shutdown())
-		return -1;
+		return -1;*/
 	return 0;
 }

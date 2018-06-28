@@ -3,6 +3,7 @@ set(SRC
 	stdafx.cpp
 
 	camera.cpp
+	etf.cpp
 	framebuffer.cpp
 	gfx.cpp
 	material.cpp
@@ -30,6 +31,7 @@ set(SRC_PUBLIC
 
 	../public/include/gfx/defs.h
 	../public/include/gfx/camera.h
+	../public/include/gfx/etf.h
 	../public/include/gfx/framebuffer.h
 	../public/include/gfx/gfx.h
 	../public/include/gfx/icamera.h

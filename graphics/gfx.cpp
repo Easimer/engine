@@ -10,6 +10,8 @@
 #include <gfx/smd_loader.h>
 #include <gfx/emf_loader.h>
 
+#include <gfx/etf.h>
+
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
@@ -340,37 +342,55 @@ gfx::shared_tex2d gfx::gfx_global::load_texture(const std::string& filename)
 		return filename_texture_map[filename];
 	}
 
-	SDL_Surface* pSurf;
 	gfx::texture_format iTexFmt = texfmt_rgb;
+	void* pImageBuf;
+	size_t nWidth;
+	size_t nHeight;
 
-	pSurf = IMG_Load(filename.c_str());
-
-	if (!pSurf) {
-		PRINT_ERR("gfx: failed to load texture: " << filename);
-		ASSERT_IMAGE(pSurf);
-		return nullptr;
+	// Check filename extension
+	size_t iExt = filename.rfind('.');
+	bool bETF = false;
+	if (iExt != std::string::npos) {
+		auto sExt = filename.substr(iExt + 1, filename.length() - 1);
+		std::transform(sExt.begin(), sExt.end(), sExt.begin(), ::tolower);
+		bETF = (sExt == "etf");
 	}
 
-	ASSERT(pSurf->format);
+	if (bETF) {
+		gfx::etf::etf_reader etfr(filename);
+		
+	} else {
+		SDL_Surface* pSurf;
+		
+		pSurf = IMG_Load(filename.c_str());
 
-	if (pSurf->format->BytesPerPixel == 4)
-		iTexFmt = texfmt_rgba;
+		if (!pSurf) {
+			PRINT_ERR("gfx: failed to load texture: " << filename);
+			ASSERT_IMAGE(pSurf);
+			return nullptr;
+		}
 
-	ASSERT(pSurf->pixels);
+		ASSERT(pSurf->format);
 
-	gfx::shared_tex2d tex = std::make_shared<gfx::texture2d>();
-	tex->bind();
-	tex->wrap(texw_repeat);
-	tex->filtering(texfilt_linear);
-	tex->upload(pSurf->pixels, iTexFmt, pSurf->w, pSurf->h);
-	tex->generate_mipmap();
-	filename_texture_map.emplace(filename, tex);
+		if (pSurf->format->BytesPerPixel == 4)
+			iTexFmt = texfmt_rgba;
 
-	SDL_FreeSurface(pSurf);
+		ASSERT(pSurf->pixels);
 
-	PRINT_DBG("gfx: loaded texture " << filename);
+		gfx::shared_tex2d tex = std::make_shared<gfx::texture2d>();
+		tex->bind();
+		tex->wrap(texw_repeat);
+		tex->filtering(texfilt_linear);
+		tex->upload(pSurf->pixels, iTexFmt, pSurf->w, pSurf->h);
+		tex->generate_mipmap();
+		filename_texture_map.emplace(filename, tex);
 
-	return tex;
+		SDL_FreeSurface(pSurf);
+
+		PRINT_DBG("gfx: loaded texture " << filename);
+
+		return tex;
+	}
 }
 
 gfx::model_id gfx::gfx_global::load_model(const std::string & filename)

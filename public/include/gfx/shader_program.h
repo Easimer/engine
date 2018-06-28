@@ -9,6 +9,7 @@
 #include <watchdog.h>
 #include <qc.h>
 #include <unordered_map>
+#include <map>
 
 namespace gfx {
 

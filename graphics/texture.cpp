@@ -99,6 +99,7 @@ void gfx::texture2d::upload(const void * pImageData, texture_format iFormat, siz
 	GLuint iFmt = 0;
 	GLuint iIFmt = 0;
 	GLenum iType = 0;
+	GLsizei nSize = 0;
 	switch (iFormat) {
 	case texfmt_rgb:
 		iFmt = GL_RGB;
@@ -124,10 +125,27 @@ void gfx::texture2d::upload(const void * pImageData, texture_format iFormat, siz
 		iIFmt = GL_RGBA;
 		iType = GL_FLOAT;
 		break;
+	case texfmt_dxt1:
+
+		break;
 	}
 	ASSERT(iFmt && iIFmt && iType);
 	if (iFmt && iIFmt && iType) {
 		bind();
-		glTexImage2D(GL_TEXTURE_2D, 0, iFmt, nWidth, nHeight, 0, iIFmt, iType, pImageData);
+		if (iFormat == texfmt_dxt1) {
+			glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, nWidth, nHeight, 0, 0, pImageData);
+		} else {
+			glTexImage2D(GL_TEXTURE_2D, 0, iFmt, nWidth, nHeight, 0, iIFmt, iType, pImageData);
+		}
+	}
+}
+
+void gfx::texture2d::upload(const void * pImageData, size_t nSize, texture_format iFormat, size_t nWidth, size_t nHeight) {
+	ASSERT(pImageData && nSize && nWidth && nHeight);
+	bind();
+	if (iFormat == texfmt_dxt1) {
+		glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, nWidth, nHeight, 0, nSize, pImageData);
+	} else {
+		ASSERT(0);
 	}
 }

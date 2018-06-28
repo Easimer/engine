@@ -18,7 +18,8 @@ enum texture_format {
 	texfmt_rgba,
 	texfmt_depthc,
 	texfmt_rgb16f,
-	texfmt_rgb32f
+	texfmt_rgb32f,
+	texfmt_dxt1,
 };
 
 enum texture_wrap {
@@ -45,6 +46,8 @@ public:
 	void generate_mipmap();
 
 	void upload(const void* pImageData, texture_format iFormat, size_t nWidth, size_t nHeight);
+	// Use this to upload compressed textures
+	void upload(const void* pImageData, size_t nSize, texture_format iFormat, size_t nWidth, size_t nHeight);
 
 private:
 	// Gfx API texture handle

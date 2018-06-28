@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <type_traits>
+#include <enl/platform.h>
 
 namespace gfx {
 	// Model handle
@@ -19,4 +20,22 @@ namespace gfx {
 		TEX_MAX			= 4,
 		TEX_DEPTH
 	};
+
+	START_PACK
+	struct color_rgb888_packed {
+		uint8_t r, g, b;
+	} PACKED;
+	END_PACK
+
+	struct color_rgba {
+		float r, g, b, a;
+	};
+
+	START_PACK
+	struct color_rgb565 {
+		uint16_t r : 5;
+		uint16_t g : 6;
+		uint16_t b : 5;
+	} PACKED;
+	END_PACK
 }
