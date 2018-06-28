@@ -72,9 +72,9 @@ add_library(graphics STATIC
 	CMakeLists.txt
 )
 IF(WIN32)
-target_link_libraries(graphics SDL2 SDL2_image SDL2_ttf)
+target_link_libraries(graphics SDL2 SDL2_image SDL2_ttf platlayer)
 ELSE()
-target_link_libraries(graphics SDL2 SDL2_image SDL2_ttf dl)
+target_link_libraries(graphics SDL2 SDL2_image SDL2_ttf platlayer dl)
 ENDIF()
 
 IF(WIN32)
