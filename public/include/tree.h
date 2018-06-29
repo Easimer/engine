@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 
 template<typename T>
 struct node;
@@ -25,7 +26,7 @@ public:
 		m_node_pool.push_back(node<T>());
 	}
 
-	void insert(const T& v) {
+	T& insert(const T& v) {
 		auto node = allocate_node();
 		value(node, v);
 		
@@ -68,6 +69,7 @@ public:
 		}
 
 		repair(node);
+		return m_node_pool[node].value;
 	}
 
 	const size_t root() const noexcept {
@@ -75,6 +77,10 @@ public:
 	}
 
 	T value(size_t index) const {
+		return m_node_pool[index].value;
+	}
+
+	T& value(size_t index) {
 		return m_node_pool[index].value;
 	}
 
@@ -98,10 +104,55 @@ public:
 		return m_node_pool[index].parent;
 	}
 
+	template<typename U>
+	std::optional<T*> find(const U& filter) {
+		size_t i = m_root;
+		if (i != invalid_index()) {
+			auto& v = value(i);
+			if (v > filter) {
+				auto res = find_recurse(filter, left_child(i));
+				if (res.has_value())
+					return res;
+			}
+
+			if (v == filter)
+				return &v;
+
+			if (v < filter) {
+				auto res = find_recurse(filter, right_child(i));
+				if (res.has_value())
+					return res;
+			}
+		}
+		return std::nullopt;
+	}
+
 protected:
 	size_t allocate_node() {
 		m_node_pool.push_back(node<T>());
 		return m_node_pool.size() - 1;
+	}
+
+	template<typename U>
+	std::optional<T*> find_recurse(const U& filter, size_t i) {
+		if (i != invalid_index()) {
+			auto& v = value(i);
+			if (v > filter) {
+				auto res = find_recurse(filter, left_child(i));
+				if (res.has_value())
+					return res;
+			}
+
+			if (v == filter)
+				return &v;
+
+			if (v < filter) {
+				auto res = find_recurse(filter, right_child(i));
+				if (res.has_value())
+					return res;
+			}
+		}
+		return std::nullopt;
 	}
 
 	void repair(size_t node);
