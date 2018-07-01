@@ -24,7 +24,7 @@ add_executable(efs_tool
 )
 
 builddir(efs_tool)
-target_link_libraries(efs_tool efs enl)
+target_link_libraries(efs_tool efs enl platlayer)
 
 IF(WIN32)
 # Create filters

@@ -6,10 +6,12 @@ set(SRC
 if(WIN32)
 	set(SRC_PLAT
 		fileio_win32.cpp
+		endian_win32.cpp
 	)
 elseif(UNIX)
 	set(SRC_PLAT
 		fileio_linux.cpp
+		endian_linux.cpp
 	)
 endif()
 

@@ -48,22 +48,15 @@ END_PACK
 
 START_PACK
 struct efs_hashtable_entry {
-	uint32_t nHash0;
-	uint32_t nHash1;
-	uint32_t nHash2;
-	uint32_t nHash3;
-	uint32_t nHash4;
-	uint32_t nHash5;
-	uint32_t nHash6;
-	uint32_t nHash7;
 	uint64_t offFileStart;
 	uint64_t nFileSiz;
 	uint8_t reserved[16];
+	uint32_t nHash;
 } PACKED;
 END_PACK
 
 struct efs_hash {
-	uint8_t value[32];
+	uint32_t value;
 	size_t offset;
 	size_t size;
 };
@@ -76,21 +69,33 @@ struct efs_handle;
 class efs {
 public:
 	efs(const std::string& path, bool bDontCreate = false);
+	~efs();
 
-	size_t size(uint8_t hash[32]);
-	void read(uint8_t hash[32], void* buf, size_t size);
+	// Returns a file's size
+	size_t size(uint32_t hash);
+	// Attempts to read a file's content
+	void read(uint32_t hash, void* buf, size_t size);
 
+	// Lists files on the console
 	void list_files();
 
+	bool read_only() const noexcept { return m_bReadOnly; }
+
+	// Volume creation tools
 	void begin_write();
-	void write(uint8_t out_hash[32], void* buf, size_t size);
+	uint32_t write(void* buf, size_t size);
 	void end_write();
 
 private:
-	// Returns file data offset
-	size_t find_file_by_hash(uint32_t nHash);
+
+	// Checks if file exists
+	bool file_exists(uint32_t hash);
+	// Retrieves the file entry
+	// NOTE: Check file existance beforehand with file_exists()
+	const efs_hash& find_file_by_hash(uint32_t hash);
 
 	void load_ht();
+
 
 private:
 	FILE* m_hFile;
