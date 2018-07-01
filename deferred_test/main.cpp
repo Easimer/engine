@@ -10,6 +10,10 @@
 #include <glm/gtc/random.hpp>
 #include <array>
 
+#include <iostream>
+#include <fstream>
+#include <efs/efs.h>
+
 #undef main
 
 const glm::mat4 mat_proj = glm::perspective(glm::radians(90.0f), 640.f / 360.f, 0.00001f, 1000.f);

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <optional>
+#include <magic/type_traits.h>
 
 template<typename T>
 struct node;
@@ -22,6 +23,8 @@ struct node {
 template<typename T>
 class tree {
 public:
+	static_assert(mgc::is_less_than_comparable<T>::value, "tree<T>: T is not less-than comparable!");
+
 	tree() : m_root(0) {
 		m_node_pool.push_back(node<T>());
 	}
@@ -126,6 +129,7 @@ public:
 		}
 		return std::nullopt;
 	}
+
 
 protected:
 	size_t allocate_node() {

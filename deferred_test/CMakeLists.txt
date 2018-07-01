@@ -19,7 +19,7 @@ add_executable(deferred_test
 builddir(deferred_test)
 vs_link_static(deferred_test)
 
-SET(GAME_LIBRARIES SDL2 SDL2_image SDL2_ttf imgui graphics)
+SET(GAME_LIBRARIES SDL2 SDL2_image SDL2_ttf imgui graphics efs)
 
 IF(UNIX AND NOT APPLE)
 target_link_libraries(deferred_test ${GAME_LIBRARIES} dl pthread)
